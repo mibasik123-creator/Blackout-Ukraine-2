@@ -80,12 +80,23 @@ nav button{font-size:12px;padding:14px 2px}#md.solo .sec{display:none}
 #gear{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));right:12px;z-index:20;width:42px;height:42px;border-radius:50%;margin:0;padding:0;font-size:20px;background:var(--card)!important;color:var(--mut);border:1px solid var(--bd);box-shadow:0 2px 10px rgba(0,0,0,.12)!important}#gear.on{color:var(--ac)}
 details.card summary{cursor:pointer;font-weight:600}details.card>*:not(summary){margin-top:10px}
 #mi{display:none;margin:10px 0 4px;font-size:22px;text-align:center}
+.locrow{display:flex;gap:8px;align-items:center;margin:0 0 12px}.locrow select{padding:10px;font-size:14px;flex:1;min-width:0}.locrow .gb2{flex:0 0 46px;width:46px;height:46px;margin:0;padding:0;border-radius:14px;font-size:20px}
+#mp{position:fixed;inset:0;z-index:60;background:var(--bg);display:none;flex-direction:column}#mp.on{display:flex}
+#mpt{display:flex;gap:8px;padding:calc(10px + env(safe-area-inset-top,0px)) 12px 10px;background:var(--card);border-bottom:1px solid var(--bd)}#mpt input{flex:1;min-width:0}#mpt button{width:46px;height:46px;margin:0;padding:0;flex:0 0 46px;border-radius:14px}
+#mmap{position:relative;flex:1;overflow:hidden;touch-action:none;background:#cfd8dc}#mtl{position:absolute;inset:0}
+#mmap img{position:absolute;width:256px;height:256px;max-width:none;user-select:none;-webkit-user-drag:none}
+#mpin{position:absolute;left:50%;top:50%;width:0;height:0;pointer-events:none;z-index:3}#mpin::before{content:"\1F4CD";position:absolute;font-size:38px;line-height:1;transform:translate(-50%,-100%);filter:drop-shadow(0 3px 3px rgba(0,0,0,.4))}
+#mz{position:absolute;right:12px;top:12px;z-index:4;display:flex;flex-direction:column;gap:8px}#mz button{width:44px;height:44px;margin:0;padding:0;border-radius:12px;font-size:22px}
+#mat{position:absolute;left:6px;bottom:4px;z-index:4;font-size:11px;background:rgba(255,255,255,.8);color:#333;padding:1px 6px;border-radius:6px}
+#mpf{padding:12px;background:var(--card);border-top:1px solid var(--bd);padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))}#mpf .rc{margin:0 0 8px}
+#mmsg{position:absolute;left:12px;right:60px;top:12px;z-index:4;background:var(--card);border-radius:12px;padding:10px;font-size:13px;display:none}
 </style>
 </head>
 <body>
 <main id="app"></main>
 <nav id="nav"><div id="ind"></div><div id="nb"></div></nav>
 <button id="gear" onclick="setTab('set')">⚙</button>
+<div id="mp"></div>
 <div id="spl"><span>⚡</span></div>
 <div id="toast"></div>
 <div id="md"><div class="mb"><p id="mt" style="margin:0 0 6px;font-size:17px"></p><input id="mi" type="number" inputmode="decimal"><div class="row"><button class="sec" id="mcn" onclick="askOk(0)">Отмена</button><button class="stop" id="mok" onclick="askOk(1)">Да</button></div></div></div>
@@ -105,20 +116,6 @@ function render(){
  document.getElementById('ind').style.transform='translateX('+(tab=='cat'?4:Math.max(0,TABS.indexOf(tab)))*100+'%)';document.getElementById('nb').innerHTML=tabs.map(function(t){return '<button class="'+(t[0]==tab?'on':'')+'" onclick="setTab(\''+t[0]+'\')" style="flex:1">'+tr(t[1])+'</button>'}).join('');
  var ap=document.getElementById('app');ap.classList.remove('anim');ap.innerHTML=tr((tab=='pan'?'':heroH(tab))+{pan:vPan,gen:vGen,st:vSt,hist:vHist,set:vSet,cat:vCat}[tab]());document.documentElement.lang=S.lang||'uk';document.getElementById('mcn').textContent={uk:'Скасувати',en:'Cancel',ru:'Отмена'}[S.lang||'uk'];if(tf){void ap.offsetWidth;ap.classList.add('anim');tf=0;cu()}
 }
-function vGen(){
- var g=S.gens[S.g]||S.gens[0],left=g.last+g.svc-g.h,pct=Math.max(0,Math.min(100,left/g.svc*100));
- var opts=S.gens.map(function(x,i){return '<option value="'+i+'"'+(i==S.g?' selected':'')+'>'+esc(x.n)+'</option>'}).join('');
- var h='<div class="card"><h2>Модель</h2><select onchange="S.g=+this.value;save();render()">'+opts+'</select>'+sel2()+(g.p?'<img src="'+g.p+'" style="width:100%;max-height:200px;object-fit:cover;border-radius:12px;margin-top:10px">':'');
- h+='<div class="tm'+(S.run?' run':'')+'" id="tm">'+(S.run?dur(Date.now()-S.run):'0:00:00')+'</div>';
- if(S.run){h+='<div class="mut" style="text-align:center">Включён в '+dt(S.run)+'</div><label>Фактический расход, л (необязательно)</label><input id="fa" type="number" step="0.1" inputmode="decimal"><button class="big stop" onclick="stopG()">Остановить</button>'}
- else h+='<button class="big go" onclick="startG()">Запустить</button>';
- h+='</div>'+fuelCard(g)+'<div class="card"><h2>Моточасы и ТО</h2><div class="kv"><span>Наработка</span><b>'+f1(g.h)+' ч</b></div><div class="kv"><span>До ТО</span><b style="color:'+(left<=5?'var(--bad)':'inherit')+'">'+f1(left)+' ч</b></div><div class="bar"><i style="width:'+pct+'%;background:'+(left<=5?'var(--bad)':'var(--ok)')+'"></i></div>';
- if(left<=5)h+='<div class="mut">⚠ Пора на обслуживание: масло, свеча, воздушный фильтр.</div>';
- h+='<button class="sec" onclick="doSvc()">ТО выполнено</button></div>';
- var tf=0,th=0;S.ses.forEach(function(s){tf+=s.f;th+=s.h});
- h+='<div class="card"><h2>Всего за всё время</h2><div class="kv"><span>Сессий</span><b>'+S.ses.length+'</b></div><div class="kv"><span>Время работы</span><b>'+f1(th)+' ч</b></div><div class="kv"><span>Топливо</span><b>'+f1(tf)+' л</b></div>'+(S.price>0?'<div class="kv"><span>Стоимость</span><b>'+Math.round(tf*S.price)+' ₴</b></div>':'')+'</div>';
- return h;
-}
 function startG(){S.run=Date.now();S.remN=0;S.lowW=0;save();render()}
 function stopG(){
  var g=S.gens[S.g],end=Date.now(),h=(end-S.run)/3600000,fa=parseFloat((document.getElementById('fa')||{}).value),est=!(fa>0);
@@ -137,7 +134,7 @@ function vSt(){
  h+=rtCard();
  S.sts.forEach(function(s,i){
   var c=0,d=0,gr=0,last=null;S.logs.forEach(function(l){if(l.i==i){if(l.c){c+=l.wh;if(!l.src||l.src=='grid'||l.src=='Сеть')gr+=l.wh}else d+=l.wh;last=l.p2}});
-  h+='<div class="card"><div class="gh"><div class="pwrap sm"><svg class="gz" viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" class="gb"/><circle cx="50" cy="50" r="44" class="gf" style="stroke-dasharray:276;stroke-dashoffset:'+(276*(1-Math.max(0,Math.min(100,last||0))/100))+'"/></svg><span class="gp">'+(last==null?'—':Math.round(last)+'%')+'</span></div><div><div class="pn">'+esc(s.n)+'</div><div class="mut">'+s.wh+' Вт·ч</div></div></div>'+(s.p?'<img src="'+s.p+'" style="width:100%;max-height:160px;object-fit:cover;border-radius:12px;margin-bottom:8px">':'')+'<div class="kv"><span>Заряжено</span><b>'+f1(c/1000)+' кВт·ч</b></div>'+(S.tar>0?'<div class="kv"><span>Из сети, стоимость</span><b>'+f1(gr/1000*S.tar)+' ₴</b></div>':'')+'<div class="kv"><span>Отдано нагрузке</span><b>'+f1(d/1000)+' кВт·ч</b></div><div class="kv"><span>Последний уровень</span><b>'+(last==null?'—':f1(last)+' %')+'</b></div></div>';
+  h+='<div class="card"><div class="gh"><div class="pwrap sm"><svg class="gz" viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" class="gb"/><circle cx="50" cy="50" r="44" class="gf" style="stroke-dasharray:276;stroke-dashoffset:'+(276*(1-Math.max(0,Math.min(100,last||0))/100))+'"/></svg><span class="gp">'+(last==null?'—':Math.round(last)+'%')+'</span></div><div><div class="pn">'+esc(s.n)+'</div><div class="mut">'+s.wh+' Вт·ч</div></div></div>'+(s.p?'<img src="'+s.p+'" style="width:100%;max-height:160px;object-fit:cover;border-radius:12px;margin-bottom:8px">':'')+'<div class="kv"><span>Заряжено</span><b>'+f1(c/1000)+' кВт·ч</b></div>'+(S.tar>0?'<div class="kv"><span>Из сети, стоимость</span><b>'+f1(gr/1000*S.tar)+' ₴</b></div>':'')+'<div class="kv"><span>Отдано нагрузке</span><b>'+f1(d/1000)+' кВт·ч</b></div><div class="kv"><span>Последний уровень</span><b>'+(last==null?'—':f1(last)+' %')+'</b></div><button class="sec" onclick="svcFind(\'s\','+i+')">🔧 Сервис-центр</button></div>';
  });
  return h;
 }
@@ -154,9 +151,7 @@ function vHist(){
  S.fills.forEach(function(f){items.push({t:f.t,k:'f',id:f.id,x:'⛽ '+esc(f.g)+': +'+f1(f.l)+' л, '+dt(f.t)})});
  items.sort(function(a,b){return b.t-a.t});
  items=items.filter(function(i){return (hf=='all'||i.k==hf)&&(!hp||Date.now()-i.t<hp*864e5)});var tot=items.length;if(!hx)items=[];var h='<div class="card"><h2>История</h2>'+histBar()+(tot?'<button class="sec" onclick="hx=!hx;render()">'+(hx?'Свернуть ▴':'Раскрыть ▾ ('+tot+')')+'</button>':'')+(items.length?items.map(function(i){return '<div class="h"><span>'+i.x+'</span><button class="sec sm" onclick="del(\''+i.k+'\','+i.id+')">✕</button></div>'}).join(''):(tot?'':'<div class="mut">Пока пусто</div>'))+'</div>';
- h+=dayCard();
- h+='<div class="card"><h2>По местам</h2>'+agg('loc')+'</div><div class="card"><h2>По людям</h2>'+agg('u')+'</div>';
- h+='<div class="card"><h2>Экспорт</h2><button class="sec" onclick="csv()">Показать CSV</button><div id="csv"></div></div>';
+  h+='<div class="card"><h2>Экспорт</h2><button class="sec" onclick="csv()">Показать CSV</button><div id="csv"></div></div>';
  return h;
 }
 function del(k,id){ask('Удалить запись?',function(){del2(k,id)})}
@@ -192,10 +187,9 @@ var ck='s',cq='',ci=0;
 function so(a,s){return a.map(function(x,i){return '<option value="'+i+'"'+(i==s?' selected':'')+'>'+esc(x)+'</option>'}).join('')}
 function sel2(){return '<div class="row"><div><label>Место</label><select onchange="S.loc=+this.value;save()">'+so(S.locs,S.loc)+'</select></div><div><label>Кто</label><select onchange="S.usr=+this.value;save()">'+so(S.users,S.usr)+'</select></div></div>'}
 function tag(x){return x.loc?'<br><span class="mut">📍 '+esc(x.loc)+' · 👤 '+esc(x.u||'')+'</span>':''}
-function agg(key){var m={};S.ses.forEach(function(s){var k=s[key]||'—';m[k]=m[k]||{h:0,f:0};m[k].h+=s.h;m[k].f+=s.f});return Object.keys(m).map(function(k){return '<div class="kv"><span>'+esc(k)+'</span><b>'+f1(m[k].h)+' ч · '+f1(m[k].f)+' л</b></div>'}).join('')||'<div class="mut">Нет данных</div>'}
-function lst(k,t){return '<div class="card"><h2>'+t+'</h2>'+S[k].map(function(n,i){return '<div class="row" style="margin-bottom:6px"><input value="'+esc(n)+'" onchange="S.'+k+'['+i+']=this.value;save()">'+(k=='locs'?'<button class="sec sm" style="flex:0 0 auto" onclick="gps('+i+')">📍</button>':'')+'<button class="sec sm" style="flex:0 0 auto" onclick="rm(\''+k+'\','+i+')">✕</button></div>'+(k=='locs'&&S.gps[n]?'<div class="mut" style="margin:-2px 0 6px">GPS: '+esc(S.gps[n])+'</div>':'')}).join('')+'<button class="sec" onclick="S.'+k+'.push(\'Новое\');save();render()">+ Добавить</button></div>'}
+function agg(key,arr){var m={};(arr||S.ses).forEach(function(s){var k=s[key]||'—';m[k]=m[k]||{h:0,f:0};m[k].h+=s.h;m[k].f+=s.f});return Object.keys(m).map(function(k){return '<div class="kv"><span>'+esc(k)+'</span><b>'+f1(m[k].h)+' ч · '+f1(m[k].f)+' л</b></div>'}).join('')||'<div class="mut">Нет данных</div>'}
+function lst(k,t){return '<div class="card"><h2>'+t+'</h2>'+S[k].map(function(n,i){return '<div class="row" style="margin-bottom:6px"><input value="'+esc(n)+'" onchange="ren(\''+k+'\','+i+',this.value)">'+(k=='locs'?'<button class="sec sm" style="flex:0 0 auto" onclick="gps('+i+')">📍</button><button class="sec sm" style="flex:0 0 auto" onclick="openMap('+i+')">🗺</button>':'')+'<button class="sec sm" style="flex:0 0 auto" onclick="rm(\''+k+'\','+i+')">✕</button></div>'+(k=='locs'&&S.gps[n]?'<div class="mut" style="margin:-2px 0 6px">GPS: '+esc(S.gps[n])+' <span onclick="viewLoc('+i+')" style="color:var(--ac);cursor:pointer">🗺 ↗</span></div>':'')}).join('')+'<button class="sec" onclick="S.'+k+'.push(\'Новое\');save();render()">+ Добавить</button></div>'}
 function rm(k,i){if(S[k].length<2)return toast('Нужна хотя бы одна запись');S[k].splice(i,1);S.loc=0;S.usr=0;save();render()}
-function gps(i){var n=S.locs[i];try{navigator.geolocation.getCurrentPosition(function(p){S.gps[n]=p.coords.latitude.toFixed(5)+', '+p.coords.longitude.toFixed(5);save();render()},function(){toast('Не удалось получить GPS')},{timeout:10000})}catch(e){toast('GPS недоступен')}}
 function vPanOld(){var g=S.gens[S.g]||S.gens[0],r=S.run,sr=S.srun;
  var h='<div class="card"><h2>⚙ '+esc(g.n)+'</h2><div class="tm'+(r?' run':'')+'" id="tm" style="font-size:34px">'+(r?dur(Date.now()-r):'Выкл')+'</div>'+(r?'<button class="big stop" onclick="stopG()">Выключить</button>':'<button class="big go" onclick="startG()">Включить</button>')+'</div>';
  h+='<div class="card"><h2>🔋 Станция</h2><select onchange="si=+this.value;render()">'+so(S.sts.map(function(x){return x.n}),si)+'</select>';
@@ -225,7 +219,7 @@ function tick(){var n=Date.now(),e=document.getElementById('tm');if(e&&S.run)e.t
  if(S.run){var g=S.gens[S.g];if(S.remInt>0){var k=Math.floor((n-S.run)/(S.remInt*60000));if(k>(S.remN||0)){S.remN=k;ring('⏱ Генератор работает '+dur(n-S.run)+', примерно '+f1((n-S.run)/3600000*g.lph)+' л. Он ещё нужен?')}}
  if(!S.lowW&&S.fills.length){var b=0;S.fills.forEach(function(f){if(f.g==g.n)b+=f.l});S.ses.forEach(function(s){if(s.g==g.n)b-=s.f});b-=(n-S.run)/3600000*g.lph;if(b<=g.lph*0.5){S.lowW=1;ring('⛽ Топливо на исходе: примерно на 30 минут работы.')}}}}
 function LOC(){var l=S.lang||'uk';return l=='en'?'en-GB':l=='ru'?'ru-RU':'uk-UA'}
-function heroH(t){var T={gen:['⚙ Генератор','Моточасы, топливо и обслуживание'],st:['🔋 Станции','Заряд, разряд и расход энергии'],hist:['🕘 История','Все запуски, заправки и записи'],set:['🛠 Настройки','Модели, места, люди и тариф'],cat:['📚 Каталог','Выберите модель из списка']}[t];return '<div class="hero"><div class="hi">'+T[1]+'</div><div class="ttl">'+T[0]+'</div></div>'}
+function heroH(t){var T={gen:['⚙ Генератор','Статистика, топливо и настройки'],st:['🔋 Станции','Заряд, разряд и расход энергии'],hist:['🕘 История','Все запуски, заправки и записи'],set:['🛠 Настройки','Модели, места, люди и тариф'],cat:['📚 Каталог','Выберите модель из списка']}[t];return '<div class="hero"><div class="hi">'+T[1]+'</div><div class="ttl">'+T[0]+'</div></div>'}
 var DL=null;
 function tr(s){var l=S.lang||'uk';if(l=='ru')return s;var i=l=='en'?2:1;if(!DL){DL=DICT.split('\n').map(function(x){return x.split('|')}).filter(function(p){return p.length>2}).sort(function(a,b){return b[0].length-a[0].length})}DL.forEach(function(p){if(s.indexOf(p[0])>=0)s=s.split(p[0]).join(p[i])});return s.replace(/кВт·ч/g,i==2?'kWh':'кВт·год').replace(/Вт·ч/g,i==2?'Wh':'Вт·год').replace(/л\/ч/g,i==2?'L/h':'л/год').replace(/(\d) ч(?![а-яё])/g,i==2?'$1 h':'$1 год').replace(/(\d) л(?![а-яё])/g,i==2?'$1 L':'$1 л').replace(/(\d) мин(?![а-яё])/g,i==2?'$1 min':'$1 хв')}
 var DICT=`Доброй ночи|Доброї ночі|Good night
@@ -401,6 +395,27 @@ GPS недоступен|GPS недоступний|GPS unavailable
 Свернуть ▴|Згорнути ▴|Collapse ▴
 Раскрыть ▾|Розгорнути ▾|Expand ▾
 Фото|Фото|Photo
+Работает сейчас · управление на Панели|Працює зараз · керування на Панелі|Running now · control on the Dashboard
+Выключен · запуск на Панели|Вимкнено · запуск на Панелі|Off · start on the Dashboard
+Настройки модели|Налаштування моделі|Model settings
+Статистика, топливо и настройки|Статистика, паливо та налаштування|Statistics, fuel and settings
+Статистика|Статистика|Statistics
+Запусков|Запусків|Runs
+Средний расход|Середня витрата|Average use
+Сервисный центр|Сервісний центр|Service center
+🔧 Сервис-центр|🔧 Сервіс-центр|🔧 Service center
+Контакт сервиса (телефон или адрес)|Контакт сервісу (телефон або адреса)|Service contact (phone or address)
+Ищу сервисные центры…|Шукаю сервісні центри…|Looking for service centers…
+Определяю место…|Визначаю місце…|Locating…
+Место определено: |Місце визначено: |Place detected: 
+Рядом нет сохранённых мест. Добавить текущее?|Поруч немає збережених місць. Додати поточне?|No saved place nearby. Add the current one?
+Координаты сохранены|Координати збережено|Coordinates saved
+Поиск адреса|Пошук адреси|Search address
+Координаты|Координати|Coordinates
+Использовать эту точку|Використати цю точку|Use this point
+Карта недоступна без интернета. Введите координаты ниже или используйте GPS.|Мапа недоступна без інтернету. Введіть координати нижче або скористайтесь GPS.|The map needs internet. Enter coordinates below or use GPS.
+Ничего не найдено|Нічого не знайдено|Nothing found
+Поиск недоступен без интернета|Пошук недоступний без інтернету|Search needs internet
 Станция не подключена|Станція не підключена|Station not connected
 Нажмите, чтобы подключить|Натисніть, щоб підключити|Tap to connect
 Нажмите, чтобы отключить|Натисніть, щоб відключити|Tap to disconnect
@@ -437,7 +452,7 @@ function rtCard(){return '<div class="card"><h2>Сколько проработ�
 function calcRt(){var s=S.sts[si],w=parseFloat(document.getElementById('ld').value),p=parseFloat(document.getElementById('rp').value),e=document.getElementById('rt');if(!s||!(w>0)||isNaN(p)){e.textContent='—';return}var h=s.wh*p/100*0.85/w;e.textContent=tr(Math.floor(h)+' ч '+Math.floor(h%1*60)+' мин')}
 var hf='all',hp=0,hl=15,hx=0;
 function histBar(){var T=[['all','Все'],['s','Генератор'],['l','Станции'],['f','Заправки']],P=[[0,'Всё время'],[1,'Сегодня'],[7,'7 дней'],[30,'30 дней']];return '<div class="chips">'+T.map(function(t){return '<button class="sec sm'+(hf==t[0]?' on':'')+'" onclick="hf=\''+t[0]+'\';hl=15;render()">'+t[1]+'</button>'}).join('')+'</div><div class="chips">'+P.map(function(p){return '<button class="sec sm'+(hp==p[0]?' on':'')+'" onclick="hp='+p[0]+';hl=15;render()">'+p[1]+'</button>'}).join('')+'</div>'}
-function dayCard(){var m={},now=Date.now(),mx=0;S.ses.forEach(function(s){if(now-s.s>14*864e5)return;var d=new Date(s.s),k=('0'+d.getDate()).slice(-2)+'.'+('0'+(d.getMonth()+1)).slice(-2);m[k]=m[k]||{h:0,f:0,t:s.s};m[k].h+=s.h;m[k].f+=s.f;m[k].t=Math.max(m[k].t,s.s);mx=Math.max(mx,m[k].h)});var ks=Object.keys(m).sort(function(a,b){return m[b].t-m[a].t});return '<div class="card"><h2>Генератор по дням (14 дней)</h2>'+(ks.length?ks.map(function(k){return '<div style="padding:4px 0"><div style="display:flex;justify-content:space-between"><span>'+k+'</span><b>'+f1(m[k].h)+' ч · '+f1(m[k].f)+' л</b></div><div class="bar"><i style="width:'+(m[k].h/mx*100)+'%;background:var(--ac)"></i></div></div>'}).join(''):'<div class="mut">Нет данных</div>')+'</div>'}
+function dayCard(arr){var m={},now=Date.now(),mx=0;(arr||S.ses).forEach(function(s){if(now-s.s>14*864e5)return;var d=new Date(s.s),k=('0'+d.getDate()).slice(-2)+'.'+('0'+(d.getMonth()+1)).slice(-2);m[k]=m[k]||{h:0,f:0,t:s.s};m[k].h+=s.h;m[k].f+=s.f;m[k].t=Math.max(m[k].t,s.s);mx=Math.max(mx,m[k].h)});var ks=Object.keys(m).sort(function(a,b){return m[b].t-m[a].t});return '<div class="card"><h2>Генератор по дням (14 дней)</h2>'+(ks.length?ks.map(function(k){return '<div style="padding:4px 0"><div style="display:flex;justify-content:space-between"><span>'+k+'</span><b>'+f1(m[k].h)+' ч · '+f1(m[k].f)+' л</b></div><div class="bar"><i style="width:'+(m[k].h/mx*100)+'%;background:var(--ac)"></i></div></div>'}).join(''):'<div class="mut">Нет данных</div>')+'</div>'}
 function expB(){var o=JSON.parse(JSON.stringify(S));o.gens.forEach(function(x){delete x.p});o.sts.forEach(function(x){delete x.p});document.getElementById('bk').value=JSON.stringify(o)}
 function cpB(){var t=document.getElementById('bk');if(!t.value)expB();try{navigator.clipboard.writeText(t.value);toast('Скопировано')}catch(e){t.select();document.execCommand('copy')}}
 function impB(){var t=document.getElementById('bk').value;ask('Заменить все текущие данные данными из копии?',function(){try{var o=JSON.parse(t);if(!o.gens||!o.gens.length||!o.sts)throw 0;var ph0={};S.gens.concat(S.sts).forEach(function(x){if(x.p)ph0[x.n]=x.p});o.gens.concat(o.sts).forEach(function(x){if(!x.p&&ph0[x.n])x.p=ph0[x.n]});S=o;S.locs=S.locs||['Дом'];S.users=S.users||['Я'];S.loc=S.usr=S.g=0;S.gps=S.gps||{};S.tar=S.tar||0;S.fills=S.fills||[];S.ses=S.ses||[];S.logs=S.logs||[];S.run=null;S.srun=null;S.rem=null;S.remInt=S.remInt||0;si=0;save();render();toast('Восстановлено')}catch(e){toast('Неверные данные')}})}
@@ -482,6 +497,7 @@ function vPan(){var g=S.gens[S.g]||S.gens[0],r=S.run,sr=S.srun,hr=new Date().get
  var hi=hr<5?'Доброй ночи':hr<12?'Доброе утро':hr<18?'Добрый день':'Добрый вечер',sn=S.sts[sr?sr.i:si];
  var h='<div class="hero"><div class="hi">'+hi+(S.users[S.usr]?', '+esc(S.users[S.usr]):'')+'</div><div class="ttl">⚡ Блекаут</div><span class="pill'+(r||sr?' on':'')+'"><i></i>'+(r&&sr?'Генератор и станция работают':r?'Генератор работает':sr?'Станция работает':'Всё выключено')+'</span></div>';
  function sb(v,d,l){return '<div><b data-n="'+v+'" data-d="'+d+'">'+v.toFixed(d).replace('.',',')+'</b><span>'+l+'</span></div>'}
+ h+='<div class="locrow"><select onchange="S.loc=+this.value;save()">'+so(S.locs,S.loc)+'</select><button class="sec gb2" onclick="locDetect()">📍</button><select onchange="S.usr=+this.value;save()">'+so(S.users,S.usr)+'</select></div>';
  h+='<div class="stats">'+sb(th,1,'ч сегодня')+sb(tf2,1,'л топлива')+sb(kc,2,'кВт·ч заряд')+'</div>';
  h+='<div class="pc'+(r?' on':'')+'"><div class="pwrap"><button class="pw'+(r?' on':'')+'" onclick="'+(r?'stopG()':'startG()')+'"><span class="ring"></span>'+PW+'</button></div><div class="pi"><div class="pn">⚙ '+esc(g.n)+'</div><div class="pt" id="tm">'+(r?dur(Date.now()-r):'Выключен')+'</div><div class="mut">'+(r?'Нажмите, чтобы выключить':'Нажмите, чтобы включить')+'</div></div></div>';
  h+='<div class="pc'+(sr?' on':'')+'"><div class="pwrap"><svg class="gz" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" class="gb"/><circle cx="50" cy="50" r="46" class="gf" style="stroke-dasharray:289;stroke-dashoffset:'+(289*(1-Math.max(0,Math.min(100,lvl||0))/100))+'"/></svg><button class="pw'+(sr?' on':'')+'" onclick="'+(sr?'stStop()':'stStart()')+'"><span class="ring"></span>'+PW+'</button></div><div class="pi"><div class="pn" onclick="nextSt()">🔋 '+esc(sn?sn.n:'—')+(S.sts.length>1&&!sr?' ⇅':'')+'</div><div class="pt" id="stm">'+(sr?dur(Date.now()-sr.t):(lvl==null?'—':Math.round(lvl)+' %'))+'</div><div class="mut">'+(BT.on?'● Bluetooth':(sr?'Нажмите, чтобы выключить':'Нажмите, чтобы включить'))+'</div></div></div>';
@@ -499,6 +515,66 @@ function render(){var ap=document.getElementById('app'),T=['gen','st','pan','his
  document.getElementById('gear').className=(tab=='set'||tab=='cat')?'on':'';
  if(tf){void ap.offsetWidth;ap.classList.add('anim');tf=0;cu()}}
 setInterval(btUi,1000);
+
+function getPos(ok,fail){var G=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.Geolocation,done=function(p){ok(p.coords.latitude,p.coords.longitude)};
+ if(G){Promise.resolve(G.requestPermissions()).catch(function(){}).then(function(){return G.getCurrentPosition({enableHighAccuracy:true,timeout:12000})}).then(done).catch(function(e){if(fail)fail(e)});return}
+ if(!navigator.geolocation){if(fail)fail();return}
+ navigator.geolocation.getCurrentPosition(done,function(e){if(fail)fail(e)},{enableHighAccuracy:true,timeout:12000,maximumAge:60000})}
+function hav(a,b,c,d){var R=6371000,r=Math.PI/180,x=(c-a)*r,y=(d-b)*r,q=Math.sin(x/2)*Math.sin(x/2)+Math.cos(a*r)*Math.cos(c*r)*Math.sin(y/2)*Math.sin(y/2);return 2*R*Math.asin(Math.sqrt(q))}
+function pc(s){var m=String(s||'').match(/(-?\d+(?:[.,]\d+)?)\s*[,;\s]\s*(-?\d+(?:[.,]\d+)?)/);return m?[parseFloat(m[1].replace(',','.')),parseFloat(m[2].replace(',','.'))]:null}
+function ren(k,i,v){var o=S[k][i];S[k][i]=v;if(k=='locs'&&o!==v&&S.gps[o]!=null){S.gps[v]=S.gps[o];delete S.gps[o]}save()}
+function gps(i){var n=S.locs[i];getPos(function(la,lo){S.gps[n]=la.toFixed(5)+', '+lo.toFixed(5);save();render();toast('Координаты сохранены')},function(){toast('Не удалось получить GPS')})}
+function viewLoc(i){var c=pc(S.gps[S.locs[i]]);if(!c)return;var u='https://www.openstreetmap.org/?mlat='+c[0]+'&mlon='+c[1]+'#map=16/'+c[0]+'/'+c[1];try{window.open(u,'_blank')}catch(e){location.href=u}}
+function locDetect(){toast('Определяю место…');getPos(function(la,lo){var b=-1,bd=1e9;S.locs.forEach(function(n,i){var c=pc(S.gps[n]);if(c){var d=hav(la,lo,c[0],c[1]);if(d<bd){bd=d;b=i}}});
+ if(b>=0&&bd<300){S.loc=b;save();render();toast('Место определено: '+S.locs[b])}
+ else ask('Рядом нет сохранённых мест. Добавить текущее?',function(){var n={uk:'Місце',en:'Place',ru:'Место'}[S.lang||'uk']+' '+(S.locs.length+1);S.locs.push(n);S.gps[n]=la.toFixed(5)+', '+lo.toFixed(5);S.loc=S.locs.length-1;save();render();toast('Место определено: '+n)})},function(){toast('Не удалось получить GPS')})}
+function svcFind(kind,idx){var m=kind=='g'?S.gens[idx==null?S.g:idx]:S.sts[idx==null?si:idx],br=((m&&m.n)||'').split(' ')[0],q=encodeURIComponent('сервісний центр '+br+' '+(kind=='g'?'генератор':'зарядна станція')+' ремонт'),
+ go=function(u){try{window.open(u,'_blank')}catch(e){location.href=u}};toast('Ищу сервисные центры…');
+ getPos(function(la,lo){go('https://www.google.com/maps/search/'+q+'/@'+la.toFixed(5)+','+lo.toFixed(5)+',13z')},function(){go('https://www.google.com/maps/search/'+q)})}
+var MP={la:48.5,lo:31.5,z:6,i:-1,w:0,h:0,raf:0};
+function wx(lo,z){return (lo+180)/360*Math.pow(2,z)*256}
+function wy(la,z){var s=Math.sin(la*Math.PI/180);return (0.5-Math.log((1+s)/(1-s))/(4*Math.PI))*Math.pow(2,z)*256}
+function lx(x,z){return x/(Math.pow(2,z)*256)*360-180}
+function ly(y,z){var n=Math.PI-2*Math.PI*y/(Math.pow(2,z)*256);return 180/Math.PI*Math.atan(0.5*(Math.exp(n)-Math.exp(-n)))}
+function openMap(i){var c=pc(S.gps[S.locs[i]]);MP.i=i;if(c){MP.la=c[0];MP.lo=c[1];MP.z=16}
+ var d=document.getElementById('mp');
+ d.innerHTML=tr(`<div id="mpt"><input id="mq" placeholder="Поиск адреса" onkeydown="if(event.key=='Enter')mapFind()"><button onclick="mapFind()">🔍</button><button class="sec" onclick="mapClose()">✕</button></div><div id="mmap"><div id="mtl"></div><div id="mmsg"></div><div id="mpin"></div><div id="mz"><button onclick="mapZoom(1)">+</button><button onclick="mapZoom(-1)">−</button><button class="sec" onclick="mapGps()">📍</button></div><div id="mat">© OpenStreetMap</div></div><div id="mpf"><div class="rc"><span>Координаты</span><input id="mc" onchange="mapCoord(this.value)"></div><button onclick="mapOk()">Использовать эту точку</button></div>`);
+ d.classList.add('on');setTimeout(mapInit,60)}
+function mapInit(){var m=document.getElementById('mmap'),drag=null;if(!m)return;MP.w=m.clientWidth||360;MP.h=m.clientHeight||500;
+ m.onpointerdown=function(e){if(e.target.closest&&e.target.closest('button'))return;drag={x:e.clientX,y:e.clientY,px:wx(MP.lo,MP.z),py:wy(MP.la,MP.z)};if(m.setPointerCapture)try{m.setPointerCapture(e.pointerId)}catch(x){}};
+ m.onpointermove=function(e){if(!drag)return;var X=drag.px-(e.clientX-drag.x),Y=drag.py-(e.clientY-drag.y);MP.lo=lx(X,MP.z);MP.la=Math.max(-84,Math.min(84,ly(Y,MP.z)));mapDraw()};
+ m.onpointerup=m.onpointercancel=function(){drag=null};
+ m.onwheel=function(e){e.preventDefault();mapZoom(e.deltaY<0?1:-1)};
+ mapDraw2()}
+function mapDraw(){if(MP.raf)return;MP.raf=requestAnimationFrame(function(){MP.raf=0;mapDraw2()})}
+function mapDraw2(){var t=document.getElementById('mtl');if(!t)return;var cx=wx(MP.lo,MP.z),cy=wy(MP.la,MP.z),W=MP.w,H=MP.h,N=Math.pow(2,MP.z),x0=Math.floor((cx-W/2)/256),x1=Math.floor((cx+W/2)/256),y0=Math.max(0,Math.floor((cy-H/2)/256)),y1=Math.min(N-1,Math.floor((cy+H/2)/256)),h='',x,y;
+ for(x=x0;x<=x1;x++)for(y=y0;y<=y1;y++){h+='<img draggable="false" alt="" src="https://tile.openstreetmap.org/'+MP.z+'/'+(((x%N)+N)%N)+'/'+y+'.png" style="left:'+Math.round(x*256-cx+W/2)+'px;top:'+Math.round(y*256-cy+H/2)+'px" onload="mapLoaded()" onerror="mapErr()">'}
+ t.innerHTML=h;var c=document.getElementById('mc');if(c)c.value=MP.la.toFixed(5)+', '+MP.lo.toFixed(5)}
+function mapLoaded(){var e=document.getElementById('mmsg');if(e)e.style.display='none'}
+function mapErr(){var e=document.getElementById('mmsg');if(e){e.style.display='block';e.textContent=tr('Карта недоступна без интернета. Введите координаты ниже или используйте GPS.')}}
+function mapZoom(d){MP.z=Math.max(3,Math.min(18,MP.z+d));mapDraw()}
+function mapGps(){getPos(function(la,lo){MP.la=la;MP.lo=lo;MP.z=16;mapDraw()},function(){toast('Не удалось получить GPS')})}
+function mapCoord(v){var c=pc(v);if(c&&Math.abs(c[0])<=84&&Math.abs(c[1])<=180){MP.la=c[0];MP.lo=c[1];MP.z=Math.max(MP.z,14);mapDraw()}else toast('Введите число')}
+function mapFind(){var q=(document.getElementById('mq').value||'').trim();if(!q)return;if(/^-?\d+[.,]\d+\s*[,;\s]\s*-?\d+[.,]\d+$/.test(q))return mapCoord(q);
+ try{fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language='+(S.lang||'uk')+'&q='+encodeURIComponent(q)).then(function(r){return r.json()}).then(function(r){if(r&&r[0]){MP.la=+r[0].lat;MP.lo=+r[0].lon;MP.z=15;mapDraw()}else toast('Ничего не найдено')}).catch(function(){toast('Поиск недоступен без интернета')})}catch(e){toast('Поиск недоступен без интернета')}}
+function mapOk(){var n=S.locs[MP.i];if(n==null)return mapClose();S.gps[n]=MP.la.toFixed(5)+', '+MP.lo.toFixed(5);save();mapClose();render();toast('Координаты сохранены')}
+function mapClose(){var d=document.getElementById('mp');d.classList.remove('on');d.innerHTML=''}
+function vGen(){
+ var g=S.gens[S.g]||S.gens[0],gi=S.gens.indexOf(g),left=g.last+g.svc-g.h,pct=Math.max(0,Math.min(100,left/g.svc*100)),mine=S.ses.filter(function(s){return s.g==g.n}),th=0,tf=0;
+ mine.forEach(function(s){th+=s.h;tf+=s.f});
+ var h='<div class="card"><h2>Модель</h2><select onchange="S.g=+this.value;save();render()">'+S.gens.map(function(x,i){return '<option value="'+i+'"'+(i==S.g?' selected':'')+'>'+esc(x.n)+'</option>'}).join('')+'</select>'+(g.p?'<img src="'+g.p+'" style="width:100%;max-height:200px;object-fit:cover;border-radius:12px;margin-top:10px">':'')+'<div class="pill'+(S.run?' on':'')+'" style="margin-top:10px;cursor:pointer" onclick="setTab(\'pan\')"><i></i>'+(S.run?'Работает сейчас · управление на Панели':'Выключен · запуск на Панели')+'</div></div>';
+ h+=fuelCard(g);
+ h+='<div class="card"><h2>Моточасы и ТО</h2><div class="kv"><span>Наработка</span><b>'+f1(g.h)+' ч</b></div><div class="kv"><span>До ТО</span><b style="color:'+(left<=5?'var(--bad)':'inherit')+'">'+f1(left)+' ч</b></div><div class="bar"><i style="width:'+pct+'%;background:'+(left<=5?'var(--bad)':'var(--ok)')+'"></i></div>';
+ if(left<=5)h+='<div class="mut">⚠ Пора на обслуживание: масло, свеча, воздушный фильтр.</div>';
+ h+='<div class="row"><button class="sec" onclick="doSvc()">ТО выполнено</button><button onclick="svcFind(\'g\')">🔧 Сервис-центр</button></div>';
+ if(g.sc){var ph=String(g.sc).replace(/[^\d+]/g,'');h+='<div class="kv"><span>Сервисный центр</span><b>'+(ph.length>=7?'<a href="tel:'+ph+'" style="color:var(--ac)">'+esc(g.sc)+'</a>':esc(g.sc))+'</b></div>'}
+ h+='</div>';
+ h+='<div class="card"><h2>Статистика</h2><div class="kv"><span>Запусков</span><b>'+mine.length+'</b></div><div class="kv"><span>Время работы</span><b>'+f1(th)+' ч</b></div><div class="kv"><span>Топливо</span><b>'+f1(tf)+' л</b></div>'+(th>0?'<div class="kv"><span>Средний расход</span><b>'+f1(tf/th)+' л/ч</b></div>':'')+(S.price>0?'<div class="kv"><span>Стоимость</span><b>'+Math.round(tf*S.price)+' ₴</b></div>':'')+'</div>';
+ h+=dayCard(mine);
+ h+='<div class="card"><h2>По местам</h2>'+agg('loc',mine)+'</div><div class="card"><h2>По людям</h2>'+agg('u',mine)+'</div>';
+ h+='<details class="card"><summary>Настройки модели</summary>'+ph0(gi)+'<div class="row"><div><label>Расход, л/ч</label><input type="number" step="0.1" value="'+g.lph+'" onchange="up(\'gens\','+gi+',\'lph\',this.value)"></div><div><label>ТО каждые, ч</label><input type="number" value="'+g.svc+'" onchange="up(\'gens\','+gi+',\'svc\',this.value)"></div></div><div class="row"><div><label>Наработка, ч</label><input type="number" step="0.1" value="'+f1(g.h).replace(',','.')+'" onchange="up(\'gens\','+gi+',\'h\',this.value)"></div><div><label>Последнее ТО, ч</label><input type="number" step="0.1" value="'+g.last+'" onchange="up(\'gens\','+gi+',\'last\',this.value)"></div></div><label>Контакт сервиса (телефон или адрес)</label><input value="'+esc(g.sc||'')+'" onchange="up(\'gens\','+gi+',\'sc\',this.value,1);render()"></details>';
+ return h}
+function ph0(i){return ph('gens',i)}
 
 render();
 </script>
