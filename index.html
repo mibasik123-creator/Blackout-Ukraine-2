@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- v2: panel, nav, bluetooth -->
 <title>Блекаут: генератор и станции</title>
 <style>
 :root{--bg:#f5f5f2;--card:#fff;--tx:#1d1d1b;--mut:#6b6b66;--ac:#e8730c;--ok:#2e8b57;--bad:#c0392b;--bd:#e2e2dc;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -70,14 +71,24 @@ button:not(.pw){position:relative;overflow:hidden}.rp{position:absolute;border-r
 #spl{position:fixed;inset:0;z-index:99;display:flex;align-items:center;justify-content:center;background:var(--bg);font-size:80px;pointer-events:none;animation:spl .5s ease .9s forwards}#spl span{animation:bolt .9s cubic-bezier(.3,1.4,.5,1)}@keyframes spl{to{opacity:0;visibility:hidden}}@keyframes bolt{0%{transform:scale(.2) rotate(-25deg);opacity:0}100%{transform:scale(1);opacity:1}}.pwrap.sm{width:76px;height:76px;flex:0 0 76px}.gp{position:relative;font-weight:700;font-size:15px}
 nav button{font-size:12px;padding:14px 2px}#md.solo .sec{display:none}
 @media (prefers-reduced-motion:reduce){#spl{display:none}*{animation:none!important;transition:none!important}}
+#ind{display:none}nav{overflow:visible}#nb{align-items:flex-end}
+#nb button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 0 9px;font-size:11px;color:var(--mut);background:none!important;box-shadow:none!important}
+#nb button i{font-style:normal;font-size:20px;line-height:1}#nb button.on{color:var(--ac)}
+#nb button.cn{flex:0 0 76px;height:76px;margin:-30px 4px 4px;border-radius:50%;padding:0;justify-content:center;color:#fff;background:linear-gradient(145deg,var(--ac),#f5a000)!important;box-shadow:0 8px 22px rgba(232,115,12,.45)!important;overflow:visible}
+#nb button.cn i{font-size:28px}#nb button.cn.on{outline:4px solid rgba(232,115,12,.25)}
+#nb button.cn.run{background:linear-gradient(145deg,#3aa56a,#2e8b57)!important;box-shadow:0 8px 22px rgba(46,139,87,.5)!important}
+#gear{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));right:12px;z-index:20;width:42px;height:42px;border-radius:50%;margin:0;padding:0;font-size:20px;background:var(--card)!important;color:var(--mut);border:1px solid var(--bd);box-shadow:0 2px 10px rgba(0,0,0,.12)!important}#gear.on{color:var(--ac)}
+details.card summary{cursor:pointer;font-weight:600}details.card>*:not(summary){margin-top:10px}
+#mi{display:none;margin:10px 0 4px;font-size:22px;text-align:center}
 </style>
 </head>
 <body>
 <main id="app"></main>
 <nav id="nav"><div id="ind"></div><div id="nb"></div></nav>
+<button id="gear" onclick="setTab('set')">⚙</button>
 <div id="spl"><span>⚡</span></div>
 <div id="toast"></div>
-<div id="md"><div class="mb"><p id="mt" style="margin:0 0 6px;font-size:17px"></p><div class="row"><button class="sec" id="mcn" onclick="askOk(0)">Отмена</button><button class="stop" id="mok" onclick="askOk(1)">Да</button></div></div></div>
+<div id="md"><div class="mb"><p id="mt" style="margin:0 0 6px;font-size:17px"></p><input id="mi" type="number" inputmode="decimal"><div class="row"><button class="sec" id="mcn" onclick="askOk(0)">Отмена</button><button class="stop" id="mok" onclick="askOk(1)">Да</button></div></div></div>
 <script>
 var KEY='blackout_v1',tab='pan';
 function def(){return{gens:[{n:'FORTE FG6500',lph:1.8,svc:50,h:0,last:0}],g:0,run:null,ses:[],sts:[{n:'Fossibot F2400',wh:2048},{n:'Fossibot F1800 (2026)',wh:1536}],logs:[],price:0}}
@@ -165,6 +176,7 @@ function vSet(){
  h+='<div class="card"><h2>Зарядные станции</h2>';
  S.sts.forEach(function(s,i){h+=ph('sts',i)+'<div class="row"><div style="flex:2"><label>Название</label><input value="'+esc(s.n)+'" onchange="up(\'sts\','+i+',\'n\',this.value,1)"></div><div><label>Вт·ч</label><input type="number" value="'+s.wh+'" onchange="up(\'sts\','+i+',\'wh\',this.value)"></div></div>'});
  h+='<button class="sec" onclick="S.sts.push({n:\'Новая\',wh:1000});save();render()">+ Добавить станцию</button></div>';
+ h+='<div class="card"><h2>Напоминание</h2><label>Повторять каждые, мин, пока генератор работает (0 — выкл)</label><input type="number" inputmode="numeric" value="'+S.remInt+'" onchange="S.remInt=+this.value||0;save()"><button class="sec" onclick="notif()">Включить уведомления</button></div>';
  h+='<div class="card"><h2>Электроэнергия</h2><label>Тариф, ₴/кВт·ч (0 — не считать)</label><input type="number" step="0.01" value="'+S.tar+'" onchange="S.tar=+this.value||0;save()"><div class="mut" style="margin-top:6px">Считается только заряд станций от «Сети».</div></div>';
  h+=lst('locs','Места (локации)')+lst('users','Люди');
  h+='<div class="card"><h2>Топливо</h2><label>Цена бензина, ₴/л (0 — не считать)</label><input type="number" step="0.1" value="'+S.price+'" onchange="S.price=+this.value||0;save()"></div>';
@@ -388,7 +400,31 @@ GPS недоступен|GPS недоступний|GPS unavailable
 Показать ещё|Показати ще|Show more
 Свернуть ▴|Згорнути ▴|Collapse ▴
 Раскрыть ▾|Розгорнути ▾|Expand ▾
-Фото|Фото|Photo`.split('\n').filter(function(x){return x.indexOf('x|x')<0&&x.indexOf('❓')<0}).join('\n');
+Фото|Фото|Photo
+Станция не подключена|Станція не підключена|Station not connected
+Нажмите, чтобы подключить|Натисніть, щоб підключити|Tap to connect
+Нажмите, чтобы отключить|Натисніть, щоб відключити|Tap to disconnect
+Данные со станции|Дані зі станції|Station data
+Обновлено|Оновлено|Updated
+Вт вход|Вт вхід|W in
+Вт выход|Вт вихід|W out
+Протокол и диагностика|Протокол і діагностика|Protocol & diagnostics
+Адрес|Адреса|Address
+Регистров|Регістрів|Registers
+На экране|На екрані|On screen
+% заряда|% заряду|% charge
+Показать регистры|Показати регістри|Show registers
+Подключение к станции|Підключення до станції|Connect to a station
+Подключено|Підключено|Connected
+Отключено|Відключено|Disconnected
+Не удалось подключиться|Не вдалося підключитися|Could not connect
+Введите число|Введіть число|Enter a number
+Совпадений нет|Збігів немає|No matches
+Нет данных от станции|Немає даних від станції|No data from the station
+Регистр выбран|Регістр обрано|Register selected
+Bluetooth работает только в установленном APK.|Bluetooth працює лише в установленому APK.|Bluetooth only works in the installed APK.
+Экспериментально: протокол станции неофициальный. Если не подключается, закройте приложение BrightEMS на телефоне и повторите.|Експериментально: протокол станції неофіційний. Якщо не підключається, закрийте додаток BrightEMS на телефоні й повторіть.|Experimental: the station protocol is unofficial. If it will not connect, close the BrightEMS app on the phone and retry.
+Bluetooth недоступен в этом режиме|Bluetooth недоступний у цьому режимі|Bluetooth is not available in this mode`.split('\n').filter(function(x){return x.indexOf('x|x')<0&&x.indexOf('❓')<0}).join('\n');
 document.addEventListener('pointerdown',function(e){var b=e.target.closest?e.target.closest('button'):null;if(!b||b.disabled||b.classList.contains('pw')||(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches))return;var r=b.getBoundingClientRect(),d=Math.max(r.width,r.height)*2,s=document.createElement('span');s.className='rp';s.style.cssText='width:'+d+'px;height:'+d+'px;left:'+(e.clientX-r.left-d/2)+'px;top:'+(e.clientY-r.top-d/2)+'px';b.appendChild(s);setTimeout(function(){s.remove()},600)});
 function toast(m){var t=document.getElementById('toast');t.textContent=tr(m);t.classList.add('on');clearTimeout(window._tt);window._tt=setTimeout(function(){t.classList.remove('on')},2500)}
 var _ask=null;
@@ -413,6 +449,56 @@ function vCat(){return '<div class="card"><h2>Каталог моделей</h2>
 function cl(r){var a=ck=='g'?CG:CS,q=cq.toLowerCase(),have=(ck=='g'?S.gens:S.sts).map(function(x){return x.n}),h=a.map(function(m,i){return[m,i]}).filter(function(x){return x[0][0].toLowerCase().indexOf(q)>=0&&(!ci||ck!='g'||x[0][2])}).map(function(x){var m=x[0],d=have.indexOf(m[0])>=0;return '<div class="h"><span>'+esc(m[0])+'<br><span class="mut">'+(ck=='g'?m[1]+' кВт, ~'+f1(glph(m))+' л/ч'+(m[2]?', инвертор':''):m[1]+' Вт·ч, ~'+m[2]+' г.')+'</span></span><button class="sm'+(d?' sec" disabled':'"')+' onclick="addC('+x[1]+')">'+(d?'✓':'+')+'</button></div>'}).join('');if(r)return h;document.getElementById('cl').innerHTML=tr(h)}
 function addC(i){if(ck=='g'){var m=CG[i];S.gens.push({n:m[0],lph:glph(m),svc:50,h:0,last:0})}else{var s=CS[i];S.sts.push({n:s[0],wh:s[1]})}save();cl()}
 function doImp(){var n=0;document.getElementById('imp').value.split('\n').forEach(function(l){var p=l.split(';').map(function(x){return x.trim()});if(p[0]=='g'&&p[1]){S.gens.push({n:p[1],lph:parseFloat(p[2])||1.5,svc:parseFloat(p[3])||50,h:0,last:0});n++}else if(p[0]=='s'&&p[1]){S.sts.push({n:p[1],wh:parseFloat(p[2])||1000});n++}});save();toast('Добавлено: '+n);render()}
+TABS=['gen','st','pan','hist','bt','set','cat'];
+var BT={on:0,name:'',regs:null,pct:null,w:null,wi:null,t:0,buf:[],tx:null,err:''},SV='0000a002-0000-1000-8000-00805f9b34fb',CW='0000c304-0000-1000-8000-00805f9b34fb',CN='0000c305-0000-1000-8000-00805f9b34fb';
+var BTI='<svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7l10 10-5 5V2l5 5L7 17"/></svg>';
+function BC(){return S.bt||(S.bt={a:'11',n:80,p:null,w:null,i:null})}
+function crc16(b){var c=65535,i,j;for(i=0;i<b.length;i++){c^=b[i];for(j=0;j<8;j++)c=c&1?(c>>1)^40961:c>>1}return c}
+function hex2b(s){var m=String(s||'').replace(/[^0-9a-f]/gi,''),o=[],i;for(i=0;i+1<m.length;i+=2)o.push(parseInt(m.substr(i,2),16));return o}
+function b2hex(b){return b.map(function(x){return ('0'+x.toString(16)).slice(-2)}).join(' ')}
+function btPlug(){return window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.BluetoothLe}
+function UW(){return {uk:'Вт',en:'W',ru:'Вт'}[S.lang||'uk']}
+function btReq(){if(!BT.tx)return;var c=BC(),n=c.n||80,b=[parseInt(c.a,16)||17,4,0,0,n>>8,n&255],k=crc16(b);b.push(k&255,k>>8);try{var p=BT.tx(b);if(p&&p.catch)p.catch(function(){})}catch(e){}}
+function btRx(b){BT.buf=BT.buf.concat(b);if(BT.buf.length>1500)BT.buf=[];for(var g=0;g<30;g++){var u=BT.buf;if(u.length<8)return;var n=u[4]<<8|u[5];if((u[1]!=3&&u[1]!=4)||n<1||n>160){u.shift();continue}var need=6+2*n+2;if(u.length<need)return;var f=u.slice(0,need),cr=crc16(f.slice(0,need-2));if((cr&255)!=f[need-2]||(cr>>8)!=f[need-1]){u.shift();continue}BT.buf=u.slice(need);if(f[1]==4)btFrame(f,n)}}
+function btFrame(f,n){var r=[],i,old=BT.pct;for(i=0;i<n;i++)r.push(f[6+2*i]<<8|f[7+2*i]);BT.regs=r;BT.t=Date.now();btFrame2();if(tab=='pan'&&BT.pct!=old)render()}
+function btFrame2(){var c=BC(),r=BT.regs,g=function(k){return k&&r[k[0]]!=null?r[k[0]]/k[1]:null};BT.pct=g(c.p);BT.w=g(c.w);BT.wi=g(c.i);btUi()}
+function btUi(){var e=function(i){return document.getElementById(i)},v=function(x){return x==null?'—':Math.round(x)+' '+UW()};if(e('btp'))e('btp').textContent=BT.pct!=null?Math.round(BT.pct)+' %':'—';if(e('btw'))e('btw').textContent=v(BT.w);if(e('bti'))e('bti').textContent=v(BT.wi);if(e('bttm'))e('bttm').textContent=BT.t?Math.round((Date.now()-BT.t)/1000)+' '+(S.lang=='en'?'s':'с'):'—'}
+function btFind(){var k=document.getElementById('btk').value,v=parseFloat(document.getElementById('btv').value),o=document.getElementById('btf');if(isNaN(v))return toast('Введите число');if(!BT.regs)return toast('Нет данных от станции');var h='',n=0;BT.regs.forEach(function(x,i){var d=x==v?1:x==Math.round(v*10)?10:0;if(d&&n<14){n++;h+='<button class="sec sm" onclick="btPick(\''+k+'\','+i+','+d+')">#'+i+' = '+x+'</button>'}});o.innerHTML=h||tr('Совпадений нет')}
+function btPick(k,i,d){BC()[k]=[i,d];save();toast('Регистр выбран');if(BT.regs)btFrame2()}
+function btRaw(){var t=document.getElementById('btr');t.value=BT.regs?BT.regs.map(function(x,i){return i+':'+x}).filter(function(s){return !/:0$/.test(s)}).join('  '):''}
+function cpEl(id){var t=document.getElementById(id);try{navigator.clipboard.writeText(t.value);toast('Скопировано')}catch(e){t.select();document.execCommand('copy')}}
+async function btConnect(){var P=btPlug();BT.err='';try{if(P){await P.initialize();var d=await P.requestDevice({optionalServices:[SV]});BT.id=d.deviceId;BT.name=d.name||d.deviceId;await P.connect({deviceId:BT.id});P.addListener('disconnected|'+BT.id,btDown);P.addListener('notification|'+BT.id+'|'+SV+'|'+CN,function(e){btRx(hex2b(e.value))});await P.startNotifications({deviceId:BT.id,service:SV,characteristic:CN});BT.tx=function(b){return P.write({deviceId:BT.id,service:SV,characteristic:CW,value:b2hex(b)})}}else if(navigator.bluetooth){var dv=await navigator.bluetooth.requestDevice({acceptAllDevices:true,optionalServices:[SV]});BT.name=dv.name||'BLE';var gs=await dv.gatt.connect(),sv=await gs.getPrimaryService(SV),cw=await sv.getCharacteristic(CW),cn=await sv.getCharacteristic(CN);dv.addEventListener('gattserverdisconnected',btDown);cn.addEventListener('characteristicvaluechanged',function(e){btRx(Array.from(new Uint8Array(e.target.value.buffer)))});await cn.startNotifications();BT.dev=dv;BT.tx=function(b){var u=new Uint8Array(b);return cw.writeValueWithoutResponse?cw.writeValueWithoutResponse(u):cw.writeValue(u)}}else return toast('Bluetooth недоступен в этом режиме');BT.on=1;BT.buf=[];clearInterval(BT.poll);btReq();BT.poll=setInterval(btReq,3000);toast('Подключено');render()}catch(e){BT.err=String(e&&e.message||e);toast('Не удалось подключиться');if(tab=='bt')render()}}
+function btDown(){if(!BT.on)return;BT.on=0;BT.tx=null;BT.pct=null;clearInterval(BT.poll);toast('Отключено');if(tab=='bt'||tab=='pan')render()}
+function btDisc(){try{if(btPlug())btPlug().disconnect({deviceId:BT.id});else if(BT.dev&&BT.dev.gatt)BT.dev.gatt.disconnect()}catch(e){}btDown()}
+function vBt(){var c=BC(),on=BT.on;return '<div class="hero"><div class="hi">Подключение к станции</div><div class="ttl">📡 Bluetooth</div></div>'+
+ '<div class="pc'+(on?' on':'')+'"><div class="pwrap"><button class="pw'+(on?' on':'')+'" onclick="'+(on?'btDisc()':'btConnect()')+'"><span class="ring"></span>'+BTI+'</button></div><div class="pi"><div class="pn">'+(on?esc(BT.name):'Станция не подключена')+'</div><div class="pt" id="btp">'+(BT.pct!=null?Math.round(BT.pct)+' %':'—')+'</div><div class="mut">'+(on?'Нажмите, чтобы отключить':'Нажмите, чтобы подключить')+'</div></div></div>'+
+ (btPlug()?'':'<div class="mut" style="margin:0 4px 12px">Bluetooth работает только в установленном APK.</div>')+
+ '<div class="card"><h2>Данные со станции</h2><div class="kv"><span>Вт вход</span><b id="bti">—</b></div><div class="kv"><span>Вт выход</span><b id="btw">—</b></div><div class="kv"><span>Обновлено</span><b id="bttm">—</b></div></div>'+
+ '<details class="card"><summary>Протокол и диагностика</summary><div class="rc"><span>Адрес</span><input value="'+esc(c.a)+'" onchange="BC().a=this.value;save()"><span>Регистров</span><input type="number" value="'+c.n+'" onchange="BC().n=+this.value||80;save()"></div><select id="btk"><option value="p">% заряда</option><option value="w">Вт выход</option><option value="i">Вт вход</option></select><div class="rc"><span>На экране</span><input id="btv" type="number" inputmode="decimal"><button onclick="btFind()">🔍</button></div><div id="btf" class="chips"></div><button class="sec" onclick="btRaw()">Показать регистры</button><textarea id="btr" readonly></textarea><button class="sec" onclick="cpEl(\'btr\')">Копировать</button>'+(BT.err?'<div class="mut">'+esc(BT.err)+'</div>':'')+'<div class="mut">Экспериментально: протокол станции неофициальный. Если не подключается, закройте приложение BrightEMS на телефоне и повторите.</div></details>'}
+function nextSt(){if(S.srun||S.sts.length<2)return;si=(si+1)%S.sts.length;render()}
+function vPan(){var g=S.gens[S.g]||S.gens[0],r=S.run,sr=S.srun,hr=new Date().getHours(),t0=new Date().setHours(0,0,0,0),th=0,tf2=0,kc=0,lvl=sr?sr.p:null;
+ S.ses.forEach(function(s){if(s.s>=t0){th+=s.h;tf2+=s.f}});S.logs.forEach(function(l){if(l.c&&l.t>=t0)kc+=l.wh/1000;if(!sr&&l.i==si&&l.p2!=null)lvl=l.p2});if(BT.on&&BT.pct!=null)lvl=BT.pct;
+ var hi=hr<5?'Доброй ночи':hr<12?'Доброе утро':hr<18?'Добрый день':'Добрый вечер',sn=S.sts[sr?sr.i:si];
+ var h='<div class="hero"><div class="hi">'+hi+(S.users[S.usr]?', '+esc(S.users[S.usr]):'')+'</div><div class="ttl">⚡ Блекаут</div><span class="pill'+(r||sr?' on':'')+'"><i></i>'+(r&&sr?'Генератор и станция работают':r?'Генератор работает':sr?'Станция работает':'Всё выключено')+'</span></div>';
+ function sb(v,d,l){return '<div><b data-n="'+v+'" data-d="'+d+'">'+v.toFixed(d).replace('.',',')+'</b><span>'+l+'</span></div>'}
+ h+='<div class="stats">'+sb(th,1,'ч сегодня')+sb(tf2,1,'л топлива')+sb(kc,2,'кВт·ч заряд')+'</div>';
+ h+='<div class="pc'+(r?' on':'')+'"><div class="pwrap"><button class="pw'+(r?' on':'')+'" onclick="'+(r?'stopG()':'startG()')+'"><span class="ring"></span>'+PW+'</button></div><div class="pi"><div class="pn">⚙ '+esc(g.n)+'</div><div class="pt" id="tm">'+(r?dur(Date.now()-r):'Выключен')+'</div><div class="mut">'+(r?'Нажмите, чтобы выключить':'Нажмите, чтобы включить')+'</div></div></div>';
+ h+='<div class="pc'+(sr?' on':'')+'"><div class="pwrap"><svg class="gz" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" class="gb"/><circle cx="50" cy="50" r="46" class="gf" style="stroke-dasharray:289;stroke-dashoffset:'+(289*(1-Math.max(0,Math.min(100,lvl||0))/100))+'"/></svg><button class="pw'+(sr?' on':'')+'" onclick="'+(sr?'stStop()':'stStart()')+'"><span class="ring"></span>'+PW+'</button></div><div class="pi"><div class="pn" onclick="nextSt()">🔋 '+esc(sn?sn.n:'—')+(S.sts.length>1&&!sr?' ⇅':'')+'</div><div class="pt" id="stm">'+(sr?dur(Date.now()-sr.t):(lvl==null?'—':Math.round(lvl)+' %'))+'</div><div class="mut">'+(BT.on?'● Bluetooth':(sr?'Нажмите, чтобы выключить':'Нажмите, чтобы включить'))+'</div></div></div>';
+ if(S.fills.length){var b=0,mx=0;S.fills.forEach(function(f){if(f.g==g.n){b+=f.l;mx=Math.max(mx,f.l)}});S.ses.forEach(function(s){if(s.g==g.n)b-=s.f});if(r)b-=(Date.now()-r)/3600000*g.lph;b=Math.max(0,b);h+='<div class="card"><div class="kv"><span>⛽ Топливо</span><b>'+f1(b)+' л · ~'+f1(b/(g.lph||1))+' ч</b></div><div class="bar"><i style="width:'+Math.min(100,b/(mx||1)*100)+'%;background:'+(b/(g.lph||1)<0.5?'var(--bad)':'var(--ac)')+'"></i></div></div>'}
+ return h}
+function askNum(m,fn){var d=document.getElementById('md'),i=document.getElementById('mi');_ask=function(){var v=parseFloat(i.value);if(isNaN(v))return toast('Введите число');fn(v)};d.classList.remove('solo');i.value='';i.style.display='block';document.getElementById('mok').textContent='OK';document.getElementById('mt').textContent=tr(m);d.classList.add('on');setTimeout(function(){i.focus()},120)}
+function ask(m,fn){_ask=fn;var d=document.getElementById('md');d.classList.remove('solo');document.getElementById('mi').style.display='none';document.getElementById('mok').textContent={uk:'Так',en:'Yes',ru:'Да'}[S.lang||'uk'];document.getElementById('mt').textContent=tr(m);d.classList.add('on')}
+function askOk(y){document.getElementById('md').classList.remove('on');document.getElementById('mi').style.display='none';var f=_ask;_ask=null;if(y&&f)f()}
+function stStart(){if(!S.sts[si])return;var go=function(p){S.srun={i:si,t:Date.now(),p:p};save();render()};if(BT.on&&BT.pct!=null)go(BT.pct);else askNum('Заряд сейчас, %',go)}
+function stStop(){var r=S.srun,s=S.sts[r.i],fin=function(p2){if(!s){S.srun=null;save();return render()}var c=p2>r.p?1:0,e=Date.now();S.logs.push({id:e,i:r.i,c:c,wh:Math.abs(p2-r.p)/100*s.wh,p1:r.p,p2:p2,t:r.t,dur:e-r.t,loc:S.locs[S.loc],u:S.users[S.usr],src:c?'grid':''});S.srun=null;save();render();toast('Записано')};if(BT.on&&BT.pct!=null)fin(BT.pct);else askNum('Заряд сейчас, %',fin)}
+function render(){var ap=document.getElementById('app'),T=['gen','st','pan','hist','bt'],L={gen:['⚙','Генератор'],st:['🔋','Станции'],pan:['⚡','Панель'],hist:['🕘','История'],bt:['📡','Bluetooth']};
+ ap.classList.remove('anim');ap.innerHTML=tr((tab=='pan'||tab=='bt'?'':heroH(tab))+({pan:vPan,gen:vGen,st:vSt,hist:vHist,set:vSet,cat:vCat,bt:vBt}[tab])());
+ document.documentElement.lang=S.lang||'uk';document.getElementById('mcn').textContent={uk:'Скасувати',en:'Cancel',ru:'Отмена'}[S.lang||'uk'];
+ document.getElementById('nb').innerHTML=tr(T.map(function(k){return '<button class="'+(k=='pan'?'cn ':'')+(k=='pan'&&S.run?'run ':'')+(k==tab?'on':'')+'" onclick="setTab(\''+k+'\')"><i>'+L[k][0]+'</i>'+L[k][1]+'</button>'}).join(''));
+ document.getElementById('gear').className=(tab=='set'||tab=='cat')?'on':'';
+ if(tf){void ap.offsetWidth;ap.classList.add('anim');tf=0;cu()}}
+setInterval(btUi,1000);
+
 render();
 </script>
 </body>
