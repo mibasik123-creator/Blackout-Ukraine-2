@@ -136,11 +136,11 @@ function f1(x){return (Math.round(x*10)/10).toString().replace('.',',')}
 function dt(t){return new Date(t).toLocaleString(LOC(),{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}
 function dur(ms){var s=Math.max(0,Math.floor(ms/1000)),h=Math.floor(s/3600),m=Math.floor(s%3600/60);s%=60;return h+':'+('0'+m).slice(-2)+':'+('0'+s).slice(-2)}
 var TABS=['pan','gen','st','hist','bt','set','cat'];var tf=1;function setTab(t){var o=TABS.indexOf(tab),n=TABS.indexOf(t);document.getElementById('app').style.setProperty('--dx',((n>o)-(n<o))*28+'px');tab=t;tf=1;window.scrollTo(0,0);render()}
-function startG(){S.run=Date.now();S.remN=0;S.lowW=0;save();render()}
+function startG(){S.run=Date.now();S.remN=0;S.lowW=0;if(save()){scheduleRunReminders();render()}}
 function stopG(){
  var g=S.gens[S.g],end=Date.now(),h=(end-S.run)/3600000,fa=parseFloat((document.getElementById('fa')||{}).value),est=!(fa>0);
  var f=est?h*g.lph:fa;
- S.ses.push({id:end,g:g.n,s:S.run,e:end,h:h,f:f,est:est,loc:S.locs[S.loc],u:S.users[S.usr]});g.h+=h;S.run=null;save();render();
+ S.ses.push({id:end,g:g.n,s:S.run,e:end,h:h,f:f,est:est,loc:S.locs[S.loc],u:S.users[S.usr]});g.h+=h;S.run=null;save();cancelRunReminders();render();
 }
 function doSvc(){var g=S.gens[S.g];ask('Отметить ТО на '+f1(g.h)+' ч?',function(){g.last=g.h;save();render();toast('ТО отмечено')})}
 setInterval(tick,1000);
@@ -191,7 +191,7 @@ function vSet(){
  h+='<div class="card"><h2>Зарядные станции</h2>';
  S.sts.forEach(function(s,i){h+=ph('sts',i)+'<div class="row"><div style="flex:2"><label>Название</label><input value="'+esc(s.n)+'" onchange="up(\'sts\','+i+',\'n\',this.value,1)"></div><div><label>Вт·ч</label><input type="number" value="'+s.wh+'" onchange="up(\'sts\','+i+',\'wh\',this.value)"></div></div>'});
  h+='<button class="sec" onclick="S.sts.push({n:\'Новая\',wh:1000});save();render()">+ Добавить станцию</button></div>';
- h+='<div class="card"><h2>Напоминание</h2><label>Повторять каждые, мин, пока генератор работает (0 — выкл)</label><input type="number" inputmode="numeric" value="'+S.remInt+'" onchange="S.remInt=+this.value||0;save()"><button class="sec" onclick="notif()">Включить уведомления</button></div>';
+ h+='<div class="card"><h2>Напоминание</h2>'+(S.rem?'<div class="kv"><span>Следующее напоминание</span><b id="rm">'+dur(S.rem.t-Date.now())+'</b></div><button class="sec" onclick="clearRem()">Отменить</button>':'<div class="row"><button class="sec" onclick="setRem(30)">30 мин</button><button class="sec" onclick="setRem(60)">1 ч</button><button class="sec" onclick="setRem(120)">2 ч</button></div><div class="rc"><span>Через</span><input id="rmin" type="number" inputmode="numeric" placeholder="45"><span>мин</span><button onclick="setRemInput()">▶</button></div><div class="rc"><span>В</span><input id="rat" type="time"><button onclick="setRemAt()">▶</button></div>')+'<label>Повторять каждые, мин, пока генератор работает (0 — выкл)</label><input type="number" inputmode="numeric" value="'+S.remInt+'" onchange="setRemInterval(this.value)"><button class="sec" onclick="notif()">Включить уведомления</button><div class="mut">Разовое и ближайшие 12 повторных напоминаний планируются Android. Точное время зависит от энергосбережения и разрешений Android.</div></div>';
  h+='<div class="card"><h2>Электроэнергия</h2><label>Тариф, ₴/кВт·ч (0 — не считать)</label><input type="number" step="0.01" value="'+S.tar+'" onchange="S.tar=+this.value||0;save()"><div class="mut" style="margin-top:6px">Считается только заряд станций от «Сети».</div></div>';
  h+=lst('locs','Места (локации)')+lst('users','Люди');
  h+='<div class="card"><h2>Топливо</h2><label>Цена бензина, ₴/л (0 — не считать)</label><input type="number" step="0.1" value="'+S.price+'" onchange="S.price=+this.value||0;save()"></div>';
@@ -217,13 +217,27 @@ function cu(){if(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)'
 
 
 
-function setRem(m){if(!(m>0))return toast('Укажите минуты');S.rem={t:Date.now()+m*60000};save();render();toast('Напоминание установлено')}
-function setRemAt(){var v=document.getElementById('rat').value;if(!v)return toast('Выберите время');var p=v.split(':'),d=new Date();d.setHours(+p[0],+p[1],0,0);if(d<=Date.now())d.setDate(d.getDate()+1);S.rem={t:+d};save();render()}
-function notif(){try{Notification.requestPermission().then(function(r){toast(r=='granted'?'Уведомления включены':'Уведомления отключены')})}catch(e){toast('Недоступно в этом режиме')}}
+var REMINDER_NOTIFICATION_ID=73101,RUN_REMINDER_BASE=73110,RUN_REMINDER_COUNT=12;
+function capPlugin(name){var c=window.Capacitor;return c&&c.Plugins&&c.Plugins[name]||null}
+function cancelNativeReminder(){var P=capPlugin('LocalNotifications');if(!P||!P.cancel)return Promise.resolve(false);return P.cancel({notifications:[{id:REMINDER_NOTIFICATION_ID}]}).then(function(){return true}).catch(function(){return false})}
+function cancelRunReminders(){var P=capPlugin('LocalNotifications');if(!P||!P.cancel)return Promise.resolve(false);var a=[];for(var i=0;i<RUN_REMINDER_COUNT;i++)a.push({id:RUN_REMINDER_BASE+i});return P.cancel({notifications:a}).then(function(){return true}).catch(function(){return false})}
+function reminderPermission(request){var P=capPlugin('LocalNotifications');if(!P)return Promise.resolve(false);return Promise.resolve(request?P.requestPermissions():P.checkPermissions()).then(function(p){return !!(p&&p.display==='granted')}).catch(function(){return false})}
+function scheduleNativeReminder(request){var P=capPlugin('LocalNotifications');if(!P||!P.schedule||!S.rem||!(S.rem.t>Date.now()))return Promise.resolve(false);return reminderPermission(request).then(function(ok){if(!ok){if(request)toast('Дозвольте BLACKOUT надсилати сповіщення в Android');return false}return cancelNativeReminder().then(function(){return P.schedule({notifications:[{id:REMINDER_NOTIFICATION_ID,title:'BLACKOUT',body:'Час перевірити обладнання та живлення.',schedule:{at:new Date(S.rem.t),allowWhileIdle:true},extra:{kind:'user-reminder'}}]})}).then(function(){return true}).catch(function(){if(request)toast('Не вдалося запланувати нагадування Android');return false})})}
+function scheduleRunReminders(){var P=capPlugin('LocalNotifications');if(!P||!P.schedule||!S.run||!(S.remInt>0))return cancelRunReminders();return reminderPermission(false).then(function(ok){if(!ok)return false;return cancelRunReminders().then(function(){var step=S.remInt*60000,first=Math.max(1,Math.floor((Date.now()-S.run)/step)+1),a=[];for(var i=0;i<RUN_REMINDER_COUNT;i++){var n=first+i,t=S.run+n*step;if(t>Date.now())a.push({id:RUN_REMINDER_BASE+i,title:'BLACKOUT',body:'Генератор працює. Перевірте, чи він ще потрібен, та залишок пального.',schedule:{at:new Date(t),allowWhileIdle:S.remInt>=9},extra:{kind:'generator-reminder'}})}return a.length?P.schedule({notifications:a}):false})}).catch(function(){return false})}
+function syncNativeReminders(){if(S.rem&&S.rem.t>Date.now())scheduleNativeReminder(false);if(S.run&&S.remInt>0)scheduleRunReminders()}
+function clearRem(){S.rem=null;save();cancelNativeReminder();render()}
+function setRemInput(){var e=document.getElementById('rmin');setRem(e?e.value:0)}
+function setRem(m){if(!(m>0))return toast('Вкажіть кількість хвилин');S.rem={t:Date.now()+m*60000};if(!save())return;scheduleNativeReminder(true);render();toast('Нагадування встановлено')}
+function setRemAt(){var v=document.getElementById('rat').value;if(!v)return toast('Оберіть час');var p=v.split(':'),d=new Date();d.setHours(+p[0],+p[1],0,0);if(d<=Date.now())d.setDate(d.getDate()+1);S.rem={t:+d};if(!save())return;scheduleNativeReminder(true);render()}
+function setRemInterval(v){S.remInt=Math.max(0,parseInt(v,10)||0);if(!save())return;if(S.remInt>0&&S.run)scheduleRunReminders();else cancelRunReminders()}
+function notif(){var P=capPlugin('LocalNotifications');if(!P||!P.requestPermissions)return toast('Фонові сповіщення доступні лише в Android-застосунку');P.requestPermissions().then(function(r){if(r&&r.display==='granted'){toast('Сповіщення ввімкнено');syncNativeReminders()}else toast('Дозвіл на сповіщення не надано')}).catch(function(){toast('Не вдалося запросити дозвіл Android')})}
 function ring(m){try{var a=new (window.AudioContext||window.webkitAudioContext)(),o=a.createOscillator();o.connect(a.destination);o.frequency.value=880;o.start();setTimeout(function(){o.stop()},700)}catch(e){}try{if(navigator.vibrate)navigator.vibrate([300,150,300,150,300])}catch(e){}try{if(window.Notification&&Notification.permission=='granted')new Notification('Блекаут',{body:m})}catch(e){}_ask=null;document.getElementById('mt').textContent=tr(m);document.getElementById('mok').textContent={uk:'Зрозуміло',en:'OK',ru:'Понятно'}[S.lang||'uk'];document.getElementById('md').classList.add('solo','on')}
-function tick(){var n=Date.now(),e=document.getElementById('tm');if(e&&S.run)e.textContent=dur(n-S.run);e=document.getElementById('stm');if(e&&S.srun)e.textContent=dur(n-S.srun.t);e=document.getElementById('rm');if(e&&S.rem)e.textContent=dur(S.rem.t-n);if(S.rem&&n>=S.rem.t){S.rem=null;save();ring('⏰ Время вышло. Проверьте топливо и нагрузку.');if(tab=='pan')render()}
+function tick(){var n=Date.now(),e=document.getElementById('tm');if(e&&S.run)e.textContent=dur(n-S.run);e=document.getElementById('stm');if(e&&S.srun)e.textContent=dur(n-S.srun.t);e=document.getElementById('rm');if(e&&S.rem)e.textContent=dur(S.rem.t-n);if(S.rem&&n>=S.rem.t){S.rem=null;save();cancelNativeReminder();ring('⏰ Время вышло. Проверьте топливо и нагрузку.');if(tab=='pan')render()}
  if(S.run){var g=S.gens[S.g];if(S.remInt>0){var k=Math.floor((n-S.run)/(S.remInt*60000));if(k>(S.remN||0)){S.remN=k;ring('⏱ Генератор работает '+dur(n-S.run)+', примерно '+f1((n-S.run)/3600000*g.lph)+' л. Он ещё нужен?')}}
  if(!S.lowW&&S.fills.length){var b=0;S.fills.forEach(function(f){if(f.g==g.n)b+=f.l});S.ses.forEach(function(s){if(s.g==g.n)b-=s.f});b-=(n-S.run)/3600000*g.lph;if(b<=g.lph*0.5){S.lowW=1;ring('⛽ Топливо на исходе: примерно на 30 минут работы.')}}}}
+var nativeBackReady=false;
+function initNativeApp(){var A=capPlugin('App');if(!A)return;if(!nativeBackReady){nativeBackReady=true;A.addListener('backButton',function(){var mp=document.getElementById('mp'),md=document.getElementById('md');if(mp&&mp.classList.contains('on')){mapClose();return}if(md&&md.classList.contains('on')){askOk(0);return}if(tab!=='pan'){setTab('pan');return}A.exitApp().catch(function(){})}).catch(function(){nativeBackReady=false})}A.addListener('resume',function(){tick();syncNativeReminders()}).catch(function(){})}
+document.addEventListener('visibilitychange',function(){if(!document.hidden){tick();syncNativeReminders()}});
 function LOC(){var l=S.lang||'uk';return l=='en'?'en-GB':l=='ru'?'ru-RU':'uk-UA'}
 function heroH(t){var T={gen:['⚙ Генератор','Статистика, топливо и настройки'],st:['🔋 Станции','Заряд, разряд и расход энергии'],hist:['🕘 История','Все запуски, заправки и записи'],set:['🛠 Настройки','Модели, места, люди и тариф'],cat:['📚 Каталог','Выберите модель из списка']}[t];return '<div class="hero"><div class="hi">'+T[1]+'</div><div class="ttl">'+T[0]+'</div></div>'}
 var DL=null;
@@ -254,7 +268,7 @@ var DICT=`Доброй ночи|Доброї ночі|Good night
 минут|хвилин|minutes
 К времени|На час|At time
 Повторять каждые, мин, пока генератор работает (0 — выкл)|Повторювати кожні, хв, поки генератор працює (0 — вимк.)|Repeat every, min, while generator runs (0 = off)
-Сигнал, вибрация и окно работают, пока страница открыта. При топливе на исходе (около 30 мин) тоже придёт сигнал, если записаны заправки.|Сигнал, вібрація і вікно працюють, поки сторінка відкрита. Коли паливо закінчується (близько 30 хв), сигнал теж надійде, якщо записані заправки.|Sound, vibration and the pop-up work while the page is open. You also get an alert when fuel runs low (about 30 min) if refills are logged.
+Разовое и ближайшие 12 повторных напоминаний планируются Android. Точное время зависит от энергосбережения и разрешений Android.|Одноразові й найближчі 12 повторних нагадувань плануються Android. Точність часу залежить від енергозбереження та дозволів Android.|One-off and the next 12 recurring reminders are scheduled by Android. Delivery timing depends on Android battery and permission settings.
 Модель|Модель|Model
 Место|Місце|Place
 Кто|Хто|Who
@@ -636,8 +650,8 @@ function fuelLeft(g){var b=0;S.fills.forEach(function(f){if(f.g==g.n)b+=f.l});S.
 function fuelCap(g){var m=0;S.fills.forEach(function(f){if(f.g==g.n)m=Math.max(m,f.l)});return Math.max(m,fuelLeft(g),1)}
 function flowAct(k){if(k=='tank')askNum('Залито топлива, л',function(v){if(!(v>0))return toast('Введите литры');S.fills.push({id:Date.now(),t:Date.now(),l:v,g:S.gens[S.g].n});save();render();toast('Заправка записана')});else if(k=='plug')askNum('Тариф электроэнергии, грн/кВт·ч (0 — не считать)',function(v){S.tar=Math.max(0,v);save();render();toast('Тариф сохранён')});else if(k=='gen'){if(S.run)stopG();else startG()}else if(k=='st'){if(!S.sts[si])return toast('Добавьте станцию в каталоге');if(S.srun)stStop();else stStart()}else if(k=='home')setTab('hist')}
 function flowNode(k,x,dy,ico,sub,lab,l,col){var y=40+dy,w=70,hh=76,id='c'+x+'_'+dy,fy=y+hh*(1-l),cx=x+w/2;
- return '<g class="nd" onclick="flowAct(\''+k+'\')"><defs><clipPath id="'+id+'"><rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+hh+'" rx="14"/></clipPath></defs><rect class="box" x="'+x+'" y="'+y+'" width="'+w+'" height="'+hh+'" rx="14" style="stroke:'+col+'"/>'+(l>0?'<rect clip-path="url(#'+id+')" x="'+x+'" y="'+fy+'" width="'+w+'" height="'+(hh*l)+'" fill="#2e8b57" opacity=".35" style="transition:y 1s,height 1s"/>':'')+ico.replace(/CX/g,cx).replace(/IY/g,y+(sub?44:52))+(sub?sub.replace(/CX/g,cx).replace(/SY/g,y+66):'')+'<text x="'+cx+'" y="'+(y+hh+18)+'">'+esc(lab)+'</text></g>'}
-function flowCard(lvl,g){var r=S.run,sr=S.srun,sn=S.sts[sr?sr.i:si],l=Math.max(0,Math.min(1,(lvl||0)/100)),H=250,A=18,B=135,C=252,s='<svg viewBox="0 0 340 '+H+'" role="img">',snm=sn?String(sn.n).split(' ').slice(-1)[0]:'—',gn=g?String(g.n).split(' ').slice(-1)[0]:'',pc=lvl==null?'—':Math.round(lvl)+'%',ok='var(--ok)',bd='var(--bd)';
+ return '<g class="nd" role="button" tabindex="0" aria-label="'+esc(lab)+'" onclick="flowAct(&quot;'+k+'&quot;)" onkeydown="if(event.key===&quot;Enter&quot;||event.key===&quot; &quot;){event.preventDefault();flowAct(&quot;'+k+'&quot;)}"><defs><clipPath id="'+id+'"><rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+hh+'" rx="14"/></clipPath></defs><rect class="box" x="'+x+'" y="'+y+'" width="'+w+'" height="'+hh+'" rx="14" style="stroke:'+col+'"/>'+(l>0?'<rect clip-path="url(#'+id+')" x="'+x+'" y="'+fy+'" width="'+w+'" height="'+(hh*l)+'" fill="#2e8b57" opacity=".35" style="transition:y 1s,height 1s"/>':'')+ico.replace(/CX/g,cx).replace(/IY/g,y+(sub?44:52))+(sub?sub.replace(/CX/g,cx).replace(/SY/g,y+66):'')+'<text x="'+cx+'" y="'+(y+hh+18)+'">'+esc(lab)+'</text></g>'}
+function flowCard(lvl,g){var r=S.run,sr=S.srun,sn=S.sts[sr?sr.i:si],l=Math.max(0,Math.min(1,(lvl||0)/100)),H=250,A=18,B=135,C=252,s='<svg viewBox="0 0 340 '+H+'" role="group" aria-label="Схема потоків енергії">',snm=sn?String(sn.n).split(' ').slice(-1)[0]:'—',gn=g?String(g.n).split(' ').slice(-1)[0]:'',pc=lvl==null?'—':Math.round(lvl)+'%',ok='var(--ok)',bd='var(--bd)';
  var wave='M-60 4 q15 -8 30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 V130 H-60Z';
  function bolt(x,y){return '<text class="bolt" x="'+x+'" y="'+y+'" style="font-size:16px">⚡</text>'}
  function line(d,on,bx,by){return on?'<path class="cur" d="'+d+'"/>'+bolt(bx,by):'<path class="pipe" d="'+d+'"/>'}
@@ -657,7 +671,7 @@ function flowCard(lvl,g){var r=S.run,sr=S.srun,sn=S.sts[sr?sr.i:si],l=Math.max(0
 function flowTick(){var q=document.getElementById('flq');if(!q||!S.run)return;var g=S.gens[S.g],b=fuelLeft(g),cap=fuelCap(g),lv=S.fills.length?Math.max(.04,Math.min(1,b/cap)):.6,t=document.getElementById('flt'),r=document.getElementById('flr');q.style.transform='translateY('+(40+76*(1-lv))+'px)';if(t)t.textContent=S.fills.length?tr(f1(b)+' л'):'—';if(r)r.textContent=tr('⛽ −'+f1(g.lph)+' л/ч'+(S.fills.length?' · ~'+f1(b/(g.lph||1))+' ч':''))}
 setInterval(flowTick,1000);
 
-render();
+initNativeApp();syncNativeReminders();render();
 </script>
 </body>
 </html>
