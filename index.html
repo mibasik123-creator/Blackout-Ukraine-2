@@ -671,7 +671,8 @@ function flowCard(lvl,g){var r=S.run,sr=S.srun,sn=S.sts[sr?sr.i:si],l=Math.max(0
 function flowTick(){var q=document.getElementById('flq');if(!q||!S.run)return;var g=S.gens[S.g],b=fuelLeft(g),cap=fuelCap(g),lv=S.fills.length?Math.max(.04,Math.min(1,b/cap)):.6,t=document.getElementById('flt'),r=document.getElementById('flr');q.style.transform='translateY('+(40+76*(1-lv))+'px)';if(t)t.textContent=S.fills.length?tr(f1(b)+' л'):'—';if(r)r.textContent=tr('⛽ −'+f1(g.lph)+' л/ч'+(S.fills.length?' · ~'+f1(b/(g.lph||1))+' ч':''))}
 setInterval(flowTick,1000);
 
-initNativeApp();syncNativeReminders();render();
+window.addEventListener('error',function(e){try{var a=document.getElementById('app');if(a&&(!a.innerHTML||!a.innerHTML.trim()))a.innerHTML='<div class="card" style="margin:18px;padding:18px"><h2>Помилка запуску</h2><div class="mut">'+esc(e.message||'Невідома помилка')+'</div><button onclick="setTab(\\'set\\')">Відкрити налаштування</button></div>'}catch(x){}});
+try{initNativeApp();syncNativeReminders();render()}catch(bootError){try{var bootApp=document.getElementById('app');bootApp.innerHTML='<div class="card" style="margin:18px;padding:18px"><h2>Помилка запуску BLACKOUT</h2><div class="mut" id="bootErrorText"></div><button onclick="setTab(\\'set\\')">Відкрити налаштування</button><button class="sec" onclick="location.reload()">Перезапустити</button></div>';document.getElementById('bootErrorText').textContent=String(bootError&&bootError.stack||bootError)}catch(bootDisplayError){}}
 </script>
 </body>
 </html>
