@@ -15,7 +15,7 @@ jobs:
           mkdir www
           cp index.html www/index.html
           npm init -y
-          npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6 @capacitor-community/bluetooth-le@6 @capacitor/geolocation@6
+          npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6 @capacitor-community/bluetooth-le@6 @capacitor/geolocation@6 @capacitor/app@6 @capacitor/local-notifications@6
           echo '{"appId":"com.blackout.log","appName":"Blackout","webDir":"www"}' > capacitor.config.json
       - run: npx cap add android
       - run: npx cap sync android
