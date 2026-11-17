@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=yes">
-<!-- BLACKOUT 3.1 | Android-first | local-first -->
+<!-- BLACKOUT 3.2 | Android-first | local-first -->
 <meta name="theme-color" content="#101820">
 <meta name="application-name" content="BLACKOUT">
 <title>BLACKOUT — Energy Management</title>
@@ -197,7 +197,7 @@ function vSet(){
  h+='<div class="card"><h2>Топливо</h2><label>Цена бензина, ₴/л (0 — не считать)</label><input type="number" step="0.1" value="'+S.price+'" onchange="S.price=+this.value||0;save()"></div>';
  h+='<div class="card"><h2>Добавить модели</h2><button onclick="ck=\'s\';setTab(\'cat\')">Открыть каталог</button><label>Импорт списком (по строке на модель): g;Название;л/ч;ТО или s;Название;Вт·ч</label><textarea id="imp"></textarea><button class="sec" onclick="doImp()">Импортировать</button></div>';
  h+='<div class="card"><h2>Резервная копия</h2><button class="sec" onclick="expB()">Показать данные для копирования</button><textarea id="bk" placeholder="Сюда вставьте данные для восстановления" style="margin-top:10px"></textarea><div class="row"><button onclick="cpB()">Копировать</button><button class="sec" onclick="impB()">Восстановить</button></div><div class="mut" style="margin-top:6px">Фото в копию не входят. Сохраните текст в заметках или мессенджере — так данные можно перенести в APK.</div></div>';
- h+='<div class="mut" style="text-align:center">BLACKOUT 3.1 · Android Edition</div>';
+ h+='<div class="mut" style="text-align:center">BLACKOUT 3.2 · Android Edition</div>';
  h+='<div class="mut">Значения по умолчанию примерные. Сверьте расход и ёмкость с паспортом. Дані зберігаються локально на цьому пристрої. Резервну копію можна перенести вручну.</div>';
  return h;
 }
