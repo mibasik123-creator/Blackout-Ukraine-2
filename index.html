@@ -578,12 +578,23 @@ function ask(m,fn){_ask=fn;var d=document.getElementById('md');d.classList.remov
 function askOk(y){document.getElementById('md').classList.remove('on');document.getElementById('mi').style.display='none';var f=_ask;_ask=null;if(y&&f)f()}
 function stStart(){if(!S.sts[si])return;var go=function(p){S.srun={i:si,t:Date.now(),p:p};save();render()};if(BT.on&&BT.pct!=null)go(BT.pct);else askNum('Заряд сейчас, %',go)}
 function stStop(){var r=S.srun,s=S.sts[r.i],fin=function(p2){if(!s){S.srun=null;save();return render()}var c=p2>r.p?1:0,e=Date.now();S.logs.push({id:e,i:r.i,c:c,wh:Math.abs(p2-r.p)/100*s.wh,p1:r.p,p2:p2,t:r.t,dur:e-r.t,loc:S.locs[S.loc],u:S.users[S.usr],src:c?'grid':''});S.srun=null;save();render();toast('Записано')};if(BT.on&&BT.pct!=null)fin(BT.pct);else askNum('Заряд сейчас, %',fin)}
-function render(){var ap=document.getElementById('app'),T=['gen','st','pan','hist','bt'],L={gen:['⚙','Генератор'],st:['🔋','Станции'],pan:['⚡','Панель'],hist:['🕘','История'],bt:['📡','Bluetooth']};
- ap.classList.remove('anim');ap.innerHTML=tr((tab=='pan'||tab=='bt'?'':heroH(tab))+({pan:vPan,gen:vGen,st:vSt,hist:vHist,set:vSet,cat:vCat,bt:vBt}[tab])());
- document.documentElement.lang=S.lang||'uk';applyTheme();document.getElementById('mcn').textContent={uk:'Скасувати',en:'Cancel',ru:'Отмена'}[S.lang||'uk'];
- document.getElementById('nb').innerHTML=tr(T.map(function(k){return '<button class="'+(k=='pan'?'cn ':'')+(k=='pan'&&S.run?'run ':'')+(k==tab?'on':'')+'" onclick="setTab(\''+k+'\')"><i>'+L[k][0]+'</i>'+L[k][1]+'</button>'}).join(''));
- document.getElementById('gear').className=(tab=='set'||tab=='cat')?'on':'';
- if(tf){void ap.offsetWidth;ap.classList.add('anim');tf=0;cu()}}
+function render(){
+ var ap=document.getElementById('app'),T=['gen','st','pan','hist','bt'],L={gen:['⚙','Генератор'],st:['🔋','Станции'],pan:['⚡','Панель'],hist:['🕘','История'],bt:['📡','Bluetooth']};
+ try{
+  ap.classList.remove('anim');
+  var fn={pan:vPan,gen:vGen,st:vSt,hist:vHist,set:vSet,cat:vCat,bt:vBt}[tab]||vPan;
+  var view=fn();
+  ap.innerHTML=tr((tab=='pan'||tab=='bt'?'':heroH(tab))+view);
+  document.documentElement.lang=S.lang||'uk';applyTheme();document.getElementById('mcn').textContent={uk:'Скасувати',en:'Cancel',ru:'Отмена'}[S.lang||'uk'];
+  document.getElementById('nb').innerHTML=tr(T.map(function(k){return '<button class="'+(k=='pan'?'cn ':'')+(k=='pan'&&S.run?'run ':'')+(k==tab?'on':'')+'" onclick="setTab(\\''+k+'\\')"><i>'+L[k][0]+'</i>'+L[k][1]+'</button>'}).join(''));
+  document.getElementById('gear').className=(tab=='set'||tab=='cat')?'on':'';
+  if(tf){void ap.offsetWidth;ap.classList.add('anim');tf=0;cu()}
+ }catch(e){
+  console.error('BLACKOUT render error',tab,e);
+  ap.innerHTML='<section style="margin:18px;padding:18px;border:1px solid #c0392b;border-radius:14px;background:#fff;color:#222;font:14px/1.45 system-ui"><h2 style="color:#c0392b">BLACKOUT: помилка запуску</h2><p>Вкладка: '+String(tab)+'</p><pre id="booterr" style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px"></pre><button onclick="tab=\'set\';render()">Відкрити налаштування</button><button onclick="tab=\'pan\';render()">Повторити запуск</button></section>';
+  var er=document.getElementById('booterr');if(er)er.textContent=(e&&e.stack)||String(e);
+ }
+}
 setInterval(btUi,1000);
 
 function getPos(ok,fail){var G=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.Geolocation,done=function(p){ok(p.coords.latitude,p.coords.longitude)};
