@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=yes">
-<!-- BLACKOUT 3.3.1 | Android-first | local-first -->
+<!-- BLACKOUT 3.3.2 | Android-first | local-first -->
 <meta name="theme-color" content="#101820">
 <script>(function(){var t='dark';try{var s=JSON.parse(localStorage.getItem('blackout_v1')||'null');if(s&&s.theme==='light')t='light'}catch(e){}var d=document.documentElement;d.setAttribute('data-theme',t);var m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',t==='dark'?'#101820':'#F2F5F7')})()</script>
 <meta name="application-name" content="BLACKOUT">
@@ -402,7 +402,7 @@ function vSetAll(){
  h+='<div class="card"><h2>Топливо</h2><label>Цена бензина, ₴/л (0 — не считать)</label><input type="number" step="0.1" value="'+S.price+'" onchange="S.price=+this.value||0;save()"></div>';
  h+='<div class="card"><h2>Добавить модели</h2><button onclick="ck=\'s\';setTab(\'cat\')">Открыть каталог</button><label>Импорт списком (по строке на модель): g;Название;л/ч;ТО или s;Название;Вт·ч</label><textarea id="imp"></textarea><button class="sec" onclick="doImp()">Импортировать</button></div>';
  h+='<div class="card"><h2>Резервная копия</h2><button class="sec" onclick="expB()">Показать данные для копирования</button><textarea id="bk" placeholder="Сюда вставьте данные для восстановления" style="margin-top:10px"></textarea><div class="row"><button onclick="cpB()">Копировать</button><button class="sec" onclick="impB()">Восстановить</button></div><div class="mut" style="margin-top:6px">Фото в копию не входят. Сохраните текст в заметках или мессенджере — так данные можно перенести в APK.</div></div>';
- h+='<div class="mut" style="text-align:center">BLACKOUT 3.3.1 · Android Edition</div>';
+ h+='<div class="mut" style="text-align:center">BLACKOUT 3.3.2 · Android Edition</div>';
  h+='<div class="mut">Значения по умолчанию примерные. Сверьте расход и ёмкость с паспортом. Дані зберігаються локально на цьому пристрої. Резервну копію можна перенести вручну.</div>';
  return h;
 }
@@ -1004,6 +1004,33 @@ function vSet(){var all=vSetAll(),CS='<div class="card"><h2>',idx=[],p=-1;while(
  var h2='<div class="sh"><button class="sb" onclick="setGo(\'\')" aria-label="Back">'+svgi('back',20)+'<span>'+L3('Настройки','Налаштування','Settings')+'</span></button><h1>'+secTitle(sec)+'</h1></div>';
  chunks.forEach(function(c){if(sec.m.indexOf(c.h)>=0)h2+=c.c});
  return h2}
+
+/* ===== Запис Bluetooth-сеансу (діагностика протоколу) ===== */
+var BL=[],BLon=0,BLt0=0;
+function blog(k,s){var t=BLt0?((Date.now()-BLt0)/1000).toFixed(3):'0.000';BL.push('+'+t+'s '+k+' '+s);if(BL.length>4000)BL.splice(0,500)}
+(function(){var r=btRx;btRx=function(b){if(BLon)blog('RX',b2hex(b));return r(b)};
+ btReq=function(){if(!BT.tx)return;var c=BC(),n=c.n||80,b=[parseInt(c.a,16)||17,4,0,0,n>>8,n&255],k=crc16(b);b.push(k&255,k>>8);if(BLon)blog('TX',b2hex(b));try{var p=BT.tx(b);if(p&&p.catch)p.catch(function(){})}catch(e){}};
+ var v=vBt;vBt=function(){return v()+btRecCard()}})();
+function btRecCard(){var n=BL.length;return '<div class="card"><h2>'+L3('Запись сеанса','Запис сеансу','Session recording')+'</h2><div class="mut" style="margin-bottom:8px">'+L3('Для настройки протокола: подключитесь к станции, нажмите «Начать запись», поменяйте нагрузку (включите/выключите потребитель), добавьте отметки и отправьте журнал разработчику.','Для налаштування протоколу: підключіться до станції, натисніть «Почати запис», змініть навантаження (увімкніть/вимкніть споживач), додайте позначки та надішліть журнал розробнику.','To tune the protocol: connect, tap “Start recording”, change the load, add notes and send the log.')+'</div>'+
+ '<div class="kv"><span>'+L3('Состояние','Стан','State')+'</span><b>'+(BLon?'● REC':L3('остановлена','зупинено','stopped'))+'</b></div><div class="kv"><span>'+L3('Строк в журнале','Рядків у журналі','Log lines')+'</span><b id="bln">'+n+'</b></div>'+
+ '<div class="row"><button class="'+(BLon?'stop':'')+'" onclick="'+(BLon?'btRecStop()':'btRec()')+'">'+(BLon?L3('Остановить','Зупинити','Stop'):L3('Начать запись','Почати запис','Start recording'))+'</button></div>'+
+ '<div class="rc" style="margin-top:8px"><input id="blm" placeholder="'+L3('Отметка: например «чайник 2000 Вт включён»','Позначка: напр. «чайник 2000 Вт увімкнено»','Note: e.g. “kettle 2000 W on”')+'"><button onclick="btNote()">+</button></div>'+
+ '<div class="row"><button class="sec" onclick="btLogShow()">'+L3('Показать журнал','Показати журнал','Show log')+'</button><button class="sec" onclick="btLogCopy()">'+L3('Копировать','Копіювати','Copy')+'</button></div><textarea id="bll" readonly style="height:140px;margin-top:8px"></textarea></div>'}
+function btNote(){var e=document.getElementById('blm');if(!e||!e.value.trim())return toast(L3('Введите текст отметки','Введіть текст позначки','Enter note text'));if(!BLt0)BLt0=Date.now();blog('NOTE',e.value.trim());e.value='';toast(L3('Отметка добавлена','Позначку додано','Note added'));btLogUi()}
+function btLogUi(){var e=document.getElementById('bln');if(e)e.textContent=BL.length}
+function btLogShow(){var t=document.getElementById('bll');if(t)t.value=BL.join('\n')}
+function btLogCopy(){btLogShow();var t=document.getElementById('bll');if(!t||!t.value)return toast(L3('Журнал пуст','Журнал порожній','Log is empty'));try{navigator.clipboard.writeText(t.value).then(function(){toast(L3('Скопировано','Скопійовано','Copied'))},function(){t.select();document.execCommand('copy');toast(L3('Скопировано','Скопійовано','Copied'))})}catch(e){t.select();try{document.execCommand('copy');toast(L3('Скопировано','Скопійовано','Copied'))}catch(x){}}}
+function btRecStop(){if(BLon)blog('SYS','stop');BLon=0;render()}
+async function btRec(){var P=btPlug();if(!P)return toast(L3('Запись работает только в установленном APK','Запис працює лише в встановленому APK','Recording works only in the installed APK'));
+ if(!BT.on){await btConnect();if(!BT.on)return}
+ BL=[];BLt0=Date.now();BLon=1;blog('SYS','start device='+BT.name+' id='+BT.id+' app=3.3.2 ua='+(navigator.userAgent||'').slice(0,80));blog('SYS','cfg addr='+BC().a+' regs='+BC().n+' pct='+JSON.stringify(BC().p)+' w='+JSON.stringify(BC().w)+' in='+JSON.stringify(BC().i));render();
+ var svcs=[];try{var r=await P.getServices({deviceId:BT.id});svcs=r&&r.services||[]}catch(e){blog('ERR','getServices '+(e&&e.message||e))}
+ for(var i=0;i<svcs.length;i++){var s=svcs[i];blog('SVC',s.uuid);var cs=s.characteristics||[];
+  for(var j=0;j<cs.length;j++){var c=cs[j],pr=c.properties||{},pn=Object.keys(pr).filter(function(k){return pr[k]}).join(',');blog('CHR',s.uuid+' / '+c.uuid+' ['+pn+']');
+   if(pr.read){try{var rv=await P.read({deviceId:BT.id,service:s.uuid,characteristic:c.uuid});blog('READ',c.uuid+' '+(rv&&rv.value))}catch(e){blog('ERR','read '+c.uuid+' '+(e&&e.message||e))}}
+   if((pr.notify||pr.indicate)&&!(s.uuid.toLowerCase()==SV&&c.uuid.toLowerCase()==CN)){(function(su,cu){try{P.addListener('notification|'+BT.id+'|'+su+'|'+cu,function(e){if(BLon)blog('NTF',cu.slice(4,8)+' '+(e&&e.value))});P.startNotifications({deviceId:BT.id,service:su,characteristic:cu}).then(function(){blog('SYS','subscribed '+cu)}).catch(function(e){blog('ERR','subscribe '+cu+' '+(e&&e.message||e))})}catch(e){blog('ERR','subscribe '+cu+' '+(e&&e.message||e))}})(s.uuid,c.uuid)}}}
+ blog('SYS','discovery done, services='+svcs.length);btLogUi()}
+setInterval(function(){if(BLon)btLogUi()},1500);
 
 try{render()}catch(e){window.__bootCheck&&setTimeout(window.__bootCheck,0);throw e}
 try{initNativeApp()}catch(e){console.error('BLACKOUT native init',e)}
