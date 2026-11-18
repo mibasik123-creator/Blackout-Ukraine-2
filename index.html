@@ -867,7 +867,7 @@ function viewLoc(i){var c=pc(S.gps[S.locs[i]]);if(!c)return;var u='https://www.o
 function locDetect(){toast('Определяю место…');getPos(function(la,lo){var b=-1,bd=1e9;S.locs.forEach(function(n,i){var c=pc(S.gps[n]);if(c){var d=hav(la,lo,c[0],c[1]);if(d<bd){bd=d;b=i}}});
  if(b>=0&&bd<300){S.loc=b;save();render();toast('Место определено: '+S.locs[b])}
  else ask('Рядом нет сохранённых мест. Добавить текущее?',function(){var n={uk:'Місце',en:'Place',ru:'Место'}[S.lang||'uk']+' '+(S.locs.length+1);S.locs.push(n);S.gps[n]=la.toFixed(5)+', '+lo.toFixed(5);S.loc=S.locs.length-1;save();render();toast('Место определено: '+n)})},function(){toast('Не удалось получить GPS')})}
-function svcFind(kind,idx){var m=kind=='g'?S.gens[idx==null?S.g:idx]:S.sts[idx==null?si:idx],br=((m&&m.n)||'').split(' ')[0],q=encodeURIComponent('сервісний центр '+br+' '+(kind=='g'?'генератор':'зарядна станція')+' ремонт'),
+function svcFind(kind,idx){var m=kind=='g'?S.gens[idx==null?S.g:idx]:S.sts[idx==null?si:idx],br=((m&&m.n)||'').split(' ')[0],q=encodeURIComponent(kind=='g'?'ремонт генераторів':'ремонт зарядних станцій'),
  go=function(u){try{window.open(u,'_blank')}catch(e){location.href=u}};toast('Ищу сервисные центры…');
  getPos(function(la,lo){go('https://www.google.com/maps/search/'+q+'/@'+la.toFixed(5)+','+lo.toFixed(5)+',13z')},function(){go('https://www.google.com/maps/search/'+q)})}
 var MP={la:48.5,lo:31.5,z:6,i:-1,w:0,h:0,raf:0};
