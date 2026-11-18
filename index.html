@@ -586,7 +586,7 @@ function render(){
   var view=fn();
   ap.innerHTML=tr((tab=='pan'||tab=='bt'?'':heroH(tab))+view);
   document.documentElement.lang=S.lang||'uk';applyTheme();document.getElementById('mcn').textContent={uk:'Скасувати',en:'Cancel',ru:'Отмена'}[S.lang||'uk'];
-  document.getElementById('nb').innerHTML=tr(T.map(function(k){return '<button class="'+(k=='pan'?'cn ':'')+(k=='pan'&&S.run?'run ':'')+(k==tab?'on':'')+'" onclick="setTab(\''+k+'\\')"><i>'+L[k][0]+'</i>'+L[k][1]+'</button>'}).join(''));
+ document.getElementById('nb').innerHTML=tr(T.map(function(k){return '<button class="'+(k=='pan'?'cn ':'')+(k=='pan'&&S.run?'run ':'')+(k==tab?'on':'')+'" onclick="setTab(\''+k+'\')"><i>'+L[k][0]+'</i>'+L[k][1]+'</button>'}).join(''));
   document.getElementById('gear').className=(tab=='set'||tab=='cat')?'on':'';
   if(tf){void ap.offsetWidth;ap.classList.add('anim');tf=0;cu()}
  }catch(e){
