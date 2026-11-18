@@ -315,6 +315,8 @@ body.pb{--bg:#080A09;--bg2:#0C0F0D;--card:#141816;--surf:#141816;--elev:#1B211E;
 body.pb .schbar{background:rgba(168,240,0,.16)}
 
 .svtg{display:flex;align-items:center;gap:12px;font-size:15px;margin:2px 0 12px;cursor:pointer}.svtg input{margin:0}
+body.bo-locked #app button,body.bo-locked #app input,body.bo-locked #app select,body.bo-locked #app textarea,body.bo-locked #app .pbn,body.bo-locked #app .pbring,body.bo-locked #app a,body.bo-locked #app details{pointer-events:none!important;opacity:.38;filter:grayscale(1)}
+body.bo-locked #app .bo-ban{opacity:1;filter:none}.bo-ban{border-color:var(--warn)!important}.bo-ban h2{color:var(--warn)}.bo-note{text-align:center;margin:0 0 10px}
 </style>
 </head>
 <body>
@@ -1227,6 +1229,16 @@ async function bluStart(){var P=btPlug();if(!P||!BT.on||BT.tx)return;try{P.addLi
 (function(){var c=btConnect;btConnect=async function(){var r=await c.apply(this,arguments);try{if(BT.on&&!BT.tx)await bluStart()}catch(e){}return r};
  var d=btDown;btDown=function(){clearInterval(BLUP.poll);BLUP.on=0;return d.apply(this,arguments)};
  var v=vBt;vBt=function(){var h=v();if(BLUP.on){var row='<div class="kv"><span>'+L3('Модель','Модель','Model')+'</span><b id="btmodel">'+esc(BLUP.model||'—')+'</b></div>';h=h.replace('<div class="kv"><span>Вт вход</span>',row+'<div class="kv"><span>Вт вход</span>')}return h}})();
+/* ===== Тестова збірка з обмеженим строком (BO_EXP підставляє збірка GitHub Actions) ===== */
+var BO_EXP=0/*BO_EXP*/;
+function boNow(){var n=Date.now(),s=0;try{s=+localStorage.getItem('bo_seen')||0;if(n>s)localStorage.setItem('bo_seen',String(n))}catch(e){}return Math.max(n,s)}
+function boExpired(){return BO_EXP>0&&boNow()>BO_EXP}
+function boDate(ms){var d=new Date(ms);return('0'+d.getDate()).slice(-2)+'.'+('0'+(d.getMonth()+1)).slice(-2)+'.'+d.getFullYear()}
+(function(){var r=render;render=function(){var ex=boExpired();try{document.body.classList.toggle('bo-locked',ex&&tab!=='set'&&tab!=='cat')}catch(e){}r();
+ try{if(!BO_EXP)return;var ap=document.getElementById('app'),msg;if(ex)msg='<div class="card bo-ban"><h2>'+L3('Тестовый период завершён','Тестовий період завершено','Test period ended')+'</h2><div class="mut">'+L3('Срок тестовой версии закончился ','Строк тестової версії закінчився ','This test build expired on ')+boDate(BO_EXP)+'. '+L3('Данные сохранены: их можно скопировать в «Настройки → Резервная копия». Обратитесь к разработчику за новой версией.','Дані збережено: їх можна скопіювати в «Налаштування → Резервна копія». Зверніться до розробника за новою версією.','Your data is kept: copy it in Settings → Backup. Ask the developer for a new build.')+'</div></div>';
+  else if(tab==='set')msg='<div class="mut bo-note">'+L3('Тестовая версия до ','Тестова версія до ','Test build until ')+boDate(BO_EXP)+'</div>';
+  if(msg&&ap)ap.insertAdjacentHTML('afterbegin',msg)}catch(e){}}})();
+setInterval(function(){try{if(BO_EXP&&boExpired()&&!document.body.classList.contains('bo-locked')&&tab!=='set'&&tab!=='cat')render()}catch(e){}},60000);
 
 /* ===== Автооновлення графіка: неофіційний сервіс svitlo.live (як у інтеграції Svitlo Live для Home Assistant) ===== */
 var SV_NEW='https://dtek-api.svitlo-proxy.workers.dev/',SV_OLD='https://svitlo-proxy.svitlo-proxy.workers.dev';

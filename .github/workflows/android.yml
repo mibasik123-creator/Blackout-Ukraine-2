@@ -1,6 +1,11 @@
 name: Build APK
 on:
   workflow_dispatch:
+    inputs:
+      trial_days:
+        description: 'Тестова збірка: скільки днів працює (0 = без обмежень)'
+        required: false
+        default: '0'
   push:
     branches: [main, "test/**", "design/**"]
     paths: [index.html, .github/workflows/android.yml]
@@ -27,6 +32,13 @@ jobs:
         run: |
           mkdir www
           cp index.html www/index.html
+          D="${{ github.event.inputs.trial_days }}"
+          if [ -n "$D" ] && [ "$D" -gt 0 ] 2>/dev/null; then
+            EXP=$(( ($(date +%s) + D*86400) * 1000 ))
+            sed -i "s#var BO_EXP=0/\*BO_EXP\*/#var BO_EXP=${EXP}/*BO_EXP*/#" www/index.html
+            grep -c "BO_EXP=${EXP}" www/index.html
+            echo "TRIAL build: expires $(date -d @$((EXP/1000)) '+%d.%m.%Y %H:%M') UTC"
+          fi
           npm init -y
           npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6 @capacitor-community/bluetooth-le@6 @capacitor/geolocation@6 @capacitor/app@6 @capacitor/local-notifications@6 @capacitor-community/keep-awake@5
           echo '{"appId":"com.blackout.log","appName":"Blackout","webDir":"www"}' > capacitor.config.json
@@ -63,6 +75,6 @@ jobs:
           $ANDROID_HOME/build-tools/$BT/apksigner verify --print-certs android/app/build/outputs/apk/debug/app-debug.apk | grep -i "SHA-256"
       - uses: actions/upload-artifact@v4
         with:
-          name: blackout-apk
+          name: ${{ github.event.inputs.trial_days != '' && github.event.inputs.trial_days != '0' && format('blackout-apk-trial-{0}d', github.event.inputs.trial_days) || 'blackout-apk' }}
           path: android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 14
