@@ -123,6 +123,21 @@ nav button.on{background:rgba(53,213,138,.12)!important}
 <div id="toast"></div>
 <div id="md"><div class="mb"><p id="mt" style="margin:0 0 6px;font-size:17px"></p><input id="mi" type="number" inputmode="decimal"><div class="row"><button class="sec" id="mcn" onclick="askOk(0)">Отмена</button><button class="stop" id="mok" onclick="askOk(1)">Да</button></div></div></div>
 <script>
+window.addEventListener('error',function(e){
+ try{
+  var ap=document.getElementById('app');if(!ap)return;
+  ap.innerHTML='<section style="margin:18px;padding:18px;border:1px solid #c0392b;border-radius:14px;background:#fff;color:#222;font:14px/1.45 system-ui"><h2 style="color:#c0392b">BLACKOUT: помилка запуску JavaScript</h2><pre id="bootfatal" style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px"></pre></section>';
+  var p=document.getElementById('bootfatal');if(p)p.textContent=(e.error&&e.error.stack)||e.message||'Невідома помилка';
+ }catch(x){console.error(x)}
+});
+window.addEventListener('unhandledrejection',function(e){
+ try{
+  var ap=document.getElementById('app');if(!ap)return;
+  ap.innerHTML='<section style="margin:18px;padding:18px;border:1px solid #c0392b;border-radius:14px;background:#fff;color:#222;font:14px/1.45 system-ui"><h2 style="color:#c0392b">BLACKOUT: помилка Android/Promise</h2><pre style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px"></pre></section>';
+  var p=ap.querySelector('pre');if(p)p.textContent=(e.reason&&e.reason.stack)||String(e.reason||'Невідома помилка');
+ }catch(x){console.error(x)}
+});
+
 var KEY='blackout_v1',tab='pan';
 function def(){return{v:3,gens:[{n:'FORTE FG6500',lph:1.8,svc:50,h:0,last:0}],g:0,run:null,ses:[],sts:[{n:'Fossibot F2400',wh:2048},{n:'Fossibot F1800 (2026)',wh:1536}],logs:[],price:0}}
 var S=load();S.theme=S.theme||'dark';S.locs=S.locs||['Дом'];S.users=S.users||['Я'];S.loc=S.loc||0;S.usr=S.usr||0;S.gps=S.gps||{};S.tar=S.tar||0;S.fills=S.fills||[];S.remInt=S.remInt||0;S.rem=S.rem||null;S.srun=S.srun||null;if(!S.lang){S.lang='uk';if(S.locs.length==1&&S.locs[0]=='Дом')S.locs[0]='Дім'}
@@ -682,7 +697,9 @@ function flowCard(lvl,g){var r=S.run,sr=S.srun,sn=S.sts[sr?sr.i:si],l=Math.max(0
 function flowTick(){var q=document.getElementById('flq');if(!q||!S.run)return;var g=S.gens[S.g],b=fuelLeft(g),cap=fuelCap(g),lv=S.fills.length?Math.max(.04,Math.min(1,b/cap)):.6,t=document.getElementById('flt'),r=document.getElementById('flr');q.style.transform='translateY('+(40+76*(1-lv))+'px)';if(t)t.textContent=S.fills.length?tr(f1(b)+' л'):'—';if(r)r.textContent=tr('⛽ −'+f1(g.lph)+' л/ч'+(S.fills.length?' · ~'+f1(b/(g.lph||1))+' ч':''))}
 setInterval(flowTick,1000);
 
-initNativeApp();syncNativeReminders();render();
+render();
+try{initNativeApp()}catch(e){console.error('BLACKOUT native init error',e)}
+try{syncNativeReminders()}catch(e){console.error('BLACKOUT reminders init error',e)}
 </script>
 </body>
 </html>
