@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=yes">
-<!-- BLACKOUT 3.3.3 | Android-first | local-first -->
+<!-- BLACKOUT 3.4.0 | Android-first | local-first -->
 <meta name="theme-color" content="#101820">
 <script>(function(){var t='dark';try{var s=JSON.parse(localStorage.getItem('blackout_v1')||'null');if(s&&s.theme==='light')t='light'}catch(e){}var d=document.documentElement;d.setAttribute('data-theme',t);var m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',t==='dark'?'#101820':'#F2F5F7')})()</script>
 <meta name="application-name" content="BLACKOUT">
@@ -272,10 +272,39 @@ hr{border:0;height:1px;background:var(--bd);margin:14px 0}
 button.sr .si{flex:0 0 auto;width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:var(--bg);color:var(--ac)}
 button.sr .st{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}button.sr .st b{font-size:16px;font-weight:700}button.sr .st small{font-size:12.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 button.sr .sc{flex:0 0 auto;color:var(--mut)}
+body.pb{--bg:#080A09;--bg2:#0C0F0D;--card:#141816;--surf:#141816;--elev:#1B211E;--bd:rgba(255,255,255,.07);--em:#A8F000;--ac:#A8F000;--cy:#6FD400;--bl:#6FD400;--lg1:#A8F000;--lg2:#6FD400;background:#080A09!important;background-image:radial-gradient(120% 55% at 50% -8%,rgba(168,240,0,.08),transparent 62%)!important}
+.pbhero{position:relative;margin:0 0 12px;padding:4px 0 2px;contain:layout}
+.pbtop{display:flex;justify-content:center;margin:0 0 4px;position:relative;z-index:1}
+.pbstate{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;font-size:13px;font-weight:600;color:var(--mut);background:#141816;border:1px solid rgba(255,255,255,.07)}
+.pbstate i{width:8px;height:8px;border-radius:50%;background:#65737C}.pbstate.on{color:#E9FFB8}.pbstate.on i{background:#A8F000;box-shadow:0 0 10px #A8F000}
+.pbglow{position:absolute;left:50%;top:150px;width:300px;height:300px;margin:-150px 0 0 -150px;border-radius:50%;background:radial-gradient(closest-side,rgba(168,240,0,.15),rgba(168,240,0,.05) 55%,transparent 100%);pointer-events:none;opacity:.5}
+.pbhero.fx1 .pbglow,.pbhero.fx2 .pbglow{animation:pbbreath 5s ease-in-out infinite}
+.pbhero.act .pbglow{opacity:.85}.pbhero.chg.fx2 .pbglow{animation-duration:2.4s}
+@keyframes pbbreath{0%,100%{opacity:.4;transform:scale(1)}50%{opacity:.85;transform:scale(1.07)}}
+#pbsvg{position:relative}#pbsvg svg{display:block;width:100%;height:auto;overflow:visible}
+.pbp{fill:none;stroke:#1F2622;stroke-width:2;stroke-linecap:round}.pbp.on{stroke:rgba(168,240,0,.5)}
+.pbn{cursor:pointer;outline:none}.pbc{fill:#141816;stroke:rgba(255,255,255,.1);stroke-width:1.2;transition:stroke .4s}.pbn .ic{color:#A5B4BC}.pbn.on .pbc{stroke:#A8F000}.pbn.on .ic{color:#A8F000}.pbn:focus-visible .pbc,.pbring:focus-visible .pbt{stroke:#fff}
+#pbsvg text.pbl{fill:#A5B4BC;font-size:12px;text-anchor:middle;font-weight:600}#pbsvg text.pbs{fill:#71828C;font-size:11px;text-anchor:middle}
+.pbring{cursor:pointer;outline:none}.pbt{fill:none;stroke:#1B211E;stroke-width:12}
+.pbg2{fill:none;stroke:url(#pbgr);stroke-width:12;stroke-linecap:round;transform:rotate(-90deg);transform-origin:180px 150px;transition:stroke-dashoffset 1.2s cubic-bezier(.2,.8,.2,1)}
+.pbo{fill:none;stroke:#F4FFD0;stroke-opacity:.9;stroke-width:12;stroke-linecap:round;transform:rotate(-90deg);transform-origin:180px 150px}
+.pbo.spin{animation:pbspin 3.4s linear infinite}@keyframes pbspin{from{transform:rotate(-90deg)}to{transform:rotate(270deg)}}
+#pbsvg text.pbv{fill:#F1F5F4;font-size:50px;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums}#pbsvg tspan.pbu{font-size:20px;fill:#A5B4BC;font-weight:600}
+.pbchips{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:2px}
+.pbm{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.pbm>div{background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:12px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.pbm span{font-size:11px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pbm b{font-size:26px;line-height:1.1;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}.pbm small{font-size:11px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pbm .act b{color:#A8F000}
+.pbch svg{display:block;width:100%;height:auto}.pbbar{fill:#26312B;transform-origin:center bottom;transform-box:fill-box;animation:pbgrow .6s cubic-bezier(.2,.8,.2,1) both}.pbbar.now{fill:#A8F000}
+#app .pbch text.pbl{fill:#71828C;font-size:11px}#app .pbch text.pbs{fill:#A5B4BC;font-size:10px}
+@keyframes pbgrow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@media (prefers-reduced-motion:reduce){.pbglow,.pbo.spin,.pbbar{animation:none!important}.pbg2,#pbprog2{transition:none!important}}
+
+.pbm em{font-style:normal}.pbm em.s{display:none}
+@media (max-width:350px){.pbm em.l{display:none}.pbm em.s{display:inline}body.pb .ech .nm{font-size:22px}.pbm b{font-size:23px}}
 </style>
 </head>
 <body>
-<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><linearGradient id="ec-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#35D6A0"/><stop offset="1" stop-color="#39C6E6"/></linearGradient>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><linearGradient id="ec-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--lg1,#35D6A0)"/><stop offset="1" style="stop-color:var(--lg2,#39C6E6)"/></linearGradient>
 <symbol id="ec-logo" viewBox="0 0 48 48"><path d="M24 3 42 13.5v21L24 45 6 34.5v-21z" fill="none" stroke="url(#ec-g)" stroke-width="2.2" stroke-linejoin="round" opacity=".5"/><path d="M27.5 8 13.5 27.5h8.5L19.5 40 34.5 20h-8.5z" fill="url(#ec-g)"/><path d="M2.5 24h5M40.5 24h5" stroke="url(#ec-g)" stroke-width="2.2" stroke-linecap="round" opacity=".8"/></symbol>
 <symbol id="ec-mark" viewBox="0 0 48 48"><path d="M24 3 42 13.5v21L24 45 6 34.5v-21z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" opacity=".5"/><path d="M27.5 8 13.5 27.5h8.5L19.5 40 34.5 20h-8.5z" fill="currentColor"/><path d="M2.5 24h5M40.5 24h5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" opacity=".8"/></symbol></defs></svg>
 <main id="app"><div class="card mut" id="boot">Завантаження…</div></main>
@@ -402,7 +431,7 @@ function vSetAll(){
  h+='<div class="card"><h2>Топливо</h2><label>Цена бензина, ₴/л (0 — не считать)</label><input type="number" step="0.1" value="'+S.price+'" onchange="S.price=+this.value||0;save()"></div>';
  h+='<div class="card"><h2>Добавить модели</h2><button onclick="ck=\'s\';setTab(\'cat\')">Открыть каталог</button><label>Импорт списком (по строке на модель): g;Название;л/ч;ТО или s;Название;Вт·ч</label><textarea id="imp"></textarea><button class="sec" onclick="doImp()">Импортировать</button></div>';
  h+='<div class="card"><h2>Резервная копия</h2><button class="sec" onclick="expB()">Показать данные для копирования</button><textarea id="bk" placeholder="Сюда вставьте данные для восстановления" style="margin-top:10px"></textarea><div class="row"><button onclick="cpB()">Копировать</button><button class="sec" onclick="impB()">Восстановить</button></div><div class="mut" style="margin-top:6px">Фото в копию не входят. Сохраните текст в заметках или мессенджере — так данные можно перенести в APK.</div></div>';
- h+='<div class="mut" style="text-align:center">BLACKOUT 3.3.3 · Android Edition</div>';
+ h+='<div class="mut" style="text-align:center">BLACKOUT 3.4.0 · Android Edition</div>';
  h+='<div class="mut">Значения по умолчанию примерные. Сверьте расход и ёмкость с паспортом. Дані зберігаються локально на цьому пристрої. Резервну копію можна перенести вручну.</div>';
  return h;
 }
@@ -755,14 +784,14 @@ function doImp(){var n=0;document.getElementById('imp').value.split('\n').forEac
 TABS=['gen','st','pan','hist','bt','set','cat'];
 var BT={on:0,name:'',regs:null,pct:null,w:null,wi:null,t:0,buf:[],tx:null,err:''},SV='0000a002-0000-1000-8000-00805f9b34fb',CW='0000c304-0000-1000-8000-00805f9b34fb',CN='0000c305-0000-1000-8000-00805f9b34fb';
 var BTI='<svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7l10 10-5 5V2l5 5L7 17"/></svg>';
-function BC(){return S.bt||(S.bt={a:'11',n:80,p:null,w:null,i:null})}
+function BC(){var c=S.bt||(S.bt={a:'11',n:80,p:null,w:null,i:null});if(c.p==null&&!c.pd){c.p=[56,10];c.pd=1}if(c.w==null&&!c.wd){c.w=[39,1];c.wd=1}return c}
 function crc16(b){var c=65535,i,j;for(i=0;i<b.length;i++){c^=b[i];for(j=0;j<8;j++)c=c&1?(c>>1)^40961:c>>1}return c}
 function hex2b(s){var m=String(s||'').replace(/[^0-9a-f]/gi,''),o=[],i;for(i=0;i+1<m.length;i+=2)o.push(parseInt(m.substr(i,2),16));return o}
 function b2hex(b){return b.map(function(x){return ('0'+x.toString(16)).slice(-2)}).join(' ')}
 function btPlug(){return window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.BluetoothLe}
 function UW(){return {uk:'Вт',en:'W',ru:'Вт'}[S.lang||'uk']}
 function btReq(){if(!BT.tx)return;var c=BC(),n=c.n||80,b=[parseInt(c.a,16)||17,4,0,0,n>>8,n&255],k=crc16(b);b.push(k&255,k>>8);try{var p=BT.tx(b);if(p&&p.catch)p.catch(function(){})}catch(e){}}
-function btRx(b){BT.buf=BT.buf.concat(b);if(BT.buf.length>1500)BT.buf=[];for(var g=0;g<30;g++){var u=BT.buf;if(u.length<8)return;var n=u[4]<<8|u[5];if((u[1]!=3&&u[1]!=4)||n<1||n>160){u.shift();continue}var need=6+2*n+2;if(u.length<need)return;var f=u.slice(0,need),cr=crc16(f.slice(0,need-2));if((cr&255)!=f[need-2]||(cr>>8)!=f[need-1]){u.shift();continue}BT.buf=u.slice(need);if(f[1]==4)btFrame(f,n)}}
+function btRx(b){BT.buf=BT.buf.concat(b);if(BT.buf.length>1500)BT.buf=[];for(var g=0;g<30;g++){var u=BT.buf;if(u.length<8)return;var n=u[4]<<8|u[5];if((u[1]!=3&&u[1]!=4)||n<1||n>160){u.shift();continue}var need=6+2*n+2;if(u.length<need)return;var f=u.slice(0,need),cr=crc16(f.slice(0,need-2));if(!(((cr>>8)==f[need-2]&&(cr&255)==f[need-1])||((cr&255)==f[need-2]&&(cr>>8)==f[need-1]))){u.shift();continue}BT.buf=u.slice(need);if(f[1]==4)btFrame(f,n)}}
 function btFrame(f,n){var r=[],i,old=BT.pct;for(i=0;i<n;i++)r.push(f[6+2*i]<<8|f[7+2*i]);BT.regs=r;BT.t=Date.now();btFrame2();if(tab=='pan'&&BT.pct!=old)render()}
 function btFrame2(){var c=BC(),r=BT.regs,g=function(k){return k&&r[k[0]]!=null?r[k[0]]/k[1]:null};BT.pct=g(c.p);BT.w=g(c.w);BT.wi=g(c.i);btUi()}
 function btUi(){var e=function(i){return document.getElementById(i)},v=function(x){return x==null?'—':Math.round(x)+' '+UW()};if(e('btp'))e('btp').textContent=BT.pct!=null?Math.round(BT.pct)+' %':'—';if(e('btw'))e('btw').textContent=v(BT.w);if(e('bti'))e('bti').textContent=v(BT.wi);if(e('bttm'))e('bttm').textContent=BT.t?Math.round((Date.now()-BT.t)/1000)+' '+(S.lang=='en'?'s':'с'):'—'}
@@ -787,18 +816,18 @@ function vPan(){var g=S.gens[S.g]||S.gens[0],r=S.run,sr=S.srun,hr=new Date().get
  function cl(s){return s=='on'?'ONLINE':s=='warn'?'WARNING':'OFFLINE'}
  function sb(v,d,l){return '<div><b data-n="'+v+'" data-d="'+d+'">'+v.toFixed(d).replace('.',',')+'</b><span>'+l+'</span></div>'}
  function tl(v,l){return '<div><b>'+v+'</b><span>'+l+'</span></div>'}
- var h='<div class="ech"><svg class="lg"><use href="#ec-logo"/></svg><div><div class="wm">BLACKOUT UKRAINE</div><div class="nm">Energy Command</div><div class="hi">'+hi+(S.users[S.usr]?', '+esc(S.users[S.usr]):'')+'</div></div></div>';
+ var h='<div class="ech"><svg class="lg"><use href="#ec-logo"/></svg><div><div class="wm">BLACKOUT UKRAINE</div><div class="nm">Energy in motion</div><div class="hi">'+hi+(S.users[S.usr]?', '+esc(S.users[S.usr]):'')+'</div></div></div>';
  h+='<div class="locrow"><select onchange="S.loc=+this.value;save()">'+so(S.locs,S.loc)+'</select><button class="sec gb2" onclick="locDetect()">'+svgi('pin',20)+'</button><select onchange="S.usr=+this.value;save()">'+so(S.users,S.usr)+'</select></div>';
  var ov=(r||sr)?(fuelWarn||svcWarn?'warn':'on'):'off',ovT=fuelWarn?'Внимание: мало топлива':svcWarn&&r?'Пора на ТО':(r&&sr?'Генератор и станция работают':r?'Генератор работает':sr?'Станция работает':'Всё выключено');
  var ring=Math.max(0,Math.min(100,lvl||0)),ctr=(BT.on&&BT.w!=null)?'<div class="cmdv">'+Math.round(BT.w)+'<small>'+UW()+'</small></div><div class="cmdl">Мощность</div>':'<div class="cmdv">'+(lvl==null?'—':Math.round(lvl)+'<small>%</small>')+'</div><div class="cmdl">Заряд станции</div>';
- h+='<div class="card"><div style="margin-bottom:14px">'+chip(ov,ovT)+'</div><div class="cmd"><div class="cmdg"><svg viewBox="0 0 132 132"><circle class="tk" cx="66" cy="66" r="54"/><circle class="pg" cx="66" cy="66" r="54" stroke-dasharray="339.3" style="stroke-dashoffset:'+(339.3*(1-ring/100))+'"/></svg><div class="ct">'+ctr+'</div></div><div class="cmds"><div><span>Генератор</span>'+chip(gS,cl(gS))+'</div><div><span>Станция</span>'+chip(sS,cl(sS))+'</div><div><span>Bluetooth</span>'+chip(bS,cl(bS))+'</div>'+(fuelH!=null?'<div><span>Топливо</span><b>~'+f1(fuelH)+' ч</b></div>':'')+'</div></div></div>';
+ h+=pbHero(lvl,g,sn,gS,sS,bS);h+=pbMetrics(lvl,sn);
  h+='<div class="stats">'+tl((r?1:0)+'/'+S.gens.length,'Генераторы активны')+tl((sr?1:0)+'/'+S.sts.length,'Станции активны')+sb(tf2,1,'л топлива')+sb(th,1,'ч сегодня')+sb(g.h,1,'ч наработка')+sb(kc,2,'кВт·ч заряд')+'</div>';
- h+=flowCard(lvl,g);
  h+=schCard(lvl,sn);
  h+='<div class="pc'+(r?' on':'')+'"><div class="pwrap"><button class="pw'+(r?' on':'')+'" onclick="'+(r?'stopG()':'startG()')+'"><span class="ring"></span>'+PW+'</button></div><div class="pi"><div class="pn eq">'+(g.p?'<img src="'+g.p+'" alt="">':svgi('gen',18))+esc(g.n)+'</div>'+chip(gS,cl(gS))+'<div class="pt" id="tm">'+(r?dur(Date.now()-r):'Выключен')+'</div><div class="mut">'+(r?'Нажмите, чтобы выключить':'Нажмите, чтобы включить')+'</div></div></div>';
  h+='<div class="pc'+(sr?' on':'')+'"><div class="pwrap"><svg class="gz" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" class="gb"/><circle cx="50" cy="50" r="46" class="gf" style="stroke-dasharray:289;stroke-dashoffset:'+(289*(1-ring/100))+'"/></svg><button class="pw'+(sr?' on':'')+'" onclick="'+(sr?'stStop()':'stStart()')+'"><span class="ring"></span>'+PW+'</button></div><div class="pi"><div class="pn eq" onclick="nextSt()">'+(sn&&sn.p?'<img src="'+sn.p+'" alt="">':svgi('bat',18))+esc(sn?sn.n:'—')+(S.sts.length>1&&!sr?' ⇅':'')+'</div>'+chip(sS,cl(sS))+'<div class="pt" id="stm">'+(sr?dur(Date.now()-sr.t):(lvl==null?'—':Math.round(lvl)+' %'))+'</div><div class="mut">'+(BT.on?'● Bluetooth':(sr?'Нажмите, чтобы выключить':'Нажмите, чтобы включить'))+'</div></div></div>';
  if(S.fills.length&&!r){var b=0,mx=0;S.fills.forEach(function(f){if(f.g==g.n){b+=f.l;mx=Math.max(mx,f.l)}});S.ses.forEach(function(s){if(s.g==g.n)b-=s.f});if(r)b-=(Date.now()-r)/3600000*g.lph;b=Math.max(0,b);h+='<div class="card"><div class="kv"><span>'+svgi('fuel',16)+' Топливо</span><b>'+f1(b)+' л · ~'+f1(b/(g.lph||1))+' ч</b></div><div class="bar"><i style="width:'+Math.min(100,b/(mx||1)*100)+'%;background:'+(b/(g.lph||1)<0.5?'var(--bad)':'var(--em)')+'"></i></div></div>'}
- return h}
+ h+=pbChart();return h}
+
 function askNum(m,fn){var d=document.getElementById('md'),i=document.getElementById('mi');_ask=function(){var v=parseFloat(i.value);if(isNaN(v))return toast('Введите число');fn(v)};d.classList.remove('solo');i.value='';i.style.display='block';document.getElementById('mok').textContent='OK';document.getElementById('mt').textContent=tr(m);d.classList.add('on');setTimeout(function(){i.focus()},120)}
 function ask(m,fn){_ask=fn;var d=document.getElementById('md');d.classList.remove('solo');document.getElementById('mi').style.display='none';document.getElementById('mok').textContent={uk:'Так',en:'Yes',ru:'Да'}[S.lang||'uk'];document.getElementById('mt').textContent=tr(m);d.classList.add('on')}
 function askOk(y){document.getElementById('md').classList.remove('on');document.getElementById('mi').style.display='none';var f=_ask;_ask=null;if(y&&f)f()}
@@ -1009,7 +1038,7 @@ function vSet(){var all=vSetAll(),CS='<div class="card"><h2>',idx=[],p=-1;while(
 var BL=[],BLon=0,BLt0=0;
 function blog(k,s){var t=BLt0?((Date.now()-BLt0)/1000).toFixed(3):'0.000';BL.push('+'+t+'s '+k+' '+s);if(BL.length>4000)BL.splice(0,500)}
 (function(){var r=btRx;btRx=function(b){if(BLon)blog('RX',b2hex(b));return r(b)};
- btReq=function(){if(!BT.tx)return;var c=BC(),n=c.n||80,b=[parseInt(c.a,16)||17,4,0,0,n>>8,n&255],k=crc16(b);b.push(k&255,k>>8);if(BLon)blog('TX',b2hex(b));try{var p=BT.tx(b);if(p&&p.catch)p.catch(function(){})}catch(e){}};
+ btReq=function(){if(!BT.tx)return;var c=BC(),n=c.n||80,b=[parseInt(c.a,16)||17,4,0,0,n>>8,n&255],k=crc16(b);b.push(k>>8,k&255);if(BLon)blog('TX',b2hex(b));try{var p=BT.tx(b);if(p&&p.catch)p.catch(function(){})}catch(e){}};
  var v=vBt;vBt=function(){return v()+btRecCard()}})();
 function btRecCard(){var n=BL.length;return '<div class="card"><h2>'+L3('Запись сеанса','Запис сеансу','Session recording')+'</h2><div class="mut" style="margin-bottom:8px">'+L3('Для настройки протокола: подключитесь к станции, нажмите «Начать запись», поменяйте нагрузку (включите/выключите потребитель), добавьте отметки и отправьте журнал разработчику.','Для налаштування протоколу: підключіться до станції, натисніть «Почати запис», змініть навантаження (увімкніть/вимкніть споживач), додайте позначки та надішліть журнал розробнику.','To tune the protocol: connect, tap “Start recording”, change the load, add notes and send the log.')+'</div>'+
  '<div class="kv"><span>'+L3('Состояние','Стан','State')+'</span><b>'+(BLon?'● REC':L3('остановлена','зупинено','stopped'))+'</b></div><div class="kv"><span>'+L3('Строк в журнале','Рядків у журналі','Log lines')+'</span><b id="bln">'+n+'</b></div>'+
@@ -1023,7 +1052,7 @@ function btLogCopy(){btLogShow();var t=document.getElementById('bll');if(!t||!t.
 function btRecStop(){if(BLon)blog('SYS','stop');BLon=0;render()}
 async function btRec(){var P=btPlug();if(!P)return toast(L3('Запись работает только в установленном APK','Запис працює лише в встановленому APK','Recording works only in the installed APK'));
  if(!BT.on){await btConnect();if(!BT.on)return}
- BL=[];BLt0=Date.now();BLon=1;blog('SYS','start device='+BT.name+' id='+BT.id+' app=3.3.3 ua='+(navigator.userAgent||'').slice(0,80));blog('SYS','cfg addr='+BC().a+' regs='+BC().n+' pct='+JSON.stringify(BC().p)+' w='+JSON.stringify(BC().w)+' in='+JSON.stringify(BC().i));render();
+ BL=[];BLt0=Date.now();BLon=1;blog('SYS','start device='+BT.name+' id='+BT.id+' app=3.4.0 ua='+(navigator.userAgent||'').slice(0,80));blog('SYS','cfg addr='+BC().a+' regs='+BC().n+' pct='+JSON.stringify(BC().p)+' w='+JSON.stringify(BC().w)+' in='+JSON.stringify(BC().i));render();
  var svcs=[];try{var r=await P.getServices({deviceId:BT.id});svcs=r&&r.services||[]}catch(e){blog('ERR','getServices '+(e&&e.message||e))}
  for(var i=0;i<svcs.length;i++){var s=svcs[i];blog('SVC',s.uuid);var cs=s.characteristics||[];
   for(var j=0;j<cs.length;j++){var c=cs[j],pr=c.properties||{},pn=Object.keys(pr).filter(function(k){return pr[k]}).join(',');blog('CHR',s.uuid+' / '+c.uuid+' ['+pn+']');
@@ -1049,6 +1078,59 @@ async function btProbe(){if(BPr){BPr=0;return}var P=btPlug();if(!P)return toast(
  for(var j=0;j<L.length&&BPr;j++){var p=L[j],fr=btMk(p[1],p[2],p[3],p[4],p[5]);blog('PROBE',p[0]);blog('TX',b2hex(fr));await btWr(p[6],fr,p[7]);await btSleep(3000)}
  blog('PROBE','end');BPr=0;clearInterval(BT.poll);if(BT.on)BT.poll=setInterval(btReq,3000);toast(L3('Пробы завершены','Проби завершено','Probes finished'));render()}
 (function(){var v=btRecCard;btRecCard=function(){var h=v(),x='<div class="row"><button class="sec" onclick="btProbe()">'+(BPr?L3('Остановить пробы','Зупинити проби','Stop probes'):L3('Пробы протокола (~1,5 мин)','Проби протоколу (~1,5 хв)','Protocol probes (~1.5 min)'))+'</button></div>';return h.replace('<div class="rc" style="margin-top:8px">',x+'<div class="rc" style="margin-top:8px">')}})();
+
+/* ===== PREMIUM BLACK / LIVING ENERGY (design 1.0, stage 1: main screen) ===== */
+function pbFx(){var m='auto';try{m=localStorage.getItem('blackout_fx')||'auto'}catch(e){}var rm=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches;if(rm)return 0;if(m=='lite')return 1;if(m=='full')return 2;var lo=(navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=4)||(navigator.deviceMemory&&navigator.deviceMemory<=2);return lo?1:2}
+function pbSetFx(v){try{localStorage.setItem('blackout_fx',v)}catch(e){}render()}
+function pbInt(w){return Math.max(.15,Math.min(1,w/1500))}
+function pbFlows(){var r=!!S.run,sr=S.srun,on=!!BT.on,wi=on&&BT.wi!=null?BT.wi:null,wo=on&&BT.w!=null?BT.w:null;
+ var chg=wi!=null&&wi>5,dis=wo!=null?wo>5:!!sr;
+ return{r:r,chg:chg,dis:dis,wi:wi,wo:wo,gi:r?.55:0,ci:chg?pbInt(wi):0,di:dis?(wo!=null?pbInt(wo):.5):0}}
+function pbSig(f,fx){return [fx,f.r?1:0,Math.round(f.ci*4),Math.round(f.di*4),f.chg?1:0].join('|')}
+function pbState(f){return f.chg?L3('Заряжается','Заряджається','Charging'):f.dis?L3('Отдаёт нагрузку','Віддає навантаження','Powering load'):f.r?L3('Генератор работает','Генератор працює','Generator running'):L3('Ожидание','Очікування','Standby')}
+function kw(w){return w==null?'—':(w/1000).toFixed(w>=10000?1:2).replace('.',',')}
+function pbChip(s,t){return '<span class="chip '+s+'"><i></i>'+t+'</span>'}
+function pbParts(d,int,fx){if(fx<2||!int)return '';var n=2+Math.round(int*3),dur=2.8-1.7*int,o='';for(var i=0;i<n;i++)o+='<circle r="5.5" fill="url(#pbg)"><animateMotion dur="'+dur.toFixed(2)+'s" begin="'+(-i*dur/n).toFixed(2)+'s" repeatCount="indefinite" path="'+d+'"/></circle>';return o}
+function pbPipe(d,on,int,fx){return '<path class="pbp'+(on?' on':'')+'" d="'+d+'"/>'+(on?pbParts(d,int,fx):'')}
+function pbNode(k,cx,cy,icon,label,sub,on){return '<g class="pbn'+(on?' on':'')+'" role="button" tabindex="0" aria-label="'+esc(label)+'" onclick="flowAct(\''+k+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();flowAct(\''+k+'\')}"><circle class="pbc" cx="'+cx+'" cy="'+cy+'" r="30"/><g class="ic" transform="translate('+(cx-12)+' '+(cy-12)+')" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+ICO[icon]+'</g><text class="pbl" x="'+cx+'" y="'+(cy+49)+'">'+esc(label)+'</text>'+(sub?'<text class="pbs" x="'+cx+'" y="'+(cy+63)+'">'+esc(sub)+'</text>':'')+'</g>'}
+var PBC=2*Math.PI*72;
+function pbSvg(lvl,g,sn,f,fx,from){var pc=lvl==null?0:Math.max(0,Math.min(100,lvl)),to=PBC*(1-pc/100),fr=from==null?PBC:PBC*(1-from/100);
+ var s='<svg viewBox="0 0 360 318" role="group" aria-label="Living Energy"><defs><radialGradient id="pbg"><stop offset="0" stop-color="#F4FFD0"/><stop offset=".35" stop-color="#A8F000" stop-opacity=".9"/><stop offset="1" stop-color="#A8F000" stop-opacity="0"/></radialGradient><linearGradient id="pbgr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6FD400"/><stop offset="1" stop-color="#C8FF3D"/></linearGradient><mask id="pbmask"><circle id="pbprog2" cx="180" cy="150" r="72" fill="none" stroke="#fff" stroke-width="14" stroke-dasharray="'+PBC.toFixed(2)+'" stroke-dashoffset="'+fr.toFixed(2)+'" data-to="'+to.toFixed(2)+'" style="transform:rotate(-90deg);transform-origin:180px 150px;transition:stroke-dashoffset 1.2s cubic-bezier(.2,.8,.2,1)"/></mask></defs>';
+ s+=pbPipe('M40 94V120',f.r,f.gi,fx)+pbPipe('M70 138C105 18 245 18 280 138',f.r,f.gi,fx)+pbPipe('M68 250C112 250 112 214 131 203',f.chg,f.ci,fx)+pbPipe('M252 150H282',f.dis,f.di,fx);
+ var tank=S.fills.length?f1(fuelLeft(g))+' '+L3('л','л','L'):'—';
+ s+=pbNode('tank',40,36,'fuel',L3('Бак','Бак','Tank')+' · '+tank,'',f.r)+pbNode('gen',40,150,'gen',String(g.n).split(' ').slice(-1)[0],f.r?L3('работает','працює','running'):'',f.r)+pbNode('plug',40,250,'plug',L3('Сеть','Мережа','Grid'),S.tar>0?f1(S.tar)+' ₴':'',f.chg)+pbNode('home',312,150,'home',L3('Нагрузка','Навантаження','Load'),f.wo!=null?kw(f.wo)+' '+L3('кВт','кВт','kW'):'',f.dis||f.r);
+ s+='<g class="pbring" role="button" tabindex="0" aria-label="'+esc(sn?sn.n:'')+'" onclick="flowAct(\'st\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();flowAct(\'st\')}"><circle cx="180" cy="150" r="96" fill="transparent"/><circle class="pbt" cx="180" cy="150" r="72"/><circle class="pbg2" id="pbprog" cx="180" cy="150" r="72" stroke-dasharray="'+PBC.toFixed(2)+'" stroke-dashoffset="'+fr.toFixed(2)+'" data-to="'+to.toFixed(2)+'"/>'+(fx>=2&&f.chg?'<circle class="pbo spin" cx="180" cy="150" r="72" stroke-dasharray="26 '+(PBC-26).toFixed(1)+'" mask="url(#pbmask)"/>':'')+
+  '<text class="pbv" id="pbpct" x="180" y="156" text-anchor="middle" data-v="'+(lvl==null?'':Math.round(lvl))+'">'+(lvl==null?'—':Math.round(lvl))+(lvl==null?'':'<tspan class="pbu" dx="2" dy="-14">%</tspan>')+'</text><text class="pbl" x="180" y="180" text-anchor="middle">'+esc(sn?sn.n:'—')+'</text><text class="pbs" id="pbst" x="180" y="196" text-anchor="middle">'+pbState(f)+'</text></g></svg>';
+ return s}
+function pbHero(lvl,g,sn,gS,sS,bS){var f=pbFlows(),fx=pbFx(),sig=pbSig(f,fx);window._pbSig=sig;var from=window._pbPrev;
+ var top=pbTop(f);
+ var tcls=(f.chg||f.dis||f.r)?'on':'off';
+ return '<div class="pbhero fx'+fx+(f.chg?' chg':'')+((f.dis||f.r)?' act':'')+'" id="pbhero"><div class="pbtop"><span class="pbstate '+tcls+'" id="pbtop"><i></i>'+top+'</span></div><div class="pbglow"></div><div id="pbsvg">'+pbSvg(lvl,g,sn,f,fx,from)+'</div><div class="pbchips">'+pbChip(gS,L3('Генератор','Генератор','Generator'))+pbChip(sS,L3('Станция','Станція','Station'))+pbChip(bS,'Bluetooth')+'</div></div>'}
+function pbTop(f){return f.chg?L3('Заряжается · ','Заряджається · ','Charging · ')+kw(f.wi)+' '+L3('кВт','кВт','kW'):f.dis?(f.wo!=null?L3('Нагрузка · ','Навантаження · ','Load · ')+kw(f.wo)+' '+L3('кВт','кВт','kW'):L3('Станция работает','Станція працює','Station running')):f.r?L3('Генератор работает','Генератор працює','Generator running'):L3('Всё выключено','Усе вимкнено','Everything off')}
+function pbAuto(lvl,sn,f){var w=(f.wo!=null&&f.wo>5)?f.wo:(S.sch&&S.sch.load>0?S.sch.load:0);if(lvl==null||!sn||!(sn.wh>0)||!(w>0))return null;return{h:lvl/100*sn.wh/w,w:w,live:f.wo!=null&&f.wo>5}}
+function pbMetrics(lvl,sn){var f=pbFlows(),a=pbAuto(lvl,sn,f);
+ return '<div class="pbm"><div class="'+(f.chg?'act':'')+'"><span><em class="l">'+L3('Надходження','Надходження','Input')+'</em><em class="s">'+L3('Вход','Вхід','In')+'</em></span><b id="pbin">'+kw(f.wi)+'</b><small>'+L3('кВт','кВт','kW')+'</small></div><div class="'+(f.dis?'act':'')+'"><span><em class="l">'+L3('Потребление','Споживання','Output')+'</em><em class="s">'+L3('Выход','Вихід','Out')+'</em></span><b id="pbout">'+kw(f.wo)+'</b><small>'+L3('кВт','кВт','kW')+'</small></div><div><span><em class="l">'+L3('Автономность','Автономність','Runtime')+'</em><em class="s">'+L3('Работа','Робота','Time')+'</em></span><b id="pbau">'+(a?f1(a.h):'—')+'</b><small id="pbaus">'+(a?L3('ч','год','h')+(a.live?'':' · '+Math.round(a.w)+' '+L3('Вт','Вт','W')):L3('ч','год','h'))+'</small></div></div>'}
+function pbChart(){var d=new Date(),t0=new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime(),v=[],i,mx=0,tot=0;for(i=6;i>=0;i--)v.push({t:t0-i*864e5,h:0});S.ses.forEach(function(x){for(var k=0;k<7;k++){if(x.s>=v[k].t&&x.s<v[k].t+864e5){v[k].h+=x.h;break}}});v.forEach(function(x){mx=Math.max(mx,x.h);tot+=x.h});
+ var wd=function(ms){return L3(['Вс','Пн','Вт','Ср','Чт','Пт','Сб'],['Нд','Пн','Вт','Ср','Чт','Пт','Сб'],['Su','Mo','Tu','We','Th','Fr','Sa'])[new Date(ms).getDay()]},fx=pbFx();
+ var s='<div class="card"><h2>'+L3('Генератор · часы за 7 дней','Генератор · години за 7 днів','Generator · hours, 7 days')+'</h2><div class="pbch"><svg viewBox="0 0 300 120" role="img" aria-label="chart">';
+ v.forEach(function(x,k){var h=mx>0?Math.max(x.h>0?3:0,x.h/mx*74):0,bx=10+k*41;s+='<rect class="pbbar'+(k==6?' now':'')+'" x="'+bx+'" y="'+(86-h)+'" width="26" height="'+h+'" rx="6" style="'+(fx?'animation-delay:'+(k*60)+'ms':'animation:none')+'"/>'+(x.h>0?'<text class="pbs" x="'+(bx+13)+'" y="'+(80-h)+'" text-anchor="middle">'+f1(x.h)+'</text>':'')+'<text class="pbl" x="'+(bx+13)+'" y="106" text-anchor="middle">'+wd(x.t)+'</text>'});
+ return s+'</svg></div><div class="mut" style="margin-top:4px">'+L3('Всего','Разом','Total')+': <b>'+f1(tot)+' '+L3('ч','год','h')+'</b></div></div>'}
+/* плавне оновлення без перебудови DOM */
+function pbTween(el,from,to,fmt,ms){if(!el)return;if(pbFx()==0||from==null||isNaN(from)||from===to){el.textContent=fmt(to);return}var t0=performance.now();(function f(t){var k=Math.min(1,(t-t0)/ms),e=1-Math.pow(1-k,3);el.textContent=fmt(from+(to-from)*e);if(k<1&&el.isConnected)requestAnimationFrame(f)})(t0)}
+function pbTweenFn(set,from,to,ms,el){if(pbFx()==0){set(to);return}var t0=performance.now();(function f(t){var k=Math.min(1,(t-t0)/ms),e=1-Math.pow(1-k,3);set(from+(to-from)*e);if(k<1&&(!el||el.isConnected))requestAnimationFrame(f)})(t0)}
+function pbAfter(){if(tab!=='pan')return;var p=document.getElementById('pbprog'),p2=document.getElementById('pbprog2');if(p){var to=p.getAttribute('data-to');requestAnimationFrame(function(){requestAnimationFrame(function(){p.style.strokeDashoffset=to;if(p2)p2.style.strokeDashoffset=to})})}
+ var v=document.getElementById('pbpct');if(v){var n=v.getAttribute('data-v');window._pbPrev=n===''?null:+n}
+ var sv=document.querySelector('#pbsvg svg');if(sv&&sv.unpauseAnimations&&!document.hidden)try{sv.unpauseAnimations()}catch(e){}}
+function pbRefresh(){if(tab!=='pan')return;var el=document.getElementById('pbhero');if(!el)return;var f=pbFlows(),fx=pbFx();
+ if(window._pbSig!==pbSig(f,fx)){var g=S.gens[S.g]||S.gens[0],sr=S.srun,sn=S.sts[sr?sr.i:si],lvl=window._schLvl;window._pbSig=pbSig(f,fx);var w=document.getElementById('pbsvg');if(w){w.innerHTML=pbSvg(lvl,g,sn,f,fx,window._pbPrev);pbAfter()}el.classList.toggle('chg',!!f.chg);el.classList.toggle('act',!!(f.dis||f.r))}
+ var set=function(id,val){var e=document.getElementById(id);if(e&&e.textContent!==val)e.textContent=val};set('pbin',kw(f.wi));set('pbout',kw(f.wo));var tp=document.getElementById('pbtop');if(tp){var on=f.chg||f.dis||f.r;tp.className='pbstate '+(on?'on':'off');tp.innerHTML='<i></i>'+pbTop(f)}set('pbst',pbState(f));var sr2=S.srun,sn2=S.sts[sr2?sr2.i:si],lv=window._schLvl;if(BT.on&&BT.pct!=null)lv=BT.pct;var a=pbAuto(lv,sn2,f);set('pbau',a?f1(a.h):'—');var ps=document.getElementById('pbpct');if(ps&&lv!=null){var nv=Math.round(lv),ov=ps.getAttribute('data-v');if(String(nv)!==ov){if(ov===''){window._pbSig=null;window._pbPrev=null;pbRefresh();return}var from=+ov;ps.setAttribute('data-v',nv);pbTweenFn(function(x){if(ps.firstChild)ps.firstChild.nodeValue=String(Math.round(x))},from,nv,800,ps);var pr=document.getElementById('pbprog'),pr2=document.getElementById('pbprog2'),off=(PBC*(1-nv/100)).toFixed(2);if(pr)pr.style.strokeDashoffset=off;if(pr2)pr2.style.strokeDashoffset=off;window._pbPrev=nv}}}
+document.addEventListener('visibilitychange',function(){var sv=document.querySelector('#pbsvg svg');if(sv&&sv.pauseAnimations){try{document.hidden?sv.pauseAnimations():sv.unpauseAnimations()}catch(e){}}});
+(function(){var r=render;render=function(){try{document.body.classList.toggle('pb',tab==='pan'&&S.theme!=='light')}catch(e){}r();try{pbAfter()}catch(e){}};
+ var b=btFrame2;btFrame2=function(){b();try{pbRefresh()}catch(e){}};
+ var so=vSetAll;vSetAll=function(){var h=so(),m=['auto','full','lite'],cur='auto';try{cur=localStorage.getItem('blackout_fx')||'auto'}catch(e){}
+  var c='<div class="card"><h2>'+L3('Анимации','Анімації','Animations')+'</h2><select onchange="pbSetFx(this.value)">'+m.map(function(k){return '<option value="'+k+'"'+(k==cur?' selected':'')+'>'+({auto:L3('Авто','Авто','Auto'),full:L3('Полные','Повні','Full'),lite:L3('Упрощённые (слабые устройства)','Спрощені (слабкі пристрої)','Lite (low-end devices)')})[k]+'</option>'}).join('')+'</select><div class="mut" style="margin-top:6px">'+L3('Эффекты отключаются, если в системе включено «уменьшить движение».','Ефекти вимикаються, якщо в системі ввімкнено «зменшити рух».','Effects are off when the system “reduce motion” is on.')+'</div></div>';
+  var k=h.indexOf('<div class="card"><h2>Язык</h2>');return k>=0?h.slice(0,k)+c+h.slice(k):h+c};
+ for(var i=0;i<SEC.length;i++)if(SEC[i].k==='look')SEC[i].m=SEC[i].m.concat(['Анимации','Анімації','Animations'])})();
 
 try{render()}catch(e){window.__bootCheck&&setTimeout(window.__bootCheck,0);throw e}
 try{initNativeApp()}catch(e){console.error('BLACKOUT native init',e)}
