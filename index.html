@@ -312,6 +312,7 @@ body.pb{--bg:#080A09;--bg2:#0C0F0D;--card:#141816;--surf:#141816;--elev:#1B211E;
 
 .pbspark{fill:#E9FFB8;opacity:0;animation:pbdrip 1.6s ease-in infinite}
 @media (prefers-reduced-motion:reduce){.pbspark{animation:none!important}}
+body.pb .schbar{background:rgba(168,240,0,.16)}
 </style>
 </head>
 <body>
@@ -831,9 +832,8 @@ function vPan(){var g=S.gens[S.g]||S.gens[0],r=S.run,sr=S.srun,hr=new Date().get
  h+='<div class="locrow"><select onchange="S.loc=+this.value;save()">'+so(S.locs,S.loc)+'</select><button class="sec gb2" onclick="locDetect()">'+svgi('pin',20)+'</button><select onchange="S.usr=+this.value;save()">'+so(S.users,S.usr)+'</select></div>';
  var ov=(r||sr)?(fuelWarn||svcWarn?'warn':'on'):'off',ovT=fuelWarn?'Внимание: мало топлива':svcWarn&&r?'Пора на ТО':(r&&sr?'Генератор и станция работают':r?'Генератор работает':sr?'Станция работает':'Всё выключено');
  var ring=Math.max(0,Math.min(100,lvl||0)),ctr=(BT.on&&BT.w!=null)?'<div class="cmdv">'+Math.round(BT.w)+'<small>'+UW()+'</small></div><div class="cmdl">Мощность</div>':'<div class="cmdv">'+(lvl==null?'—':Math.round(lvl)+'<small>%</small>')+'</div><div class="cmdl">Заряд станции</div>';
- h+=pbHero(lvl,g,sn,gS,sS,bS);h+=pbMetrics(lvl,sn);
+ h+=pbHero(lvl,g,sn,gS,sS,bS);h+=pbMetrics(lvl,sn);h+=schCard(lvl,sn);
  h+='<div class="stats">'+tl((r?1:0)+'/'+S.gens.length,'Генераторы активны')+tl((sr?1:0)+'/'+S.sts.length,'Станции активны')+sb(tf2,1,'л топлива')+sb(th,1,'ч сегодня')+sb(g.h,1,'ч наработка')+sb(kc,2,'кВт·ч заряд')+'</div>';
- h+=schCard(lvl,sn);
  h+='<div class="pc'+(r?' on':'')+'"><div class="pwrap"><button class="pw'+(r?' on':'')+'" onclick="'+(r?'stopG()':'startG()')+'"><span class="ring"></span>'+PW+'</button></div><div class="pi"><div class="pn eq">'+(g.p?'<img src="'+g.p+'" alt="">':svgi('gen',18))+esc(g.n)+'</div>'+chip(gS,cl(gS))+'<div class="pt" id="tm">'+(r?dur(Date.now()-r):'Выключен')+'</div><div class="mut">'+(r?'Нажмите, чтобы выключить':'Нажмите, чтобы включить')+'</div></div></div>';
  h+='<div class="pc'+(sr?' on':'')+'"><div class="pwrap"><svg class="gz" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" class="gb"/><circle cx="50" cy="50" r="46" class="gf" style="stroke-dasharray:289;stroke-dashoffset:'+(289*(1-ring/100))+'"/></svg><button class="pw'+(sr?' on':'')+'" onclick="'+(sr?'stStop()':'stStart()')+'"><span class="ring"></span>'+PW+'</button></div><div class="pi"><div class="pn eq" onclick="nextSt()">'+(sn&&sn.p?'<img src="'+sn.p+'" alt="">':svgi('bat',18))+esc(sn?sn.n:'—')+(S.sts.length>1&&!sr?' ⇅':'')+'</div>'+chip(sS,cl(sS))+'<div class="pt" id="stm">'+(sr?dur(Date.now()-sr.t):(lvl==null?'—':Math.round(lvl)+' %'))+'</div><div class="mut">'+(BT.on?'● Bluetooth':(sr?'Нажмите, чтобы выключить':'Нажмите, чтобы включить'))+'</div></div></div>';
  if(S.fills.length&&!r){var b=0,mx=0;S.fills.forEach(function(f){if(f.g==g.n){b+=f.l;mx=Math.max(mx,f.l)}});S.ses.forEach(function(s){if(s.g==g.n)b-=s.f});if(r)b-=(Date.now()-r)/3600000*g.lph;b=Math.max(0,b);h+='<div class="card"><div class="kv"><span>'+svgi('fuel',16)+' Топливо</span><b>'+f1(b)+' л · ~'+f1(b/(g.lph||1))+' ч</b></div><div class="bar"><i style="width:'+Math.min(100,b/(mx||1)*100)+'%;background:'+(b/(g.lph||1)<0.5?'var(--bad)':'var(--em)')+'"></i></div></div>'}
