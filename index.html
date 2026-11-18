@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=yes">
-<!-- BLACKOUT 3.3 | Android-first | local-first -->
+<!-- BLACKOUT 3.3.1 | Android-first | local-first -->
 <meta name="theme-color" content="#101820">
 <script>(function(){var t='dark';try{var s=JSON.parse(localStorage.getItem('blackout_v1')||'null');if(s&&s.theme==='light')t='light'}catch(e){}var d=document.documentElement;d.setAttribute('data-theme',t);var m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',t==='dark'?'#101820':'#F2F5F7')})()</script>
 <meta name="application-name" content="BLACKOUT">
@@ -265,6 +265,13 @@ hr{border:0;height:1px;background:var(--bd);margin:14px 0}
 .schbar{position:relative;height:14px;border-radius:7px;background:rgba(53,214,160,.22);margin-top:12px;overflow:hidden}.schbar i{position:absolute;top:0;bottom:0;background:var(--bad);opacity:.85}.schbar u{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--tx);text-decoration:none}
 .schl{display:flex;justify-content:space-between;font-size:10px;color:var(--mut);margin-top:3px}
 .sche{margin-top:14px;border-top:1px solid var(--bd);padding-top:12px}.schd{display:flex;gap:6px;flex-wrap:wrap}.schd button{flex:1;min-width:40px}.schd button.act{background:var(--em);color:#06201A}
+.sh{display:flex;flex-direction:column;gap:6px;margin:4px 0 14px}.sh h1{font-size:26px;margin:0;letter-spacing:-.01em}
+#app button.sb{background:transparent!important;color:var(--ac)!important;box-shadow:none!important;display:inline-flex;align-items:center;gap:4px;align-self:flex-start;width:auto;margin:0;padding:8px 12px 8px 6px;background:transparent;color:var(--ac);font-weight:600;font-size:15px;min-height:40px}
+.sl{display:flex;flex-direction:column;gap:8px}
+#app button.sr{background:var(--card)!important;color:var(--tx)!important;box-shadow:none!important;display:flex;align-items:center;gap:14px;width:100%;margin:0;padding:14px 14px;text-align:left;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:18px;min-height:64px;font-weight:500}
+button.sr .si{flex:0 0 auto;width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:var(--bg);color:var(--ac)}
+button.sr .st{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}button.sr .st b{font-size:16px;font-weight:700}button.sr .st small{font-size:12.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+button.sr .sc{flex:0 0 auto;color:var(--mut)}
 </style>
 </head>
 <body>
@@ -333,7 +340,7 @@ function esc(s){return String(s).replace(/[&<>\"']/g,function(c){return{'&':'&am
 function f1(x){return (Math.round(x*10)/10).toString().replace('.',',')}
 function dt(t){return new Date(t).toLocaleString(LOC(),{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}
 function dur(ms){var s=Math.max(0,Math.floor(ms/1000)),h=Math.floor(s/3600),m=Math.floor(s%3600/60);s%=60;return h+':'+('0'+m).slice(-2)+':'+('0'+s).slice(-2)}
-var TABS=['pan','gen','st','hist','bt','set','cat'];var tf=1;function setTab(t){var o=TABS.indexOf(tab),n=TABS.indexOf(t);document.getElementById('app').style.setProperty('--dx',((n>o)-(n<o))*28+'px');tab=t;tf=1;window.scrollTo(0,0);render()}
+var TABS=['pan','gen','st','hist','bt','set','cat'];var tf=1;function setTab(t){if(t=='set'&&tab!='set'&&tab!='cat')setSec='';var o=TABS.indexOf(tab),n=TABS.indexOf(t);document.getElementById('app').style.setProperty('--dx',((n>o)-(n<o))*28+'px');tab=t;tf=1;window.scrollTo(0,0);render()}
 function startG(){S.run=Date.now();S.remN=0;S.lowW=0;if(save()){scheduleRunReminders();render()}}
 function stopG(){
  var g=S.gens[S.g],end=Date.now(),h=(end-S.run)/3600000,fa=parseFloat((document.getElementById('fa')||{}).value),est=!(fa>0);
@@ -382,7 +389,7 @@ function csv(){
 }
 function cp(){var ta=document.getElementById('ta');try{navigator.clipboard.writeText(ta.value)}catch(e){ta.select();document.execCommand('copy')}}
 
-function vSet(){
+function vSetAll(){
  var h='<div class="card"><h2>Оформлення</h2><label>Тема застосунку</label><select onchange="setTheme(this.value)"><option value="dark"'+(S.theme==='dark'?' selected':'')+'>Dark Premium</option><option value="light"'+(S.theme==='light'?' selected':'')+'>Light Minimal</option></select><div class="mut" style="margin-top:6px">Вибір теми зберігається на цьому пристрої.</div></div><div class="card"><h2>Язык</h2><select onchange="S.lang=this.value;save();render()">'+[['uk','Українська'],['en','English'],['ru','Русский']].map(function(l){return '<option value="'+l[0]+'"'+((S.lang||'uk')==l[0]?' selected':'')+'>'+l[1]+'</option>'}).join('')+'</select></div><div class="card"><h2>Генераторы</h2>';
  S.gens.forEach(function(g,i){h+=ph('gens',i)+'<label>Название</label><input value="'+esc(g.n)+'" onchange="up(\'gens\','+i+',\'n\',this.value,1)"><div class="row"><div><label>Расход, л/ч</label><input type="number" step="0.1" value="'+g.lph+'" onchange="up(\'gens\','+i+',\'lph\',this.value)"></div><div><label>ТО каждые, ч</label><input type="number" value="'+g.svc+'" onchange="up(\'gens\','+i+',\'svc\',this.value)"></div></div><div class="row"><div><label>Наработка, ч</label><input type="number" step="0.1" value="'+f1(g.h).replace(',','.')+'" onchange="up(\'gens\','+i+',\'h\',this.value)"></div><div><label>Последнее ТО, ч</label><input type="number" step="0.1" value="'+g.last+'" onchange="up(\'gens\','+i+',\'last\',this.value)"></div></div><hr>'});
  h+='<button class="sec" onclick="S.gens.push({n:\'Новый\',lph:1.5,svc:50,h:0,last:0});save();render()">+ Добавить генератор</button></div>';
@@ -395,7 +402,7 @@ function vSet(){
  h+='<div class="card"><h2>Топливо</h2><label>Цена бензина, ₴/л (0 — не считать)</label><input type="number" step="0.1" value="'+S.price+'" onchange="S.price=+this.value||0;save()"></div>';
  h+='<div class="card"><h2>Добавить модели</h2><button onclick="ck=\'s\';setTab(\'cat\')">Открыть каталог</button><label>Импорт списком (по строке на модель): g;Название;л/ч;ТО или s;Название;Вт·ч</label><textarea id="imp"></textarea><button class="sec" onclick="doImp()">Импортировать</button></div>';
  h+='<div class="card"><h2>Резервная копия</h2><button class="sec" onclick="expB()">Показать данные для копирования</button><textarea id="bk" placeholder="Сюда вставьте данные для восстановления" style="margin-top:10px"></textarea><div class="row"><button onclick="cpB()">Копировать</button><button class="sec" onclick="impB()">Восстановить</button></div><div class="mut" style="margin-top:6px">Фото в копию не входят. Сохраните текст в заметках или мессенджере — так данные можно перенести в APK.</div></div>';
- h+='<div class="mut" style="text-align:center">BLACKOUT 3.2 · Android Edition</div>';
+ h+='<div class="mut" style="text-align:center">BLACKOUT 3.3.1 · Android Edition</div>';
  h+='<div class="mut">Значения по умолчанию примерные. Сверьте расход и ёмкость с паспортом. Дані зберігаються локально на цьому пристрої. Резервну копію можна перенести вручну.</div>';
  return h;
 }
@@ -438,7 +445,7 @@ function tick(){var n=Date.now(),e=document.getElementById('tm');if(e&&S.run)e.t
  if(S.run){var g=S.gens[S.g];if(S.remInt>0){var k=Math.floor((n-S.run)/(S.remInt*60000));if(k>(S.remN||0)){S.remN=k;ring('⏱ Генератор работает '+dur(n-S.run)+', примерно '+f1((n-S.run)/3600000*g.lph)+' л. Он ещё нужен?')}}
  if(!S.lowW&&S.fills.length){var b=0;S.fills.forEach(function(f){if(f.g==g.n)b+=f.l});S.ses.forEach(function(s){if(s.g==g.n)b-=s.f});b-=(n-S.run)/3600000*g.lph;if(b<=g.lph*0.5){S.lowW=1;ring('⛽ Топливо на исходе: примерно на 30 минут работы.')}}}}
 var nativeBackReady=false;
-function initNativeApp(){var A=capPlugin('App');if(!A)return;if(!nativeBackReady){nativeBackReady=true;A.addListener('backButton',function(){var mp=document.getElementById('mp'),md=document.getElementById('md');if(mp&&mp.classList.contains('on')){mapClose();return}if(md&&md.classList.contains('on')){askOk(0);return}if(tab!=='pan'){setTab('pan');return}A.exitApp().catch(function(){})}).catch(function(){nativeBackReady=false})}A.addListener('resume',function(){tick();syncNativeReminders()}).catch(function(){})}
+function initNativeApp(){var A=capPlugin('App');if(!A)return;if(!nativeBackReady){nativeBackReady=true;A.addListener('backButton',function(){var mp=document.getElementById('mp'),md=document.getElementById('md');if(mp&&mp.classList.contains('on')){mapClose();return}if(md&&md.classList.contains('on')){askOk(0);return}if(tab==='set'&&setSec){setSec='';render();return}if(tab==='cat'){tab='set';render();return}if(tab!=='pan'){setTab('pan');return}A.exitApp().catch(function(){})}).catch(function(){nativeBackReady=false})}A.addListener('resume',function(){tick();syncNativeReminders()}).catch(function(){})}
 document.addEventListener('visibilitychange',function(){if(!document.hidden){tick();syncNativeReminders()}});
 function LOC(){var l=S.lang||'uk';return l=='en'?'en-GB':l=='ru'?'ru-RU':'uk-UA'}
 function heroH(t){var T={gen:[svgi('gen',26)+'Генератор','Статистика, топливо и настройки'],st:[svgi('bat',26)+'Станции','Заряд, разряд и расход энергии'],hist:[svgi('hist',26)+'История','Все запуски, заправки и записи'],set:[svgi('set',26)+'Настройки','Модели, места, люди и тариф'],cat:[svgi('book',26)+'Каталог','Выберите модель из списка']}[t];return '<div class="hero"><div class="hi">'+T[1]+'</div><div class="ttl">'+T[0]+'</div></div>'}
@@ -960,8 +967,44 @@ function setRemAt(){var v=document.getElementById('rat').value;if(!v)return toas
 function setRemInterval(v){S.remInt=Math.max(0,parseInt(v,10)||0);if(!save())return;if(S.remInt>0&&S.run)scheduleRunReminders();else cancelRunReminders()}
 function notif(){var P=capPlugin('LocalNotifications');if(!P||!P.requestPermissions)return toast('Фонові сповіщення доступні лише в Android-застосунку');P.requestPermissions().then(function(r){if(r&&r.display==='granted'){toast('Сповіщення ввімкнено');syncNativeReminders()}else toast('Дозвіл на сповіщення не надано')}).catch(function(){toast('Не вдалося запросити дозвіл Android')})}
 var nativeBackReady=false;
-function initNativeApp(){var A=capPlugin('App');if(!A)return;if(!nativeBackReady){nativeBackReady=true;A.addListener('backButton',function(){var mp=document.getElementById('mp'),md=document.getElementById('md');if(mp&&mp.classList.contains('on')){mapClose();return}if(md&&md.classList.contains('on')){askOk(0);return}if(tab!=='pan'){setTab('pan');return}A.exitApp().catch(function(){})}).catch(function(){nativeBackReady=false})}A.addListener('resume',function(){tick();syncNativeReminders()}).catch(function(){})}
+function initNativeApp(){var A=capPlugin('App');if(!A)return;if(!nativeBackReady){nativeBackReady=true;A.addListener('backButton',function(){var mp=document.getElementById('mp'),md=document.getElementById('md');if(mp&&mp.classList.contains('on')){mapClose();return}if(md&&md.classList.contains('on')){askOk(0);return}if(tab==='set'&&setSec){setSec='';render();return}if(tab==='cat'){tab='set';render();return}if(tab!=='pan'){setTab('pan');return}A.exitApp().catch(function(){})}).catch(function(){nativeBackReady=false})}A.addListener('resume',function(){tick();syncNativeReminders()}).catch(function(){})}
 document.addEventListener('visibilitychange',function(){if(!document.hidden){tick();syncNativeReminders()}});
+/* ===== Меню налаштувань: список розділів ===== */
+var setSec='';
+ICO.sun='<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
+ICO.bell='<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 21h4"/>';
+ICO.db='<ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/>';
+ICO.coin='<circle cx="12" cy="12" r="9"/><path d="M14.5 9.2c-.5-.8-1.4-1.2-2.5-1.2-1.4 0-2.5.7-2.5 1.8 0 2.6 5 1.2 5 3.8 0 1.1-1.1 1.9-2.6 1.9-1.1 0-2.1-.5-2.6-1.3M12 6.5V8M12 16v1.5"/>';
+ICO.chev='<path d="m9 6 6 6-6 6"/>';
+ICO.back='<path d="m15 6-6 6 6 6"/>';
+var SEC=[
+ {k:'look',i:'sun',t:['Оформление и язык','Вигляд і мова','Appearance & language'],m:['Оформлення','Язык']},
+ {k:'dev',i:'gen',t:['Оборудование','Обладнання','Equipment'],m:['Генераторы','Зарядные станции','Добавить модели']},
+ {k:'loc',i:'pin',t:['Места и люди','Місця і люди','Places & people'],m:['Места (локации)','Люди']},
+ {k:'rem',i:'bell',t:['Напоминания','Нагадування','Reminders'],m:['Напоминание']},
+ {k:'cost',i:'coin',t:['Тариф и топливо','Тариф і паливо','Tariff & fuel'],m:['Электроэнергия','Топливо']},
+ {k:'data',i:'db',t:['Резервная копия','Резервна копія','Backup'],m:['Резервная копия']}
+];
+function secTitle(s){return L3(s.t[0],s.t[1],s.t[2])}
+function secSum(k){var s=S;switch(k){
+ case'look':return (s.theme==='light'?'Light Minimal':'Dark Premium')+' · '+({uk:'Українська',en:'English',ru:'Русский'}[s.lang||'uk']);
+ case'dev':return s.gens.length+' '+L3('ген.','ген.','gen.')+' · '+s.sts.length+' '+L3('станц.','станц.','stations');
+ case'loc':return s.locs.length+' '+L3('мест','місць','places')+' · '+s.users.length+' '+L3('чел.','осіб','people');
+ case'rem':return s.rem&&s.rem.t>Date.now()?L3('Таймер включён','Таймер увімкнено','Timer on'):(s.remInt>0?L3('Повтор каждые ','Повтор кожні ','Repeat every ')+s.remInt+L3(' мин',' хв',' min'):L3('Не заданы','Не задано','Not set'));
+ case'cost':return (s.tar>0?s.tar+' ₴/'+L3('кВт·ч','кВт·год','kWh'):L3('тариф не задан','тариф не задано','no tariff'))+' · '+(s.price>0?s.price+' ₴/'+L3('л','л','L'):L3('цена топлива не задана','ціну палива не задано','no fuel price'));
+ case'data':return L3('Экспорт и восстановление','Експорт і відновлення','Export & restore')}return''}
+function setGo(k){setSec=k;window.scrollTo(0,0);render()}
+function vSet(){var all=vSetAll(),CS='<div class="card"><h2>',idx=[],p=-1;while((p=all.indexOf(CS,p+1))>=0)idx.push(p);
+ var foot=all.indexOf('<div class="mut" style="text-align:center">'),tail=foot>=0?all.slice(foot):'';if(foot>=0&&idx.length&&foot>idx[idx.length-1]){}else foot=-1;
+ var chunks=[];idx.forEach(function(s,n){var e=n+1<idx.length?idx[n+1]:(foot>=0?foot:all.length);var c=all.slice(s,e),m=c.match(/<h2>(.*?)<\/h2>/);chunks.push({h:m?m[1]:'',c:c})});
+ var sec=SEC.filter(function(x){return x.k===setSec})[0];
+ if(!sec){var h='<div class="sl">';SEC.forEach(function(x){h+='<button class="sr" onclick="setGo(\''+x.k+'\')"><span class="si">'+svgi(x.i,22)+'</span><span class="st"><b>'+secTitle(x)+'</b><small>'+esc(secSum(x.k))+'</small></span><span class="sc">'+svgi('chev',18)+'</span></button>'});
+  h+='</div><button class="sr" style="margin-top:12px" onclick="tab=\'cat\';render()"><span class="si">'+svgi('book',22)+'</span><span class="st"><b>'+L3('Каталог моделей','Каталог моделей','Model catalog')+'</b><small>'+L3('Генераторы и станции','Генератори і станції','Generators & stations')+'</small></span><span class="sc">'+svgi('chev',18)+'</span></button>';
+  return h+(foot>=0?tail:'')}
+ var h2='<div class="sh"><button class="sb" onclick="setGo(\'\')" aria-label="Back">'+svgi('back',20)+'<span>'+L3('Настройки','Налаштування','Settings')+'</span></button><h1>'+secTitle(sec)+'</h1></div>';
+ chunks.forEach(function(c){if(sec.m.indexOf(c.h)>=0)h2+=c.c});
+ return h2}
+
 try{render()}catch(e){window.__bootCheck&&setTimeout(window.__bootCheck,0);throw e}
 try{initNativeApp()}catch(e){console.error('BLACKOUT native init',e)}
 try{syncNativeReminders()}catch(e){console.error('BLACKOUT reminders init',e)}
