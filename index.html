@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=yes">
-<!-- BLACKOUT 3.3.2 | Android-first | local-first -->
+<!-- BLACKOUT 3.3.3 | Android-first | local-first -->
 <meta name="theme-color" content="#101820">
 <script>(function(){var t='dark';try{var s=JSON.parse(localStorage.getItem('blackout_v1')||'null');if(s&&s.theme==='light')t='light'}catch(e){}var d=document.documentElement;d.setAttribute('data-theme',t);var m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',t==='dark'?'#101820':'#F2F5F7')})()</script>
 <meta name="application-name" content="BLACKOUT">
@@ -402,7 +402,7 @@ function vSetAll(){
  h+='<div class="card"><h2>Топливо</h2><label>Цена бензина, ₴/л (0 — не считать)</label><input type="number" step="0.1" value="'+S.price+'" onchange="S.price=+this.value||0;save()"></div>';
  h+='<div class="card"><h2>Добавить модели</h2><button onclick="ck=\'s\';setTab(\'cat\')">Открыть каталог</button><label>Импорт списком (по строке на модель): g;Название;л/ч;ТО или s;Название;Вт·ч</label><textarea id="imp"></textarea><button class="sec" onclick="doImp()">Импортировать</button></div>';
  h+='<div class="card"><h2>Резервная копия</h2><button class="sec" onclick="expB()">Показать данные для копирования</button><textarea id="bk" placeholder="Сюда вставьте данные для восстановления" style="margin-top:10px"></textarea><div class="row"><button onclick="cpB()">Копировать</button><button class="sec" onclick="impB()">Восстановить</button></div><div class="mut" style="margin-top:6px">Фото в копию не входят. Сохраните текст в заметках или мессенджере — так данные можно перенести в APK.</div></div>';
- h+='<div class="mut" style="text-align:center">BLACKOUT 3.3.2 · Android Edition</div>';
+ h+='<div class="mut" style="text-align:center">BLACKOUT 3.3.3 · Android Edition</div>';
  h+='<div class="mut">Значения по умолчанию примерные. Сверьте расход и ёмкость с паспортом. Дані зберігаються локально на цьому пристрої. Резервну копію можна перенести вручну.</div>';
  return h;
 }
@@ -1023,7 +1023,7 @@ function btLogCopy(){btLogShow();var t=document.getElementById('bll');if(!t||!t.
 function btRecStop(){if(BLon)blog('SYS','stop');BLon=0;render()}
 async function btRec(){var P=btPlug();if(!P)return toast(L3('Запись работает только в установленном APK','Запис працює лише в встановленому APK','Recording works only in the installed APK'));
  if(!BT.on){await btConnect();if(!BT.on)return}
- BL=[];BLt0=Date.now();BLon=1;blog('SYS','start device='+BT.name+' id='+BT.id+' app=3.3.2 ua='+(navigator.userAgent||'').slice(0,80));blog('SYS','cfg addr='+BC().a+' regs='+BC().n+' pct='+JSON.stringify(BC().p)+' w='+JSON.stringify(BC().w)+' in='+JSON.stringify(BC().i));render();
+ BL=[];BLt0=Date.now();BLon=1;blog('SYS','start device='+BT.name+' id='+BT.id+' app=3.3.3 ua='+(navigator.userAgent||'').slice(0,80));blog('SYS','cfg addr='+BC().a+' regs='+BC().n+' pct='+JSON.stringify(BC().p)+' w='+JSON.stringify(BC().w)+' in='+JSON.stringify(BC().i));render();
  var svcs=[];try{var r=await P.getServices({deviceId:BT.id});svcs=r&&r.services||[]}catch(e){blog('ERR','getServices '+(e&&e.message||e))}
  for(var i=0;i<svcs.length;i++){var s=svcs[i];blog('SVC',s.uuid);var cs=s.characteristics||[];
   for(var j=0;j<cs.length;j++){var c=cs[j],pr=c.properties||{},pn=Object.keys(pr).filter(function(k){return pr[k]}).join(',');blog('CHR',s.uuid+' / '+c.uuid+' ['+pn+']');
@@ -1031,6 +1031,24 @@ async function btRec(){var P=btPlug();if(!P)return toast(L3('Запись раб
    if((pr.notify||pr.indicate)&&!(s.uuid.toLowerCase()==SV&&c.uuid.toLowerCase()==CN)){(function(su,cu){try{P.addListener('notification|'+BT.id+'|'+su+'|'+cu,function(e){if(BLon)blog('NTF',cu.slice(4,8)+' '+(e&&e.value))});P.startNotifications({deviceId:BT.id,service:su,characteristic:cu}).then(function(){blog('SYS','subscribed '+cu)}).catch(function(e){blog('ERR','subscribe '+cu+' '+(e&&e.message||e))})}catch(e){blog('ERR','subscribe '+cu+' '+(e&&e.message||e))}})(s.uuid,c.uuid)}}}
  blog('SYS','discovery done, services='+svcs.length);btLogUi()}
 setInterval(function(){if(BLon)btLogUi()},1500);
+
+/* ===== Проби протоколу (діагностика) ===== */
+var BPr=0;
+function btMk(a,f,st,n,sw){var b=[a,f,st>>8,st&255,n>>8,n&255],k=crc16(b);if(sw)b.push(k>>8,k&255);else b.push(k&255,k>>8);return b}
+function btSleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
+async function btWr(ch,b,nr){var P=btPlug();if(!P||!BT.id)return;try{var o={deviceId:BT.id,service:SV,characteristic:ch,value:b2hex(b)};if(nr&&P.writeWithoutResponse)await P.writeWithoutResponse(o);else await P.write(o)}catch(e){blog('ERR','write '+ch.slice(4,8)+' '+(e&&e.message||e))}}
+async function btProbe(){if(BPr){BPr=0;return}var P=btPlug();if(!P)return toast(L3('Пробы работают только в APK','Проби працюють лише в APK','Probes work only in the APK'));
+ if(!BT.on){await btConnect();if(!BT.on)return}
+ if(!BLon){await btRec()}
+ BPr=1;clearInterval(BT.poll);blog('PROBE','begin: polling paused');render();
+ var C4='0000c304-0000-1000-8000-00805f9b34fb',C2='0000c302-0000-1000-8000-00805f9b34fb',C3='0000c303-0000-1000-8000-00805f9b34fb';
+ blog('PROBE','1 passive listen 45s (no TX)');for(var i=0;i<45&&BPr;i++)await btSleep(1000);
+ var L=[['2 crc swapped, 11 04 0000 0050 via c304',17,4,0,80,1,C4],['3 normal crc, count 16',17,4,0,16,0,C4],['4 swapped crc, count 16',17,4,0,16,1,C4],['5 normal crc, count 1',17,4,0,1,0,C4],['6 swapped crc, count 1',17,4,0,1,1,C4],
+  ['7 func 03 swapped, count 80',17,3,0,80,1,C4],['8 func 03 normal, count 80',17,3,0,80,0,C4],['9 swapped crc via c302',17,4,0,80,1,C2],['10 swapped crc via c303 (no response)',17,4,0,80,1,C3,1],
+  ['11 addr 01 swapped',1,4,0,80,1,C4],['12 addr 01 normal',1,4,0,80,0,C4],['13 swapped crc, count 80 (repeat)',17,4,0,80,1,C4]];
+ for(var j=0;j<L.length&&BPr;j++){var p=L[j],fr=btMk(p[1],p[2],p[3],p[4],p[5]);blog('PROBE',p[0]);blog('TX',b2hex(fr));await btWr(p[6],fr,p[7]);await btSleep(3000)}
+ blog('PROBE','end');BPr=0;clearInterval(BT.poll);if(BT.on)BT.poll=setInterval(btReq,3000);toast(L3('Пробы завершены','Проби завершено','Probes finished'));render()}
+(function(){var v=btRecCard;btRecCard=function(){var h=v(),x='<div class="row"><button class="sec" onclick="btProbe()">'+(BPr?L3('Остановить пробы','Зупинити проби','Stop probes'):L3('Пробы протокола (~1,5 мин)','Проби протоколу (~1,5 хв)','Protocol probes (~1.5 min)'))+'</button></div>';return h.replace('<div class="rc" style="margin-top:8px">',x+'<div class="rc" style="margin-top:8px">')}})();
 
 try{render()}catch(e){window.__bootCheck&&setTimeout(window.__bootCheck,0);throw e}
 try{initNativeApp()}catch(e){console.error('BLACKOUT native init',e)}
