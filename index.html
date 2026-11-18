@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=yes">
-<!-- BLACKOUT 3.4.0 | Android-first | local-first -->
+<!-- BLACKOUT 3.4.1 | Android-first | local-first -->
 <meta name="theme-color" content="#101820">
 <script>(function(){var t='dark';try{var s=JSON.parse(localStorage.getItem('blackout_v1')||'null');if(s&&s.theme==='light')t='light'}catch(e){}var d=document.documentElement;d.setAttribute('data-theme',t);var m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',t==='dark'?'#101820':'#F2F5F7')})()</script>
 <meta name="application-name" content="BLACKOUT">
@@ -313,6 +313,8 @@ body.pb{--bg:#080A09;--bg2:#0C0F0D;--card:#141816;--surf:#141816;--elev:#1B211E;
 .pbspark{fill:#E9FFB8;opacity:0;animation:pbdrip 1.6s ease-in infinite}
 @media (prefers-reduced-motion:reduce){.pbspark{animation:none!important}}
 body.pb .schbar{background:rgba(168,240,0,.16)}
+
+.svtg{display:flex;align-items:center;gap:8px;font-size:14px}.svtg input{width:20px;height:20px;accent-color:var(--ac);margin:0}
 </style>
 </head>
 <body>
@@ -443,7 +445,7 @@ function vSetAll(){
  h+='<div class="card"><h2>Топливо</h2><label>Цена бензина, ₴/л (0 — не считать)</label><input type="number" step="0.1" value="'+S.price+'" onchange="S.price=+this.value||0;save()"></div>';
  h+='<div class="card"><h2>Добавить модели</h2><button onclick="ck=\'s\';setTab(\'cat\')">Открыть каталог</button><label>Импорт списком (по строке на модель): g;Название;л/ч;ТО или s;Название;Вт·ч</label><textarea id="imp"></textarea><button class="sec" onclick="doImp()">Импортировать</button></div>';
  h+='<div class="card"><h2>Резервная копия</h2><button class="sec" onclick="expB()">Показать данные для копирования</button><textarea id="bk" placeholder="Сюда вставьте данные для восстановления" style="margin-top:10px"></textarea><div class="row"><button onclick="cpB()">Копировать</button><button class="sec" onclick="impB()">Восстановить</button></div><div class="mut" style="margin-top:6px">Фото в копию не входят. Сохраните текст в заметках или мессенджере — так данные можно перенести в APK.</div></div>';
- h+='<div class="mut" style="text-align:center">BLACKOUT 3.4.0 · Android Edition</div>';
+ h+='<div class="mut" style="text-align:center">BLACKOUT 3.4.1 · Android Edition</div>';
  h+='<div class="mut">Значения по умолчанию примерные. Сверьте расход и ёмкость с паспортом. Дані зберігаються локально на цьому пристрої. Резервну копію можна перенести вручну.</div>';
  return h;
 }
@@ -949,7 +951,7 @@ function hm(m){if(m==1440)return'24:00';m=((m|0)%1440+1440)%1440;return('0'+(m/6
 function schFmt(a){return(a||[]).map(function(x){return hm(x[0])+'–'+hm(x[1])}).join(', ')}
 function schMerge(a){a=a.filter(function(x){return x&&x[1]>x[0]}).sort(function(p,q){return p[0]-q[0]});var o=[];a.forEach(function(x){var l=o[o.length-1];if(l&&x[0]<=l[1])l[1]=Math.max(l[1],x[1]);else o.push([x[0],x[1]])});return o}
 function schParse(t){var out=[],p=String(t==null?'':t).split(/[,;\n]+/);for(var i=0;i<p.length;i++){var q=p[i].trim();if(!q)continue;var m=q.match(/^(\d{1,2})(?:[:.](\d{2}))?\s*[-–—]\s*(\d{1,2})(?:[:.](\d{2}))?$/);if(!m)return null;var h1=+m[1],m1=+(m[2]||0),h2=+m[3],m2=+(m[4]||0);if(h1>23||m1>59||h2>24||m2>59||(h2==24&&m2))return null;var s=h1*60+m1,e=h2*60+m2;if(e<=s)e+=1440;out.push([s,e])}return schMerge(out)}
-function schAbs(now){var s=schD(),o=[],d0=new Date(now);d0.setHours(0,0,0,0);for(var off=-1;off<=2;off++){var d=new Date(d0.getFullYear(),d0.getMonth(),d0.getDate()+off,0,0,0,0),wd=(d.getDay()+6)%7,b=d.getTime();(s.w[wd]||[]).forEach(function(x){o.push([b+x[0]*60000,b+x[1]*60000])})}
+function schAbs(now){var s=schD(),o=[],d0=new Date(now);d0.setHours(0,0,0,0);for(var off=-1;off<=2;off++){var d=new Date(d0.getFullYear(),d0.getMonth(),d0.getDate()+off,0,0,0,0),wd=(d.getDay()+6)%7,b=d.getTime();(svDay(d)||s.w[wd]||[]).forEach(function(x){o.push([b+x[0]*60000,b+x[1]*60000])})}
  var m=schMerge(o.map(function(x){return[x[0],x[1]]}));return m}
 function schState(now){var a=schAbs(now);if(!a.length)return{none:1,a:a};for(var i=0;i<a.length;i++){if(a[i][0]<=now&&now<a[i][1])return{off:1,until:a[i][1],a:a}}for(var j=0;j<a.length;j++){if(a[j][0]>now)return{off:0,until:a[j][0],a:a}}return{off:0,until:null,a:a}}
 function schDur(ms){var m=Math.max(0,Math.round(ms/60000)),h=Math.floor(m/60);m%=60;return h?h+L3(' ч ',' г ',' h ')+('0'+m).slice(-2)+L3(' мин',' хв',' min'):m+L3(' мин',' хв',' min')}
@@ -974,10 +976,7 @@ function schCard(lvl,sn){var s=schD();window._schLvl=lvl;window._schSn=sn;
   h+='</div><div class="mut" style="margin:8px 0 4px">'+L3('Время отключений, например: 18:00-22:00, 02:00-06:00','Час відключень, напр.: 18:00-22:00, 02:00-06:00','Outage times, e.g.: 18:00-22:00, 02:00-06:00')+'</div><textarea id="sct" style="height:64px;font-size:15px">'+esc(schFmt(s.w[schDay]))+'</textarea>'
   +'<div class="row"><button onclick="schSaveDay(0)">'+L3('Сохранить день','Зберегти день','Save day')+'</button><button class="sec" onclick="schSaveDay(1)">'+L3('На все дни','На всі дні','All days')+'</button></div>'
   +'<div class="mut" style="margin:10px 0 4px">'+L3('Нагрузка для расчёта станции, Вт (если нет Bluetooth)','Навантаження для розрахунку станції, Вт (якщо немає Bluetooth)','Load for station estimate, W (when no Bluetooth)')+'</div><input id="scl" type="number" inputmode="decimal" value="'+(s.load||'')+'" onchange="schD().load=Math.max(0,parseFloat(this.value)||0);save();schRefresh()">'
-  +'<div class="mut" style="margin:10px 0 4px">'+L3('Автообновление (экспериментально): адрес JSON','Автооновлення (експериментально): адреса JSON','Auto-update (experimental): JSON address')+'</div><input id="scu" type="url" placeholder="https://…" value="'+esc(s.auto.url||'')+'">'
-  +'<button class="sec" style="margin-top:8px" onclick="schFetch()">'+L3('Обновить из сети','Оновити з мережі','Update from network')+'</button>'
-  +'<div class="mut" style="margin-top:6px">'+(s.auto.err?'<span class="badc">'+esc(s.auto.err)+'</span>':(s.auto.last?L3('Обновлено ','Оновлено ','Updated ')+new Date(s.auto.last).toLocaleString():''))+'</div>'
-  +'<div class="mut" style="margin-top:6px;font-size:11px">'+L3('Формат: {"w":[["18:00-22:00"],[],[],[],[],[],[]]} — 7 дней, начиная с понедельника.','Формат: {"w":[["18:00-22:00"],[],[],[],[],[],[]]} — 7 днів, починаючи з понеділка.','Format: {"w":[["18:00-22:00"],[],[],[],[],[],[]]} — 7 days, Monday first.')+'</div></div>'}
+  +svUi()+'</div>'}
  return h+'</div>'}
 function schToggle(){schEd=schEd?0:1;render()}
 function schRefresh(){var e=document.getElementById('schlive');if(e)e.innerHTML=schLive();var m=document.getElementById('schm');if(m){var t0=new Date();t0.setHours(0,0,0,0);m.style.left=((Date.now()-t0.getTime())/864e5*100)+'%'}}
@@ -1171,6 +1170,44 @@ document.addEventListener('visibilitychange',function(){var sv=document.querySel
 /* підключення будь-якого BLE-пристрою (інші станції: Bluetti, EcoFlow тощо) */
 async function btConnectAny(){if(BT.on)btDisc();BT.any=1;try{await btConnect()}finally{BT.any=0}}
 (function(){var v=btRecCard;btRecCard=function(){var h=v(),x='<div class="row"><button class="sec" onclick="btConnectAny()">'+L3('Подключить другое устройство (любая станция)','Підключити інший пристрій (будь-яка станція)','Connect another device (any station)')+'</button></div><div class="mut" style="margin:4px 0 6px">'+L3('Показывает все Bluetooth-устройства рядом. Для станций не Fossibot данные пока не читаются, но запись сеанса работает.','Показує всі Bluetooth-пристрої поруч. Для станцій не Fossibot дані поки не читаються, але запис сеансу працює.','Shows all nearby Bluetooth devices. For non-Fossibot stations live data is not read yet, but recording works.')+'</div>';var k=h.indexOf('<div class="kv">');return k>=0?h.slice(0,k)+x+h.slice(k):h+x}})();
+
+/* ===== Автооновлення графіка: неофіційний сервіс svitlo.live (як у інтеграції Svitlo Live для Home Assistant) ===== */
+var SV_NEW='https://dtek-api.svitlo-proxy.workers.dev/',SV_OLD='https://svitlo-proxy.svitlo-proxy.workers.dev';
+var SV_REG=[['dnipro-dnem','Дніпро · ДТЕК ДнЕМ'],['dnipro-cek','Дніпро · ЦЕК'],['dnipro-city','Дніпро (місто)'],['dnipropetrovska-oblast','Дніпропетровська обл.'],['kyiv','Київ'],['kiivska-oblast','Київська обл.'],['odeska-oblast','Одеська обл.'],['lvivska-oblast','Львівська обл.'],['kharkivska-oblast','Харківська обл.'],['poltavska-oblast','Полтавська обл.'],['zaporizka-oblast','Запорізька обл.']];
+var SV_Q=['1.1','1.2','2.1','2.2','3.1','3.2','4.1','4.2','5.1','5.2','6.1','6.2'];
+function svD(){var s=schD();if(!s.src||typeof s.src!='object'||Array.isArray(s.src))s.src={on:0,reg:'dnipro-dnem',q:'5.1',last:0,err:'',days:{}};if(!s.src.days||typeof s.src.days!='object')s.src.days={};return s.src}
+function svISO(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
+function svDay(d){var s=S.sch&&S.sch.src;if(!s||!s.on||!s.days)return null;var v=s.days[svISO(d)];return Array.isArray(v)?v:null}
+async function svGet(url){var H=window.CapacitorHttp||(window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.CapacitorHttp),txt;
+ if(H&&H.get){var r=await H.get({url:url,headers:{Accept:'application/json'}});if(r.status&&r.status!=200)throw new Error('HTTP '+r.status);txt=typeof r.data=='string'?r.data:JSON.stringify(r.data)}
+ else{var r2=await fetch(url,{cache:'no-store'});if(!r2.ok)throw new Error('HTTP '+r2.status);txt=await r2.text()}
+ var j=JSON.parse(txt);if(j&&typeof j.body=='string'){try{j=JSON.parse(j.body)}catch(e){}}return j}
+function svFind(j,cands,q){var R=(j&&j.regions)||[];for(var c=0;c<cands.length;c++)for(var i=0;i<R.length;i++)if(R[i]&&R[i].cpu===cands[c]){var sc=(R[i].schedule||{})[q];if(sc)return sc}return null}
+function svScore(sc,iso){var m=sc&&sc[iso];if(!m||typeof m!='object')return 0;return Object.keys(m).some(function(k){return m[k]==1||m[k]==2})?2:1}
+function svToIv(m){var o=[];for(var h=0;h<24;h++)for(var mm=0;mm<60;mm+=30){var c=+(m[('0'+h).slice(-2)+':'+('0'+mm).slice(-2)]||0),s=h*60+mm;if(c==2)o.push([s,s+30])}return schMerge(o)}
+var svBusy=0;
+async function svFetch(manual){var src=svD();if(svBusy||(!src.on&&!manual))return;svBusy=1;var q=String(src.q||'').trim(),n=new Date(),t=svISO(n),tm=svISO(new Date(n.getFullYear(),n.getMonth(),n.getDate()+1)),sc=null,used='',err='';
+ try{try{var j=await svGet(SV_NEW);sc=svFind(j,[src.reg],q);used='dtek-api'}catch(e){err='API 1: '+(e&&e.message||e)}
+  if(!sc||svScore(sc,t)<2){try{var j2=await svGet(SV_OLD),s2=svFind(j2,src.reg.indexOf('dnipro')==0?['dnipropetrovska-oblast',src.reg]:[src.reg],q);if(s2&&svScore(s2,t)>=svScore(sc,t)){sc=s2;used='svitlo-proxy'}}catch(e){if(!sc)err+=(err?' · ':'')+'API 2: '+(e&&e.message||e)}}
+  if(!sc){src.err=err||L3('Очередь не найдена в ответе источника','Чергу не знайдено у відповіді джерела','Queue not found in source');save();if(manual)toast(src.err);svAfter();return}
+  var days={};[t,tm].forEach(function(d){if(svScore(sc,d)==2)days[d]=svToIv(sc[d])});
+  src.days=days;src.last=Date.now();src.used=used;src.err=Object.keys(days).length?'':L3('В источнике нет графика на сегодня','У джерелі немає графіка на сьогодні','No schedule for today in source');save();if(manual)toast(src.err||L3('График обновлён','Графік оновлено','Schedule updated'));svAfter()}
+ finally{svBusy=0}}
+function svAfter(){try{if(tab==='pan')render()}catch(e){}}
+function svToggle(v){var s=svD();s.on=v?1:0;save();if(v)svFetch(true);else render()}
+function svSet(k,v){var s=svD();s[k]=v;s.days={};s.last=0;save();if(s.on)svFetch(true);else render()}
+function svUi(){var s=svD(),sel=function(list,cur,fn){return '<select onchange="'+fn+'">'+list.map(function(x){var v=Array.isArray(x)?x[0]:x,l=Array.isArray(x)?x[1]:x;return '<option value="'+esc(v)+'"'+(v==cur?' selected':'')+'>'+esc(l)+'</option>'}).join('')+'</select>'};
+ return '<div class="mut" style="margin:12px 0 6px">'+L3('Автообновление графика (svitlo.live, неофициально)','Автооновлення графіка (svitlo.live, неофіційно)','Auto-update (svitlo.live, unofficial)')+'</div>'+
+  '<label class="svtg"><input type="checkbox"'+(s.on?' checked':'')+' onchange="svToggle(this.checked)"> <span>'+L3('Включено','Увімкнено','Enabled')+'</span></label>'+
+  '<div class="row" style="margin-top:6px"><div style="flex:2">'+sel(SV_REG,s.reg,"svSet('reg',this.value)")+'</div><div>'+sel(SV_Q,s.q,"svSet('q',this.value)")+'</div></div>'+
+  '<button class="sec" style="margin-top:8px" onclick="svFetch(true)">'+L3('Обновить сейчас','Оновити зараз','Refresh now')+'</button>'+
+  '<div class="mut" style="margin-top:6px">'+(s.err?'<span class="badc">'+esc(s.err)+'</span>':(s.last?L3('Обновлено ','Оновлено ','Updated ')+schClock(s.last)+' · '+Object.keys(s.days||{}).length+' '+L3('дн.','дн.','days'):''))+'</div>'+
+  '<div class="mut" style="margin-top:4px;font-size:11px">'+L3('Дни из источника заменяют ручной график. Если источник недоступен, остаётся ручной.','Дні з джерела замінюють ручний графік. Якщо джерело недоступне, лишається ручний.','Days from the source override the manual schedule; manual stays as fallback.')+'</div>'}
+function svBadge(){var s=S.sch&&S.sch.src;if(!s||!s.on)return '';var ok=s.days&&s.days[svISO(new Date())];return '<div class="mut svb" style="margin-top:8px">'+(ok?'● '+L3('Авто','Авто','Auto')+' · '+esc(s.q)+' · '+(SV_REG.filter(function(x){return x[0]==s.reg})[0]||[0,s.reg])[1]+(s.last?' · '+schClock(s.last):''):'<span class="badc">'+L3('Авто: нет данных','Авто: немає даних','Auto: no data')+(s.err?' — '+esc(s.err):'')+'</span>')+'</div>'}
+(function(){var c=schCard;schCard=function(l,sn){var h=c(l,sn),b=svBadge(),k=h.indexOf('<div class="schbar">');if(b&&k>=0){var e=h.indexOf('</div><div class="schl">',k);if(e>0){var e2=h.indexOf('</div>',e+24);if(e2>0)h=h.slice(0,e2+6)+b+h.slice(e2+6)}}return h}})();
+setTimeout(function(){try{var s=S.sch&&S.sch.src;if(s&&s.on&&Date.now()-(s.last||0)>10*60000)svFetch(false)}catch(e){}},1500);
+setInterval(function(){try{var s=S.sch&&S.sch.src;if(s&&s.on&&!document.hidden&&Date.now()-(s.last||0)>10*60000)svFetch(false)}catch(e){}},60000);
+document.addEventListener('visibilitychange',function(){try{var s=S.sch&&S.sch.src;if(!document.hidden&&s&&s.on&&Date.now()-(s.last||0)>10*60000)svFetch(false)}catch(e){}});
 
 try{render()}catch(e){window.__bootCheck&&setTimeout(window.__bootCheck,0);throw e}
 try{initNativeApp()}catch(e){console.error('BLACKOUT native init',e)}
