@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - fix/startup-diagnostics
-    - fix/settings-button-motion
+      - fix/settings-button-motion
     paths:
       - index.html
       - .github/workflows/startup-diagnostics.yml
