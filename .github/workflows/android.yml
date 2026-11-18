@@ -36,7 +36,31 @@ jobs:
         run: |
           mkdir -p ~/.android
           cp debug.keystore ~/.android/debug.keystore
+      - name: Fixed signing key + increasing version (updates install over the old app)
+        run: |
+          cat >> android/app/build.gradle <<'EOF2'
+
+          android {
+              signingConfigs {
+                  fixed {
+                      storeFile file("${rootDir}/../debug.keystore")
+                      storePassword "android"
+                      keyAlias "androiddebugkey"
+                      keyPassword "android"
+                  }
+              }
+              buildTypes { debug { signingConfig signingConfigs.fixed } }
+              defaultConfig {
+                  versionCode ${{ github.run_number }}
+                  versionName "3.4.${{ github.run_number }}"
+              }
+          }
+          EOF2
       - run: cd android && chmod +x gradlew && ./gradlew assembleDebug
+      - name: Show APK signing certificate
+        run: |
+          BT=$(ls $ANDROID_HOME/build-tools | sort -V | tail -1)
+          $ANDROID_HOME/build-tools/$BT/apksigner verify --print-certs android/app/build/outputs/apk/debug/app-debug.apk | grep -i "SHA-256"
       - uses: actions/upload-artifact@v4
         with:
           name: blackout-apk
