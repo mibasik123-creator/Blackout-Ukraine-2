@@ -319,6 +319,19 @@ body.pb .schbar{background:rgba(168,240,0,.16)}
 .svtg{display:flex;align-items:center;gap:12px;font-size:15px;margin:2px 0 12px;cursor:pointer}.svtg input{margin:0}
 body.bo-locked #app button,body.bo-locked #app input,body.bo-locked #app select,body.bo-locked #app textarea,body.bo-locked #app .pbn,body.bo-locked #app .pbring,body.bo-locked #app a,body.bo-locked #app details{pointer-events:none!important;opacity:.38;filter:grayscale(1)}
 body.bo-locked #app .bo-ban{opacity:1;filter:none}.bo-ban{border-color:var(--warn)!important}.bo-ban h2{color:var(--warn)}.bo-note{text-align:center;margin:0 0 10px}
+
+/* ===== PREMIUM LIGHT (світла тема Living Energy) ===== */
+body.pb.pbl{--bg:#F3F5F1;--bg2:#EBEFE8;--card:#FFFFFF;--surf:#FFFFFF;--elev:#F0F3EE;--bd:rgba(14,21,16,.10);--tx:#0E1510;--mut:#5F6B64;--t1:#0E1510;--t2:#4A564F;--t3:#7A857E;--em:#5E9E00;--ac:#7CC000;--cy:#4E8A00;--bl:#4E8A00;--emrgb:94,158,0;--em2:#A8F000;--lg1:#7CC000;--lg2:#4E8A00;--off:#A3ADA6;background:#F3F5F1!important;background-image:radial-gradient(120% 55% at 50% -8%,rgba(124,192,0,.12),transparent 62%)!important;color:#0E1510}
+body.pbl .pbstate{background:#fff;border-color:rgba(14,21,16,.10);color:#5F6B64}body.pbl .pbstate.on{color:#3D6E00}body.pbl .pbstate i{background:#A3ADA6}body.pbl .pbstate.on i{background:#7CC000;box-shadow:0 0 8px rgba(124,192,0,.6)}
+body.pbl .pbglow{background:radial-gradient(closest-side,rgba(124,192,0,.18),rgba(124,192,0,.06) 55%,transparent 100%)}
+body.pbl .pbp{stroke:#D7DDD3}body.pbl .pbp.on{stroke:rgba(94,158,0,.6)}
+body.pbl .pbc{fill:#fff;stroke:rgba(14,21,16,.14)}body.pbl .pbn .ic{color:#6B7770}body.pbl .pbn.on .pbc,body.pbl .pbc.on{stroke:#7CC000}body.pbl .pbn.on .ic,body.pbl .pbon .ic,body.pbl .pbn .pbon .ic{color:#4E8A00}
+body.pbl #pbsvg text.pbl{fill:#3F4A43}body.pbl #pbsvg text.pbs{fill:#7A857E}body.pbl #pbsvg text.pbv{fill:#0E1510}body.pbl #pbsvg tspan.pbu{fill:#5F6B64}
+body.pbl .pbt{stroke:#E3E8E0}body.pbl .pbo{stroke:#FFFFFF}
+body.pbl .pbtank{fill:#F6F8F3;stroke:rgba(14,21,16,.14)}body.pbl .pbtank.on{stroke:#7CC000}body.pbl .pbfuel{stroke:rgba(94,158,0,.7)}
+body.pbl #pbg stop:nth-child(1){stop-color:#E9FFB8}body.pbl #pbg stop:nth-child(2){stop-color:#5E9E00}body.pbl #pbg stop:nth-child(3){stop-color:#5E9E00}
+body.pbl .pbm .act b{color:#4E8A00}body.pbl .pbbar{fill:#DDE3D9}body.pbl .pbbar.now{fill:#7CC000}
+body.pbl .schbar{background:rgba(124,192,0,.18)}body.pbl .pbdrop{fill:#7CC000}body.pbl .pbspark{fill:#5E9E00}
 </style>
 </head>
 <body>
@@ -1165,7 +1178,7 @@ function pbRefresh(){if(tab!=='pan')return;var el=document.getElementById('pbher
  if(window._pbSig!==pbSig(f,fx)){var g=S.gens[S.g]||S.gens[0],sr=S.srun,sn=S.sts[sr?sr.i:si],lvl=(BT.on&&BT.pct!=null)?BT.pct:window._schLvl;window._pbSig=pbSig(f,fx);var w=document.getElementById('pbsvg');if(w){w.innerHTML=pbSvg(lvl,g,sn,f,fx,window._pbPrev);pbAfter()}el.classList.toggle('chg',!!f.chg);el.classList.toggle('act',!!(f.dis||f.r))}
  var set=function(id,val){var e=document.getElementById(id);if(e&&e.textContent!==val)e.textContent=val};set('pbin',kw(f.wi));set('pbout',kw(f.wo));var tp=document.getElementById('pbtop');if(tp){var on=f.chg||f.dis||f.r;tp.className='pbstate '+(on?'on':'off');tp.innerHTML='<i></i>'+pbTop(f)}set('pbst',pbStState(f));var chs=document.querySelectorAll('.pbchips .chip');if(chs.length>2){var son=!!(S.srun||f.chg||f.dis);chs[1].className='chip '+(son?'on':'off');chs[2].className='chip '+(BT.on?'on':'off')}var sr2=S.srun,sn2=S.sts[sr2?sr2.i:si],lv=window._schLvl;if(BT.on&&BT.pct!=null)lv=BT.pct;var a=pbAuto(lv,sn2,f);set('pbau',pbAuV(a));set('pbaus',pbAuU(a));var ps=document.getElementById('pbpct');if(ps&&lv!=null){var nv=pbPct(lv),ov=ps.getAttribute('data-v');if(String(nv)!==ov){if(ov===''){window._pbSig=null;window._pbPrev=null;pbRefresh();return}var from=+ov;ps.setAttribute('data-v',nv);pbTweenFn(function(x){if(ps.firstChild)ps.firstChild.nodeValue=String(Math.round(x))},from,nv,800,ps);var pr=document.getElementById('pbprog'),pr2=document.getElementById('pbprog2'),off=(PBC*(1-nv/100)).toFixed(2);if(pr){pr.setAttribute('data-to',off);pr.style.strokeDashoffset=off}if(pr2){pr2.setAttribute('data-to',off);pr2.style.strokeDashoffset=off}window._pbPrev=nv}}}
 document.addEventListener('visibilitychange',function(){var sv=document.querySelector('#pbsvg svg');if(sv&&sv.pauseAnimations){try{document.hidden?sv.pauseAnimations():sv.unpauseAnimations()}catch(e){}}});
-(function(){var r=render;render=function(){try{document.body.classList.toggle('pb',S.theme!=='light')}catch(e){}r();try{pbAfter()}catch(e){}};
+(function(){var r=render;render=function(){try{document.body.classList.add('pb');document.body.classList.toggle('pbl',S.theme==='light')}catch(e){}r();try{pbAfter()}catch(e){}};
  var b=btFrame2;btFrame2=function(){b();try{btExtra()}catch(e){}try{pbRefresh()}catch(e){}};
  var so=vSetAll;vSetAll=function(){var h=so(),m=['auto','full','lite'],cur='auto';try{cur=localStorage.getItem('blackout_fx')||'auto'}catch(e){}
   var c='<div class="card"><h2>'+L3('Анимации','Анімації','Animations')+'</h2><select onchange="pbSetFx(this.value)">'+m.map(function(k){return '<option value="'+k+'"'+(k==cur?' selected':'')+'>'+({auto:L3('Авто','Авто','Auto'),full:L3('Полные','Повні','Full'),lite:L3('Упрощённые (слабые устройства)','Спрощені (слабкі пристрої)','Lite (low-end devices)')})[k]+'</option>'}).join('')+'</select><div class="mut" style="margin-top:6px">'+L3('Эффекты отключаются, если в системе включено «уменьшить движение».','Ефекти вимикаються, якщо в системі ввімкнено «зменшити рух».','Effects are off when the system “reduce motion” is on.')+'</div></div>';
