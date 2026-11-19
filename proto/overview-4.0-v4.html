@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="uk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>BLACKOUT 4.0 Overview</title>
+<style>
+/* ===== Design tokens — INDUSTRIAL ENERGY PREMIUM (fixed palette) ===== */
+:root{
+ --bg:#090D0B;--bg2:#101613;--s1:#151C18;--s2:#1B241F;--b1:#29342E;--b2:#202923;
+ --t1:#F1F5F2;--t2:#A0ADA4;--t3:#65736A;
+ --grid:#48B9E8;--grid-g:rgba(72,185,232,.15);--grid-v:#72C9ED;
+ --gen:#F0A542;--gen-g:rgba(240,165,66,.15);--gen-v:#F3BA70;
+ --st:#A8D957;--st-g:rgba(168,217,87,.12);
+ --home:#E8EEE9;--home-g:rgba(232,238,233,.08);
+ --car:#8D9BA5;--car-on:#A8D957;--car-off:#65736A;
+ --err:#EF665B;--warn:#EFB34F;
+ --carc:#9A1C24;
+ --sp1:4px;--sp2:8px;--sp3:12px;--sp4:16px;--sp5:24px;--r:14px;--ease:cubic-bezier(.2,.8,.2,1)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--t1);font:400 15px/1.35 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+body{background:radial-gradient(120% 55% at 50% 0%,var(--bg2) 0%,var(--bg) 70%) fixed,var(--bg)}
+.wrap{max-width:430px;margin:0 auto;padding:0 20px 112px}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+/* A. Top bar */
+.top{height:52px;display:flex;align-items:center}
+.logo{display:flex;align-items:center;gap:8px;font-weight:600;font-size:15px;letter-spacing:.14em}
+.logo svg{display:block}
+.status{margin-left:auto;display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:500;color:var(--t2)}
+.status i{width:7px;height:7px;border-radius:50%;background:var(--st);box-shadow:0 0 0 3px var(--st-g);transition:background .4s,box-shadow .4s}
+.status.warn i{background:var(--warn);box-shadow:0 0 0 3px rgba(239,179,79,.15)}.status.bad i{background:var(--err);box-shadow:0 0 0 3px rgba(239,102,91,.15)}
+.meta{margin-top:-6px;font-size:11.5px;color:var(--t3);letter-spacing:.01em}.meta b{font-weight:500;color:var(--t2)}.test{color:var(--warn);font-weight:600}
+/* B. Charge */
+.charge{display:flex;flex-direction:column;align-items:center;margin-top:22px}
+.ring{position:relative;width:180px;height:180px}
+.ring svg{width:100%;height:100%;display:block;transform:rotate(-90deg)}
+.ring .tr{fill:none;stroke:var(--b1);stroke-width:6}
+.ring .gl{fill:none;stroke:var(--st);stroke-width:12;stroke-linecap:round;opacity:.10;transition:stroke-dashoffset 1s var(--ease)}
+.ring .fg{fill:none;stroke:var(--st);stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset 1s var(--ease),stroke .4s}
+.ring .c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.pct{font-size:62px;font-weight:600;letter-spacing:-2px;line-height:1;transition:opacity .4s}.pct small{font-size:24px;font-weight:500;color:var(--t2);letter-spacing:0;margin-left:2px}
+.dev{font-size:12px;color:var(--t2);margin-top:6px;letter-spacing:.02em}
+.state{margin-top:14px;font-size:14px;font-weight:500;color:var(--t1)}.state span{color:var(--st)}
+.eta{margin-top:2px;font-size:12.5px;color:var(--t2);min-height:17px}
+.charge.stale .fg,.charge.stale .gl{stroke:var(--t3)}.charge.stale .pct{opacity:.5}.charge.stale .state span{color:var(--t2)}
+/* C. Power */
+.pw{display:grid;grid-template-columns:repeat(3,1fr);margin:22px 0 4px}
+.pw>div{padding:0 0 0 14px;border-left:1px solid var(--b2)}.pw>div:first-child{padding-left:0;border-left:0}
+.pw>div>span{display:block;font-size:10.5px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--t3)}
+.pw b{display:block;margin-top:5px;font-size:26px;font-weight:600;letter-spacing:-.5px;white-space:nowrap;transition:color .5s,opacity .4s}
+.pw b small{font-size:12px;font-weight:500;color:var(--t2);margin-left:3px;letter-spacing:0}
+.pw.stale b{opacity:.45}
+/* D/E. Scene and energy lines */
+.scene{margin:14px -20px 0}.scene svg{display:block;width:100%;height:auto}
+.lb{fill:none;stroke:var(--b1);stroke-width:1.2;stroke-linecap:round;transition:stroke .5s}
+.lg{fill:none;stroke-width:4.5;stroke-linecap:round;opacity:0;transition:opacity .8s}
+.lc{fill:none;stroke-width:1.3;stroke-linecap:round;opacity:0;transition:opacity .8s}
+.lp{fill:none;stroke-width:1.8;stroke-linecap:round;stroke-dasharray:1.5 14;opacity:0;transition:opacity .6s}
+.grid .lg{stroke:var(--grid-g);opacity:0}.grid .lc,.grid .lp{stroke:var(--grid)}
+.gen .lg{stroke:var(--gen-g)}.gen .lc,.gen .lp{stroke:var(--gen)}
+.st .lg{stroke:var(--st-g)}.st .lc,.st .lp{stroke:var(--st)}
+.lp{filter:none}
+.val{font:500 10.5px Inter,system-ui,sans-serif;transition:opacity .5s}.val.grid{fill:var(--grid-v)}.val.gen{fill:var(--gen-v)}.val.st{fill:var(--st)}
+.nm{font:500 10px Inter,system-ui,sans-serif;fill:var(--t3);letter-spacing:.12em}
+.sv{font:600 12px Inter,system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.node{transition:opacity .6s}.node.off{opacity:.55}
+.win{transition:fill .9s,opacity .9s}
+/* F. Devices */
+.hd2{display:flex;align-items:baseline;justify-content:space-between;margin:18px 0 2px}.hd2 h2{margin:0;font-size:10.5px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--t3)}.hd2 span{font-size:11.5px;color:var(--t3)}
+.row{display:flex;align-items:center;gap:14px;padding:12px 0;border-top:1px solid var(--b2)}.row:first-of-type{border-top:0}
+.row .ic{flex:0 0 56px;height:38px;display:grid;place-items:center}.row .ic svg{max-width:56px;max-height:38px;display:block}
+.row .tx{flex:1;min-width:0}.row b{display:block;font-size:14.5px;font-weight:500}.row .s{font-size:12px;color:var(--t2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.row .s.on{color:var(--st)}
+.row .v{font-size:18px;font-weight:600;text-align:right;min-width:62px}.row .v small{font-size:11.5px;font-weight:500;color:var(--t2);margin-left:1px}
+.row.stale .v,.row.stale .ic{opacity:.45}
+/* Navigation */
+nav{position:fixed;left:0;right:0;bottom:0;background:linear-gradient(rgba(9,13,11,0),var(--bg) 38%);padding:14px 16px calc(8px + env(safe-area-inset-bottom));display:flex;justify-content:center}
+nav div{display:flex;width:100%;max-width:398px;border-top:1px solid var(--b2);padding-top:8px}
+nav button{flex:1;background:none;border:0;color:var(--t3);font:500 10.5px Inter,system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;gap:4px;padding:2px}
+nav svg{width:22px;height:22px}nav button.on{color:var(--st)}
+/* Prototype panel (not part of the product UI) */
+.lab{margin-top:30px;border-top:1px dashed var(--b1);padding-top:12px}.lab h3{margin:0 0 8px;font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--warn)}
+.lab .r{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}.lab button{border:1px solid var(--b1);background:var(--s1);color:var(--t1);font:500 12px Inter,system-ui,sans-serif;padding:7px 10px;border-radius:10px}
+.lab button.on{border-color:var(--st);color:var(--st)}.sw{width:24px;height:24px;border-radius:50%;padding:0!important}.sw.on{box-shadow:0 0 0 2px var(--st)}.mono{font:500 11px ui-monospace,monospace;color:var(--t2)}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important}}
+</style></head><body>
+<div class="wrap">
+ <!-- A -->
+ <div class="top"><div class="logo"><svg width="14" height="18" viewBox="0 0 14 18"><path d="M8.6 0 0 10.2h5.4L4.2 18 14 6.9H8.3z" fill="var(--st)"/></svg>BLACKOUT</div>
+  <div class="status" id="pill"><i></i><span id="pillt">Система ОК</span></div></div>
+ <div class="meta">Дніпро · <b id="fst">оновлено щойно</b> · <span class="test">тестові дані</span></div>
+
+ <!-- B -->
+ <div class="charge" id="heroWrap">
+  <div class="ring"><svg viewBox="0 0 180 180"><circle class="tr" cx="90" cy="90" r="82"/><circle class="gl" id="arcglow" cx="90" cy="90" r="82" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/><circle class="fg" id="ringfg" cx="90" cy="90" r="82" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/></svg>
+   <div class="c"><div class="pct num"><span id="pct">—</span><small>%</small></div><div class="dev">Fossibot F2400</div></div></div>
+  <div class="state">Станція · <span id="mode">—</span></div><div class="eta" id="eta"></div>
+ </div>
+
+ <!-- C -->
+ <div class="pw" id="met"><div><span>Вхід</span><b class="num" id="vinb"><span id="vin">—</span><small>Вт</small></b></div><div><span>Вихід</span><b class="num"><span id="vout">—</span><small>Вт</small></b></div><div><span id="rtl">Запас</span><b class="num"><span id="rt">—</span><small id="rtu"></small></b></div></div>
+
+ <!-- D/E -->
+ <div class="scene">
+  <svg id="flow" viewBox="0 0 360 262" role="img" aria-label="Енергосистема будинку">
+   <defs>
+    <radialGradient id="ground" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#151C18"/><stop offset=".75" stop-color="#101613"/><stop offset="1" stop-color="#101613" stop-opacity="0"/></radialGradient>
+    <radialGradient id="stpool" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="rgba(168,217,87,.16)"/><stop offset="1" stop-color="rgba(168,217,87,0)"/></radialGradient>
+    <radialGradient id="warm" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="rgba(243,217,164,.22)"/><stop offset="1" stop-color="rgba(243,217,164,0)"/></radialGradient>
+    <linearGradient id="wallF" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#202923"/><stop offset="1" stop-color="#151C18"/></linearGradient>
+    <linearGradient id="wallS" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#171F1B"/><stop offset="1" stop-color="#101613"/></linearGradient>
+    <linearGradient id="roofG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2E3a33"/><stop offset="1" stop-color="#202923"/></linearGradient>
+    <linearGradient id="winL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F6E3BA"/><stop offset="1" stop-color="#E9C58A"/></linearGradient>
+    <linearGradient id="stF" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2B3530"/><stop offset="1" stop-color="#161D19"/></linearGradient>
+    <linearGradient id="stS" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1C2420"/><stop offset="1" stop-color="#111714"/></linearGradient>
+    <linearGradient id="stT" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3A463F"/><stop offset="1" stop-color="#29342E"/></linearGradient>
+    <linearGradient id="genB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2A332E"/><stop offset="1" stop-color="#171E1A"/></linearGradient>
+    <linearGradient id="carSh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".35"/></linearGradient>
+    <clipPath id="carClip"><path d="M6 32C6 27 9 24 14 23L30 20C38 13 48 9 62 9C76 9 88 13 98 20L108 22C113 23 116 26 116 31V34C116 36 114 37 112 37H8C6.5 37 6 36 6 34Z"/></clipPath>
+    <clipPath id="tankClip"><rect x="0" y="0" width="7" height="22" rx="2"/></clipPath>
+   </defs>
+
+   <!-- ground -->
+   <ellipse cx="180" cy="214" rx="186" ry="46" fill="url(#ground)"/>
+   <ellipse cx="72" cy="232" rx="70" ry="16" fill="url(#stpool)" id="stglow" opacity=".3" style="transition:opacity .8s"/>
+
+   <!-- energy lines (behind objects) -->
+   <g id="links"></g>
+
+   <!-- generator (top left) : open frame, fuel tank with real level -->
+   <g class="node" id="n-gen" transform="translate(38 18)">
+    <ellipse cx="27" cy="44" rx="28" ry="4" fill="#000" opacity=".5"/>
+    <rect x="2" y="12" width="50" height="30" rx="3" fill="none" stroke="#3A463F" stroke-width="2"/>
+    <rect x="8" y="20" width="26" height="18" rx="2" fill="url(#genB)"/>
+    <circle cx="42" cy="29" r="6" fill="#101613" stroke="#3A463F" stroke-width="1.2"/><circle cx="42" cy="29" r="2" fill="#29342E"/>
+    <rect x="6" y="3" width="40" height="10" rx="3" fill="url(#genB)" stroke="#29342E"/>
+    <g transform="translate(-10 14)"><rect width="7" height="22" rx="2" fill="#101613" stroke="#29342E"/><g clip-path="url(#tankClip)"><rect id="genfuel" x="0" y="22" width="7" height="22" fill="var(--gen)" opacity=".85" style="transition:y .9s var(--ease)"/></g></g>
+    <text x="27" y="60" text-anchor="middle" class="nm">ГЕНЕРАТОР</text>
+    <text x="27" y="74" text-anchor="middle" class="sv" id="genv" style="fill:var(--gen-v)">—</text>
+    <text x="27" y="87" text-anchor="middle" class="val" id="genfuelv" style="fill:var(--t3)">бак —</text>
+   </g>
+
+   <!-- grid (top right) -->
+   <g class="node" id="n-grid" transform="translate(274 4)">
+    <g fill="none" stroke="#3A463F" stroke-width="1.2" stroke-linejoin="round"><path d="M22 2 13 54M22 2l9 52M10 12h24M12 22h20M15 36h14M14 22l15 14M30 22 15 36M16 36l13 18M28 36 16 54"/></g>
+    <ellipse cx="22" cy="56" rx="13" ry="2.6" fill="#000" opacity=".45"/>
+    <text x="22" y="74" text-anchor="middle" class="nm">МЕРЕЖА</text>
+    <text x="22" y="88" text-anchor="middle" class="sv" id="gridv" style="fill:var(--grid-v)">—</text>
+   </g>
+
+   <!-- house (center) : two volumes, mono-pitch roofs -->
+   <g transform="translate(116 96)">
+    <ellipse cx="66" cy="96" rx="82" ry="10" fill="#000" opacity=".55"/>
+    <ellipse cx="62" cy="88" rx="70" ry="20" fill="url(#warm)" id="hglow" opacity="0" style="transition:opacity .9s"/>
+    <path d="M0 30 L78 10 L78 92 L0 92 Z" fill="url(#wallF)"/>
+    <path d="M-3 31 L79 9" stroke="#3A463F" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M78 34 L132 26 L132 92 L78 92 Z" fill="url(#wallS)"/>
+    <path d="M76 35 L134 25" stroke="#3A463F" stroke-width="2" stroke-linecap="round"/>
+    <rect class="win" id="w1" x="10" y="40" width="26" height="30" rx="1" fill="#1B241F"/>
+    <rect class="win" id="w2" x="42" y="34" width="26" height="36" rx="1" fill="#1B241F"/>
+    <rect class="win" id="w3" x="88" y="46" width="36" height="20" rx="1" fill="#1B241F"/>
+    <rect x="42" y="74" width="14" height="18" fill="#0E1411"/><rect class="win" id="w4" x="10" y="76" width="26" height="8" rx="1" fill="#1B241F"/>
+    <rect x="88" y="72" width="36" height="20" fill="#0E1411"/><path d="M88 77h36M88 82h36M88 87h36" stroke="#151C18" stroke-width="1"/>
+    <rect x="127" y="54" width="4" height="8" rx="1" fill="#202923" stroke="#3A463F" stroke-width=".7"/><circle cx="129" cy="57" r=".9" fill="var(--grid)" id="wcled" opacity=".25"/>
+    <path d="M-6 92 H138" stroke="#29342E" stroke-width="1.4"/>
+   </g>
+
+   <!-- station (bottom left) : stylised portable power station -->
+   <g transform="translate(28 182)" id="n-st">
+    <ellipse cx="44" cy="58" rx="46" ry="5" fill="#000" opacity=".55"/>
+    <path d="M4 12 L16 4 L84 4 L72 12 Z" fill="url(#stT)"/>
+    <path d="M72 12 L84 4 L84 46 L72 54 Z" fill="url(#stS)"/>
+    <rect x="4" y="12" width="68" height="42" rx="3" fill="url(#stF)"/>
+    <path d="M20 8 L25 0 L64 0 L59 8" fill="none" stroke="#4A5650" stroke-width="2.4" stroke-linejoin="round"/>
+    <rect x="9" y="17" width="58" height="32" rx="2.5" fill="#101613"/>
+    <rect x="13" y="21" width="21" height="12" rx="1.5" fill="#090D0B" stroke="rgba(168,217,87,.45)" stroke-width=".8"/>
+    <rect x="15" y="29" width="13" height="1.8" rx=".9" fill="var(--st)" id="stbar"/>
+    <g fill="#090D0B" stroke="#29342E" stroke-width=".6"><rect x="39" y="21" width="7" height="5" rx="1"/><rect x="49" y="21" width="7" height="5" rx="1"/><circle cx="61" cy="23.5" r="2.2"/>
+     <rect x="13" y="38" width="9" height="7" rx="1.6"/><rect x="25" y="38" width="9" height="7" rx="1.6"/><rect x="39" y="38" width="9" height="7" rx="1.6"/><rect x="51" y="38" width="9" height="7" rx="1.6"/></g>
+    <circle cx="63.5" cy="41.5" r="1.4" fill="var(--st)"/>
+    <path d="M76 14v34M79 12v34" stroke="#0E1411" stroke-width="1"/>
+   </g>
+
+   <!-- car (right) : minimal EV icon that fills with energy -->
+   <g id="carico" transform="translate(236 192)">
+    <ellipse cx="61" cy="42" rx="56" ry="3.4" fill="#000" opacity=".55"/>
+    <path d="M6 32C6 27 9 24 14 23L30 20C38 13 48 9 62 9C76 9 88 13 98 20L108 22C113 23 116 26 116 31V34C116 36 114 37 112 37H8C6.5 37 6 36 6 34Z" fill="#141B17"/>
+    <g clip-path="url(#carClip)"><rect id="carfill" x="6" y="0" width="0" height="40" fill="var(--car-off)" style="transition:width 1s var(--ease),fill .6s"/><rect id="carfilledge" x="6" y="0" width="1.5" height="40" fill="#F1F5F2" opacity="0" style="transition:x 1s var(--ease),opacity .6s"/></g>
+    <path d="M6 32C6 27 9 24 14 23L30 20C38 13 48 9 62 9C76 9 88 13 98 20L108 22C113 23 116 26 116 31V34C116 36 114 37 112 37H8C6.5 37 6 36 6 34Z" fill="url(#carSh)"/>
+    <path d="M6 32C6 27 9 24 14 23L30 20C38 13 48 9 62 9C76 9 88 13 98 20L108 22C113 23 116 26 116 31V34C116 36 114 37 112 37H8C6.5 37 6 36 6 34Z" fill="none" style="stroke:var(--carc)" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M35 20.5C43 14.5 51 12 62 12C74 12 84 15 92.5 20.5Z" fill="#0B100E" stroke="#29342E" stroke-width=".7"/><path d="M64 12.4V20.5" style="stroke:var(--carc)" stroke-width="1.2"/>
+    <path d="M18 37A10 10 0 0 1 38 37Z M84 37A10 10 0 0 1 104 37Z" fill="#090D0B"/>
+    <circle cx="28" cy="37" r="7.2" fill="#0B100E" stroke="#3A463F" stroke-width="1"/><circle cx="28" cy="37" r="3.4" fill="none" stroke="#65736A" stroke-width="1"/>
+    <circle cx="94" cy="37" r="7.2" fill="#0B100E" stroke="#3A463F" stroke-width="1"/><circle cx="94" cy="37" r="3.4" fill="none" stroke="#65736A" stroke-width="1"/>
+    <path d="M106 23.6L114 25.6" stroke="#E8EEE9" stroke-width="1.5" stroke-linecap="round"/><path d="M8 26.4L13.5 25.3" stroke="#EF665B" stroke-width="1.5" stroke-linecap="round"/>
+    <circle class="evport" cx="13" cy="29" r="1.8" fill="var(--grid)" opacity="0" style="transition:opacity .6s"/>
+    <text x="61" y="55" text-anchor="middle" class="sv" id="carpct">—</text>
+    <text x="61" y="67" text-anchor="middle" class="val" id="carlbl" style="fill:var(--t3)">Tesla</text>
+   </g>
+  </svg>
+ </div>
+
+ <!-- F -->
+ <div class="hd2"><h2>Пристрої</h2><span id="devcount"></span></div>
+ <div class="row" id="dcard"><div class="ic"><svg viewBox="0 0 90 62"><path d="M4 12 L16 4 L84 4 L72 12 Z" fill="url(#stT)"/><path d="M72 12 L84 4 L84 46 L72 54 Z" fill="url(#stS)"/><rect x="4" y="12" width="68" height="42" rx="3" fill="url(#stF)"/><rect x="9" y="17" width="58" height="32" rx="2.5" fill="#101613"/><rect x="13" y="21" width="21" height="12" rx="1.5" fill="#090D0B" stroke="rgba(168,217,87,.45)" stroke-width=".8"/><rect x="15" y="29" width="13" height="1.8" rx=".9" fill="#A8D957"/></svg></div>
+  <div class="tx"><b>Fossibot F2400</b><div class="s on" id="dst">—</div></div><div class="v num"><span id="dpct">—</span><small>%</small></div></div>
+ <div class="row" id="gcard"><div class="ic"><svg viewBox="-12 0 66 46"><rect x="2" y="12" width="50" height="30" rx="3" fill="none" stroke="#3A463F" stroke-width="2"/><rect x="8" y="20" width="26" height="18" rx="2" fill="#202923"/><circle cx="42" cy="29" r="6" fill="#101613" stroke="#3A463F" stroke-width="1.2"/><rect x="6" y="3" width="40" height="10" rx="3" fill="#202923"/><rect x="-10" y="14" width="7" height="22" rx="2" fill="#101613" stroke="#29342E"/><rect id="gfuel2" x="-10" y="25" width="7" height="11" rx="1.5" fill="#F0A542" opacity=".85"/></svg></div>
+  <div class="tx"><b>FORTE FG6500</b><div class="s" id="gst">—</div></div><div class="v num"><span id="gpct">—</span><small>% бак</small></div></div>
+ <div class="row" id="ccard"><div class="ic"><svg viewBox="4 6 114 40"><path d="M6 32C6 27 9 24 14 23L30 20C38 13 48 9 62 9C76 9 88 13 98 20L108 22C113 23 116 26 116 31V34C116 36 114 37 112 37H8C6.5 37 6 36 6 34Z" fill="#141B17" style="stroke:var(--carc)" stroke-width="2"/><circle cx="28" cy="37" r="7" fill="#0B100E" stroke="#3A463F"/><circle cx="94" cy="37" r="7" fill="#0B100E" stroke="#3A463F"/></svg></div>
+  <div class="tx"><b>Tesla Model Y</b><div class="s" id="cst">—</div></div><div class="v num"><span id="cpct">—</span><small>%</small></div></div>
+
+ <div class="lab"><h3>Панель прототипу · тестова телеметрія</h3>
+  <div class="r" id="scen"></div>
+  <div class="r"><span class="mono">Колір кузова:</span><span id="ccol"></span></div>
+  <div class="r mono" id="warn" style="color:var(--warn);line-height:1.5"></div>
+  <div class="r"><button id="mot">Анімація: увімк</button><span class="mono" id="fps">— fps</span></div></div>
+</div>
+<nav><div>
+ <button class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3.5 11 12 4.5l8.5 6.5v8.5h-5.5v-5.5h-6v5.5H3.5z"/></svg>Огляд</button>
+ <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="5" y="7.5" width="14" height="12.5" rx="2"/><path d="M9 7.5V4.5h6v3M9 12.5h3"/></svg>Пристрої</button>
+ <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M5 19.5V13M10 19.5V7M15 19.5v-8M20 19.5V9.5"/></svg>Аналітика</button>
+ <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>Система</button>
+</div></nav>
+<script>
+
+/* ===================== Telemetry store =====================
+   Each source is independent: station (BLE), grid (station voltage / schedule), gen (app session), car (Tesla BLE).
+   Freshness is checked per source; UI reads only from here. */
+var STALE={station:15000,grid:30000,gen:30000,car:120000,home:30000};
+var Tel={d:{},subs:[],set:function(k,v){v.t=v.t||Date.now();this.d[k]=v;this.subs.forEach(function(f){f(k)})},get:function(k){return this.d[k]},
+ fresh:function(k){var v=this.d[k];return !!v&&Date.now()-v.t<STALE[k]},age:function(k){var v=this.d[k];return v?Date.now()-v.t:null},on:function(f){this.subs.push(f)}};
+function ago(ms){if(ms==null)return '';var s=Math.round(ms/1000);return s<60?s+' с тому':s<3600?Math.round(s/60)+' хв тому':Math.round(s/3600)+' год тому'}
+
+/* ===================== Energy lines: geometry; colour = source (grid blue, generator amber, station green) ===================== */
+var LINKS=[
+ {id:'genhome',cls:'gen',d:'M78 112 C96 114 110 120 120 128',lx:102,ly:110,a:'start'},
+ {id:'genst',cls:'gen',d:'M56 114 C46 140 48 164 58 182',lx:42,ly:156,a:'end'},
+ {id:'gridhome',cls:'grid',d:'M284 100 C270 106 258 116 250 126',lx:262,ly:104,a:'end'},
+ {id:'gridst',cls:'grid',d:'M292 102 C282 112 270 124 262 138 M118 168 C104 172 96 176 90 182',lx:104,ly:160,a:'end'},
+ {id:'use',cls:'st',d:'M100 206 C116 204 128 198 138 188',lx:142,ly:212,a:'start'},
+ {id:'gridcar',cls:'grid',d:'M306 102 C318 130 316 166 302 196',lx:304,ly:150,a:'end'}];
+var MOTION=!(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches);
+(function(){var g=document.getElementById('links'),h='';LINKS.forEach(function(l){h+='<g id="lk-'+l.id+'" class="'+l.cls+'"><path class="lb" d="'+l.d+'"/><path class="lg" d="'+l.d+'"/><path class="lc" d="'+l.d+'"/><path class="lp" d="'+l.d+'"/><text class="val '+l.cls+'" x="'+l.lx+'" y="'+l.ly+'" text-anchor="'+l.a+'"></text></g>'});g.innerHTML=h;
+ LINKS.forEach(function(l){var gl=document.getElementById('lk-'+l.id);l.base=gl.querySelector('.lb');l.gl=gl.querySelector('.lg');l.core=gl.querySelector('.lc');l.el=gl.querySelector('.lp');l.tx=gl.querySelector('.val');
+  /* glow and core are static strokes; only the 1.8 px pulse layer moves — one Web Animation per line, no filters */
+  l.an=l.el.animate([{strokeDashoffset:0},{strokeDashoffset:-15.5}],{duration:1000,iterations:Infinity});l.an.playbackRate=0;l.rate=0})})();
+function rateFor(w){if(!(w>5))return 0;return Math.min(2.4,.3+Math.log10(w)*.58)}
+function fmtW(w){return w>=1000?(Math.round(w/100)/10).toString().replace('.',',')+' кВт':Math.round(w)+' Вт'}
+var rateAnim={};
+function setLink(id,state,w,dir){var l=LINKS.filter(function(x){return x.id===id})[0];if(!l)return;var on=state==='on'&&w>5,known=state==='known',k=Math.min(1,.2+Math.log10(Math.max(w,1))/4.2);
+ l.el.style.opacity=on?.95:0;l.core.style.opacity=on?(.4+.55*k):(known?.35:0);l.gl.style.opacity=on?(.4+.6*k):0;
+ l.base.style.strokeDasharray=state==='stale'?'2 4':'';
+ if(l.tx){l.tx.textContent=state==='stale'?(l.staleTxt||''):(on?fmtW(w):'');l.tx.style.opacity=state==='stale'?.55:1}
+ tweenRate(l,on&&MOTION?rateFor(w)*(dir||1):0)}
+function tweenRate(l,target){var from=l.rate,t0=performance.now(),D=700;cancelAnimationFrame(rateAnim[l.id]);
+ (function step(t){var k=Math.min(1,(t-t0)/D),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2,v=from+(target-from)*e;l.rate=v;try{l.an.updatePlaybackRate?l.an.updatePlaybackRate(v):(l.an.playbackRate=v)}catch(x){}if(k<1)rateAnim[l.id]=requestAnimationFrame(step)})(t0)}
+function setArc(p){var o=(100-p).toFixed(1);document.getElementById('ringfg').style.strokeDashoffset=o;document.getElementById('arcglow').style.strokeDashoffset=o}
+/* ===================== Smooth numbers ===================== */
+var NUM={};function num(id,v,dec){var el=document.getElementById(id);if(!el)return;if(v==null||isNaN(v)){cancelAnimationFrame(el._r);el.textContent='—';NUM[id]=null;return}
+ var from=NUM[id]==null?v:NUM[id],t0=performance.now(),D=600;NUM[id]=v;cancelAnimationFrame(el._r);
+ (function st(t){var k=Math.min(1,(t-t0)/D),x=from+(v-from)*(1-Math.pow(1-k,3));el.textContent=dec?x.toFixed(dec).replace('.',','):Math.round(x).toString().padStart(4,'0');if(k<1)el._r=requestAnimationFrame(st)})(t0)}
+function cls(id,c,on){var e=document.getElementById(id);if(e)e.classList.toggle(c,!!on)}
+function txt(id,t){var e=document.getElementById(id);if(e&&e.textContent!==t)e.textContent=t}
+
+/* ===================== Derived energy balance (single source of truth) =====================
+   Station output = home part + car part (only when the car is charged from the station).
+   Station input comes from grid or generator (whichever is confirmed on; generator wins during a session). */
+/* Energy topology of this home (enforced, whatever the input says):
+   - the house is fed by ONE source: generator (session on) > grid (present) > station (outage);
+   - generator and grid feed the house directly and may charge the station at the same time;
+   - the station feeds the house only when neither generator nor grid is available;
+   - Tesla charges only from the grid; a station -> Tesla flow does not exist in this system. */
+function balance(){var st=Tel.get('station'),gr=Tel.get('grid'),gn=Tel.get('gen'),car=Tel.get('car'),hm=Tel.get('home');
+ var F={st:Tel.fresh('station'),gr:Tel.fresh('grid'),gn:Tel.fresh('gen'),car:Tel.fresh('car'),hm:Tel.fresh('home')};
+ var genOn=!!(F.gn&&gn&&gn.on),gridOn=!!(F.gr&&gr&&gr.on),gridOff=!!(F.gr&&gr&&!gr.on),genOff=!!(F.gn&&gn&&!gn.on);
+ var feed=genOn?'gen':gridOn?'grid':(gridOff&&(genOff||!gn))?'station':'unknown';
+ var warn=[];
+ var stIn=st?st.inW:0,stOut=st?st.outW:0;
+ if(st&&feed!=='station'&&stOut>5)warn.push('вихід станції '+Math.round(stOut)+' Вт проігноровано: будинок живиться від '+(feed==='gen'?'генератора':feed==='grid'?'мережі':'невідомого джерела'));
+ if(st&&feed==='station'&&stIn>5)warn.push('вхід станції '+Math.round(stIn)+' Вт без підтвердженого джерела');
+ var homeW=F.hm&&hm?hm.W:null;           /* house load from a meter; null when unknown */
+ var carChg=!!(car&&car.st===5),carW=carChg?Math.round(car.kW*1000):0;
+ if(car&&car.src==='station')warn.push('джерело авто «станція» неможливе — потік не показано');
+ var carFromGrid=carChg&&gridOn;            /* the only allowed charging path */
+ var genTotal=genOn&&F.st?((homeW!=null?homeW:0)+stIn):null;
+ var gridTotal=gridOn&&F.st?((homeW!=null?homeW:0)+stIn+(carFromGrid?carW:0)):null;
+ return{st:st,gr:gr,gn:gn,car:car,F:F,feed:feed,homeW:homeW,stIn:stIn,stOut:stOut,carW:carW,carChg:carChg,carFromGrid:carFromGrid,genTotal:genTotal,gridTotal:gridTotal,homeKnown:homeW!=null,warn:warn,
+  carFromSt:false,stCarW:0,inSrc:feed==='gen'?'gen':feed==='grid'?'grid':null}}
+
+/* ===================== Paint: touches only changed nodes ===================== */
+function paint(){var B=balance(),st=B.st,F=B.F;
+ /* status pill: per-source */
+ var pill=document.getElementById('pill'),any=F.st||F.gr||F.gn||F.car;
+ if(!any){pill.className='status bad';txt('pillt','Немає даних')}else if(!F.st){pill.className='status warn';txt('pillt','Станція без зв’язку')}
+ else if(F.gr&&B.gr&&!B.gr.on){pill.className='status warn';txt('pillt',B.gn&&B.gn.on&&F.gn?'Відключення · генератор':'Відключення')}else{pill.className='status';txt('pillt','Система ОК')}
+ /* station hero + metrics: live, last-known (dimmed) or none */
+ cls('heroWrap','stale',st&&!F.st);cls('met','stale',st&&!F.st);
+ if(st){var p=Math.floor(st.pct);txt('pct',String(p));setArc(p);
+  var chg=st.inW>st.outW+5;
+  if(F.st){num('vin',st.inW);num('vout',st.outW);txt('mode',B.feed==='station'?(st.outW>5?'живить будинок':'очікування'):(st.inW>5?'заряджається':'очікування'));
+   var mins=chg?st.tf:st.te;txt('rtl',chg?'До повного':'Запас');if(mins!=null){num('rt',mins/60,1);txt('rtu','год');txt('eta',(chg?'повна через ':'вистачить на ')+Math.floor(mins/60)+' год '+(mins%60)+' хв')}else{num('rt',null);txt('rtu','');txt('eta','')}}
+  else{/* last known values stay, clearly marked; time forecast is not shown because it may be wrong now */
+   num('vin',st.inW);num('vout',st.outW);num('rt',null);txt('rtu','');txt('rtl','Запас');txt('mode','останні відомі дані');txt('eta','отримано '+ago(Tel.age('station')))}}
+ else{txt('pct','—');setArc(0);num('vin',null);num('vout',null);num('rt',null);txt('mode','немає даних');txt('eta','')}
+ /* flows: each link needs only the sources it depends on */
+ var L=function(o){return LINKS.filter(function(x){return x.id===o})[0]};
+ /* every link: 'on' only when the topology allows it AND its own sources are fresh */
+ var H=B.homeKnown?B.homeW:null,fe=B.feed;
+ L('genst').staleTxt=L('gridst').staleTxt=L('use').staleTxt='немає даних';L('gridcar').staleTxt=B.carChg?'немає даних':'';L('genhome').staleTxt=L('gridhome').staleTxt='';
+ setLink('genhome',fe==='gen'?(H!=null?'on':'known'):'idle',H||0,1);
+ setLink('genst',fe==='gen'?(F.st?'on':'stale'):'idle',B.stIn,1);
+ setLink('gridhome',fe==='grid'?(H!=null?'on':'known'):'idle',H||0,1);
+ setLink('gridst',fe==='grid'?(F.st?'on':'stale'):'idle',B.stIn,1);
+ setLink('use',fe==='station'?(F.st?'on':'stale'):(fe==='unknown'&&st&&!F.st?'stale':'idle'),fe==='station'?B.stOut:0,1);
+ setLink('gridcar',B.carChg?(B.carFromGrid?'on':(F.car&&F.gr?'idle':'stale')):'idle',B.carW,1);
+ txt('genv',!F.gn?'—':!(B.gn&&B.gn.on)?'вимкн.':B.genTotal!=null&&B.homeKnown?fmtW(B.genTotal):'працює');
+ txt('gridv',!F.gr?'—':!(B.gr&&B.gr.on)?'немає':B.gridTotal!=null&&B.homeKnown?fmtW(B.gridTotal):'є');
+ window.__warn=B.warn;var wn=document.getElementById('warn');if(wn)wn.textContent=B.warn.length?'Перевірка даних: '+B.warn.join('; '):'Перевірка даних: суперечностей немає';
+ /* nodes */
+ document.getElementById('n-gen').classList.toggle('off',!(F.gn&&B.gn&&B.gn.on));document.getElementById('n-grid').classList.toggle('off',!(F.gr&&B.gr&&B.gr.on));
+ 
+ var lit=B.feed==='gen'||B.feed==='grid'||(B.feed==='station'&&F.st&&B.stOut>5);['w1','w2','w3','w4'].forEach(function(w){var e=document.getElementById(w);e.setAttribute('fill',lit?'url(#winL)':'#1B241F');e.style.opacity=lit?.9:1});document.getElementById('hglow').setAttribute('opacity',lit?1:0);var ep=document.querySelector('#carico .evport');if(ep)ep.setAttribute('opacity',(F.car&&B.car&&B.car.st===5&&B.carFromGrid)?1:0);document.getElementById('wcled').setAttribute('opacity',(F.car&&B.car&&B.car.st===5&&B.carFromGrid)?1:.25);
+ document.getElementById('stglow').setAttribute('opacity',F.st&&st&&(B.stIn>5||(B.feed==='station'&&B.stOut>5))?'1':'.3');
+ var cl=B.car?('Tesla · '+Math.floor(B.car.pct)+'%'+(!F.car?' · немає зв’язку':B.car.st===5?' · '+String(B.car.kW).replace('.',',')+' кВт':'')):'Tesla · немає даних';txt('carlbl',cl);
+ /* input value takes the colour of the active source */
+ var vb=document.getElementById('vinb');if(vb)vb.style.color=!F.st?'':B.feed==='grid'&&B.stIn>5?'var(--grid-v)':B.feed==='gen'&&B.stIn>5?'var(--gen-v)':'';
+ /* station display bar on the illustration */
+ var sb=document.getElementById('stbar');if(sb&&st)sb.setAttribute('width',(13*Math.max(.05,st.pct/100)).toFixed(1));
+ /* car icon fills with energy (charge level); green only while it really charges */
+ var cr=B.car,cf=document.getElementById('carfill'),ce=document.getElementById('carfilledge');
+ if(cr){var w=110*Math.max(0,Math.min(100,cr.pct))/100,chgOn=F.car&&cr.st===5;cf.setAttribute('width',w.toFixed(1));cf.style.fill=chgOn?'var(--car-on)':'var(--car-off)';cf.style.opacity=F.car?1:.45;
+  ce.setAttribute('x',(6+w-1.5).toFixed(1));ce.style.opacity=chgOn?.8:0;txt('carpct',Math.floor(cr.pct)+'%');document.getElementById('carpct').style.fill=chgOn?'var(--car-on)':'var(--t1)';
+  txt('carlbl',!F.car?'Tesla · немає зв’язку':cr.st===5?(B.carFromGrid?'від мережі · '+String(cr.kW).replace('.',',')+' кВт':'заряджається · '+String(cr.kW).replace('.',',')+' кВт'):'Tesla · не заряджається')}
+ else{cf.setAttribute('width',0);txt('carpct','—');txt('carlbl','Tesla · немає даних')}
+ /* generator: real fuel level from the app's fuel log */
+ var gg=B.gn,fu=gg&&gg.fuel!=null?Math.max(0,Math.min(100,gg.fuel)):null,gf=document.getElementById('genfuel'),g2=document.getElementById('gfuel2');
+ if(fu!=null){gf.setAttribute('y',(22*(1-fu/100)).toFixed(1));g2.setAttribute('y',(14+22*(1-fu/100)).toFixed(1));g2.setAttribute('height',(22*fu/100).toFixed(1));txt('genfuelv','бак '+Math.round(fu)+'%');txt('gpct',String(Math.round(fu)))}else{txt('genfuelv','бак —');txt('gpct','—')}
+ txt('gst',!F.gn?'немає даних':gg&&gg.on?'працює · '+(B.genTotal!=null&&B.homeKnown?fmtW(B.genTotal):'потужність невідома'):'вимкнено');cls('gst','on',F.gn&&gg&&gg.on);cls('gcard','stale',!F.gn);
+ txt('devcount',[F.st,F.gn,F.car].filter(Boolean).length+' на зв’язку');
+ /* device cards */
+ if(st){txt('dpct',String(Math.floor(st.pct)))}else{txt('dpct','—')}
+ txt('dst',!st?'немає даних':F.st?'Bluetooth · на зв’язку':'немає зв’язку · '+ago(Tel.age('station')));cls('dst','on',F.st);cls('dcard','stale',st&&!F.st);
+ var car=B.car;if(car){txt('cpct',String(Math.floor(car.pct)));
+  txt('cst',!F.car?'немає зв’язку · '+ago(Tel.age('car')):car.st===5?(B.carFromGrid?'заряджається від мережі · ':'заряджається · джерело не підтверджено · ')+String(car.kW).replace('.',',')+' кВт':'на зв’язку · не заряджається');cls('cst','on',F.car&&car.st===5);cls('ccard','stale',!F.car)}
+ else{txt('cpct','—');txt('cst','немає даних')}
+ txt('fst',st?(F.st?(Tel.age('station')<5000?'оновлено щойно':'оновлено '+ago(Tel.age('station'))):'станція: '+ago(Tel.age('station'))):'немає даних')}
+var pending=0;Tel.on(function(){if(!pending){pending=1;requestAnimationFrame(function(){pending=0;paint()})}});
+
+/* ===================== Controlled test telemetry (prototype only) =====================
+   Values respect the physics: station output = home + car (when the car charges from the station);
+   Fossibot F2400 AC output limit 2400 W, so a 7.2 kW Tesla charge can only come from the grid. */
+function rnd(a){return (Math.random()-.5)*2*a}
+var sim={pct:72.4,cp:64,fuel:62};
+var SC={
+ grid:{n:'Мережа є',f:function(s){var h=1180+rnd(40);return{station:{pct:s.pct=Math.min(100,s.pct+.02),inW:549+rnd(12),outW:0,tf:85,te:null},grid:{on:1,V:229},gen:{on:0,fuel:s.fuel},home:{W:h},car:{pct:s.cp,kW:0,st:7}}}},
+ out:{n:'Відключення',f:function(s){var o=420+rnd(25);return{station:{pct:s.pct=Math.max(0,s.pct-.03),inW:0,outW:o,tf:null,te:Math.round(s.pct/100*2048/o*60)},grid:{on:0,V:0},gen:{on:0,fuel:s.fuel},home:{W:o},car:{pct:s.cp,kW:0,st:7}}}},
+ gen:{n:'Генератор',f:function(s){return{station:{pct:s.pct=Math.min(100,s.pct+.03),inW:910+rnd(30),outW:0,tf:64,te:null},grid:{on:0,V:0},gen:{on:1,fuel:s.fuel=Math.max(0,s.fuel-.02)},home:{W:780+rnd(30)},car:{pct:s.cp,kW:0,st:7}}}},
+ cargrid:{n:'Tesla від мережі',f:function(s){return{station:{pct:s.pct=Math.min(100,s.pct+.02),inW:549+rnd(10),outW:0,tf:85,te:null},grid:{on:1,V:228},gen:{on:0,fuel:s.fuel},home:{W:650+rnd(20)},car:{pct:s.cp=Math.min(80,s.cp+.01),kW:7.2,st:5,src:'grid'}}}},
+ low:{n:'Мала потужність',f:function(s){var o=18+rnd(3);return{station:{pct:s.pct,inW:0,outW:o,tf:null,te:Math.round(s.pct/100*2048/o*60)},grid:{on:0,V:0},gen:{on:0,fuel:s.fuel},home:{W:o},car:{pct:s.cp,kW:0,st:7}}}},
+ stlost:{n:'Станція без зв’язку',f:function(s){return{grid:{on:1,V:229},gen:{on:0,fuel:s.fuel},home:{W:640},car:{pct:s.cp=Math.min(80,s.cp+.01),kW:7.2,st:5,src:'grid'}}},lost:['station']},
+ bad:{n:'Помилкові дані',f:function(s){/* contradictory input: generator on, station claims 2 kW output, car claims station source */return{station:{pct:s.pct,inW:900,outW:2000,tf:60,te:null},grid:{on:0,V:0},gen:{on:1,fuel:s.fuel=Math.max(0,s.fuel-.02)},home:{W:800},car:{pct:s.cp,kW:1.8,st:5,src:'station'}}}},
+ none:{n:'Немає даних',f:null,lost:['station','grid','gen','car','home']}};
+var cur='grid';
+function tick(){var s=SC[cur];if(!s.f)return;var o=s.f(sim);Object.keys(o).forEach(function(k){Tel.set(k,o[k])})}
+function setSc(k){cur=k;[].forEach.call(document.querySelectorAll('#scen button'),function(b){b.classList.toggle('on',b.dataset.k===k)});
+ /* sources lost in this scenario simply stop updating; for the demo their last sample is aged past its limit */
+ (SC[k].lost||[]).forEach(function(x){if(Tel.d[x])Tel.d[x].t=Date.now()-STALE[x]-60000});tick();paint()}
+document.getElementById('scen').innerHTML=Object.keys(SC).map(function(k){return '<button data-k="'+k+'">'+SC[k].n+'</button>'}).join('');
+document.getElementById('scen').onclick=function(e){var b=e.target.closest('button');if(b)setSc(b.dataset.k)};
+setInterval(function(){if(!document.hidden)tick()},2000);setInterval(function(){if(!document.hidden)paint()},5000);
+/* car colours: static renders */
+var CARS={red:{c:'#9A1C24'},white:{c:'#D9DEDA'},black:{c:'#4A5450'},blue:{c:'#3A6AB8'},grey:{c:'#6E7A82'},silver:{c:'#A9B1B6'}};document.getElementById('ccol').innerHTML=Object.keys(CARS).map(function(k){return '<button class="sw" data-c="'+k+'" style="background:'+CARS[k].c+'"></button>'}).join('');
+document.getElementById('ccol').onclick=function(e){var b=e.target.closest('button');if(!b)return;document.documentElement.style.setProperty('--carc',CARS[b.dataset.c].c);[].forEach.call(document.querySelectorAll('#ccol .sw'),function(x){x.classList.toggle('on',x===b)})};
+
+
+
+document.getElementById('mot').onclick=function(){MOTION=!MOTION;this.textContent='Анімація: '+(MOTION?'увімк':'вимк');paint()};
+document.addEventListener('visibilitychange',function(){LINKS.forEach(function(l){try{document.hidden?l.an.pause():l.an.play()}catch(e){}})});
+(function(){var n=0,t0=performance.now();(function f(t){n++;if(t-t0>=1000){document.getElementById('fps').textContent=Math.round(n*1000/(t-t0))+' fps';window.__fps=Math.round(n*1000/(t-t0));n=0;t0=t}requestAnimationFrame(f)})(t0)})();
+setSc('grid');
+</script></body></html>
