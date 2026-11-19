@@ -1,9 +1,6 @@
 name: Build iOS (unsigned IPA)
 on:
   workflow_dispatch:
-  push:
-    branches: [main, "test/**", "design/**"]
-    paths: [index.html, .github/workflows/ios.yml]
 jobs:
   ios:
     runs-on: macos-latest

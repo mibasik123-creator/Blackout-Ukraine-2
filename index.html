@@ -332,6 +332,15 @@ body.pbl .pbtank{fill:#F6F8F3;stroke:rgba(14,21,16,.14)}body.pbl .pbtank.on{stro
 body.pbl #pbg stop:nth-child(1){stop-color:#E9FFB8}body.pbl #pbg stop:nth-child(2){stop-color:#5E9E00}body.pbl #pbg stop:nth-child(3){stop-color:#5E9E00}
 body.pbl .pbm .act b{color:#4E8A00}body.pbl .pbbar{fill:#DDE3D9}body.pbl .pbbar.now{fill:#7CC000}
 body.pbl .schbar{background:rgba(124,192,0,.18)}body.pbl .pbdrop{fill:#7CC000}body.pbl .pbspark{fill:#5E9E00}
+#app .card.acc>h2{cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;margin-bottom:0;min-height:28px}
+#app .card.acc.open>h2{margin-bottom:12px}
+#app .card.acc>h2 .accs{margin-left:auto;font-size:12px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:45%}
+#app .card.acc>h2::after{content:"";flex:0 0 auto;width:8px;height:8px;margin-left:10px;border-right:2px solid var(--mut);border-bottom:2px solid var(--mut);transform:rotate(45deg) translateY(-2px);transition:transform .25s}
+#app .card.acc.open>h2::after{transform:rotate(-135deg) translateY(-2px)}
+#app .card.acc.open>h2 .accs{display:none}
+#app .card.acc:not(.open)>*:not(h2){display:none!important}
+#app .card.acc:not(.open){padding-top:14px;padding-bottom:14px}
+#app .card.acc>h2.noacc::after,#app .card.acc.open>h2::after{margin-left:auto}
 </style>
 </head>
 <body>
@@ -1297,6 +1306,17 @@ btAuto=async function(){try{var c=BC(),P=btPlug();if(!P||BT.on||BT.busy||c.auto=
 function btForget(){var c=BC();c.last=null;c.devs={};c.map={};save();if(BT.on)btDisc();toast(L3('Список устройств очищен','Список пристроїв очищено','Device list cleared'));render()}
 (function(){var v=btRecCard;btRecCard=function(){var h=v(),c=BC(),n=Object.keys(c.devs||{}).length,x='<button class="sec" style="margin-top:10px" onclick="btForget()">'+L3('Забыть сохранённые устройства','Забути збережені пристрої','Forget saved devices')+(n?' ('+n+')':'')+'</button>';
  var k=h.indexOf('</select>');if(k>=0){var e=h.indexOf('</div></div>',k);if(e>0)return h.slice(0,e)+x+h.slice(e)}return h}})();
+/* ===== Згортання розділів на вкладках «Генератор» і «Станції» ===== */
+var ACC_OPEN={gen:['Модель','Модель','Model'],st:[]};
+function accState(){try{return JSON.parse(localStorage.getItem('bo_acc')||'{}')}catch(e){return {}}}
+function accApply(){if(tab!=='gen'&&tab!=='st')return;var st=accState(),def=ACC_OPEN[tab]||[];
+ [].forEach.call(document.querySelectorAll('#app > .card'),function(c){var h=c.querySelector(':scope>h2');if(!h)return;var title=h.textContent.trim(),key=tab+':'+title;
+  var open=st[key]!=null?!!st[key]:def.indexOf(title)>=0;c.classList.add('acc');c.classList.toggle('open',open);
+  var kb=c.querySelector('.kv b, .kv strong');if(kb&&!h.querySelector('.accs')){var s=document.createElement('span');s.className='accs';s.textContent=kb.textContent.trim();h.appendChild(s)}h.classList.toggle('noacc',!h.querySelector('.accs'));
+  h.setAttribute('role','button');h.setAttribute('tabindex','0');h.setAttribute('aria-expanded',open?'true':'false');
+  h.onclick=function(){var o=!c.classList.contains('open');c.classList.toggle('open',o);h.setAttribute('aria-expanded',o?'true':'false');var s2=accState();s2[key]=o?1:0;try{localStorage.setItem('bo_acc',JSON.stringify(s2))}catch(e){}};
+  h.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();h.onclick()}}})}
+(function(){var r=render;render=function(){r();try{accApply()}catch(e){}}})();
 
 /* ===== Автооновлення графіка: неофіційний сервіс svitlo.live (як у інтеграції Svitlo Live для Home Assistant) ===== */
 var SV_NEW='https://dtek-api.svitlo-proxy.workers.dev/',SV_OLD='https://svitlo-proxy.svitlo-proxy.workers.dev';
