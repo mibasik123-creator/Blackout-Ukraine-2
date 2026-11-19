@@ -1272,6 +1272,20 @@ function btAutoBind(){try{if(!BT.on||!BT.id)return;var c=BC();c.map=c.map||{};va
  var f=bluFrame;bluFrame=function(fr){f(fr);if(!BLUP.bound&&BLUP.model){BLUP.bound=1;btAutoBind()}};
  var d=btDown;btDown=function(){BLUP.bound=0;return d.apply(this,arguments)}})();
 btBindSt=function(v){var c=BC();c.map=c.map||{};var id=BT.id||(c.last&&c.last.id);var n=v===''?null:+v;if(id){if(n==null)delete c.map[id];else c.map[id]=n}c.sti=n;save();if(n!=null&&!S.srun)si=n;render()};
+/* ===== Проби Fossibot F1800 (нова модель: сервіс FFFF, запис FF01, відповіді FF02) ===== */
+var F18={SV:'0000ffff-0000-1000-8000-00805f9b34fb',W:'0000ff01-0000-1000-8000-00805f9b34fb',N:'0000ff02-0000-1000-8000-00805f9b34fb'};
+async function btProbeF1800(){var P=btPlug();if(!P)return toast(L3('Пробы работают только в APK','Проби працюють лише в APK','Probes work only in the APK'));
+ if(!BT.on){await btConnectAny();if(!BT.on)return}
+ if(!BLon){await btRec()}
+ clearInterval(BT.poll);clearInterval(BLUP.poll);blog('PROBE','f1800 begin: wait for discovery to finish');render();await btSleep(2500);
+ try{P.addListener('notification|'+BT.id+'|'+F18.SV+'|'+F18.N,function(e){if(BLon)blog('F18',e&&e.value)})}catch(e){}
+ for(var a=0;a<4;a++){try{await P.startNotifications({deviceId:BT.id,service:F18.SV,characteristic:F18.N});blog('SYS','f1800 ff02 subscribed');break}catch(e){blog('ERR','f1800 ff02 subscribe: '+(e&&e.message||e));await btSleep(800)}}
+ var L=[['11 04 0-80 crc hi-first (F2400)',17,4,0,80,1],['11 04 0-80 crc lo-first',17,4,0,80,0],['11 03 0-80 crc hi-first',17,3,0,80,1],['11 03 0-80 crc lo-first',17,3,0,80,0],['11 04 0-16 hi-first',17,4,0,16,1],['01 03 0-16 lo-first',1,3,0,16,0],['01 04 0-16 lo-first',1,4,0,16,0],['01 03 100-62 lo-first',1,3,100,62,0]];
+ for(var i=0;i<L.length;i++){var p=L[i],fr=btMk(p[1],p[2],p[3],p[4],p[5]);blog('PROBE','f1800 '+p[0]);blog('TX',b2hex(fr));
+  for(var w=0;w<3;w++){try{await P.write({deviceId:BT.id,service:F18.SV,characteristic:F18.W,value:b2hex(fr)});break}catch(e){blog('ERR','write ff01 try '+(w+1)+': '+(e&&e.message||e));await btSleep(700)}}
+  await btSleep(3000)}
+ blog('PROBE','f1800 end');toast(L3('Пробы F1800 завершены','Проби F1800 завершено','F1800 probes finished'));render()}
+(function(){var v=btRecCard;btRecCard=function(){var h=v(),x='<div class="row"><button class="sec" onclick="btProbeF1800()">'+L3('Пробы Fossibot F1800 (~30 с)','Проби Fossibot F1800 (~30 с)','Fossibot F1800 probes (~30 s)')+'</button></div>';var k=h.indexOf('<div class="rc" style="margin-top:8px">');return k>=0?h.slice(0,k)+x+h.slice(k):h+x}})();
 
 /* ===== Автооновлення графіка: неофіційний сервіс svitlo.live (як у інтеграції Svitlo Live для Home Assistant) ===== */
 var SV_NEW='https://dtek-api.svitlo-proxy.workers.dev/',SV_OLD='https://svitlo-proxy.svitlo-proxy.workers.dev';
