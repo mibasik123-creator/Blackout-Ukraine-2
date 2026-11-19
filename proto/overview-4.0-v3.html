@@ -173,7 +173,7 @@ nav button svg{width:21px;height:21px}nav button.on{color:var(--acc)}
 
  <div class="lab"><h3>Панель прототипу · тестова телеметрія</h3><div class="row" id="scen"></div>
   <div class="row"><span class="fps">Колір авто:</span><span id="ccol"></span></div><div class="row"><span class="fps">Акцент:</span><span id="accs"></span></div>
-  <div class="row"><button id="thm">Світла тема</button><button id="mot">Анімація: увімк</button><span class="fps" id="fps">— fps</span></div></div>
+  <div class="row fps" id="warn" style="color:var(--warn);line-height:1.5"></div><div class="row"><button id="thm">Світла тема</button><button id="mot">Анімація: увімк</button><span class="fps" id="fps">— fps</span></div></div>
 </div>
 <nav><div>
  <button class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 11 12 4l9 7v9h-6v-6H9v6H3z"/></svg>Огляд</button>
@@ -185,28 +185,29 @@ nav button svg{width:21px;height:21px}nav button.on{color:var(--acc)}
 /* ===================== Telemetry store =====================
    Each source is independent: station (BLE), grid (station voltage / schedule), gen (app session), car (Tesla BLE).
    Freshness is checked per source; UI reads only from here. */
-var STALE={station:15000,grid:30000,gen:30000,car:120000};
+var STALE={station:15000,grid:30000,gen:30000,car:120000,home:30000};
 var Tel={d:{},subs:[],set:function(k,v){v.t=v.t||Date.now();this.d[k]=v;this.subs.forEach(function(f){f(k)})},get:function(k){return this.d[k]},
  fresh:function(k){var v=this.d[k];return !!v&&Date.now()-v.t<STALE[k]},age:function(k){var v=this.d[k];return v?Date.now()-v.t:null},on:function(f){this.subs.push(f)}};
 function ago(ms){if(ms==null)return '';var s=Math.round(ms/1000);return s<60?s+' с тому':s<3600?Math.round(s/60)+' хв тому':Math.round(s/3600)+' год тому'}
 
 /* ===================== Flow links (geometry, v3 scene) ===================== */
 var LINKS=[
- {id:'gen',cls:'gen',d:'M42 124 C44 146 52 156 62 164',chip:'genv'},
- {id:'grid',cls:'grid',d:'M318 124 C300 138 276 146 254 150 M114 150 C104 150 96 154 92 162',chip:'gridv'},
+ {id:'genst',cls:'gen',d:'M24 122 C10 150 26 168 50 172',lx:8,ly:196},
+ {id:'genhome',cls:'gen',d:'M62 106 C78 104 94 108 108 118',lx:88,ly:98},
+ {id:'gridhome',cls:'grid',d:'M318 124 C300 138 276 146 254 150',lx:282,ly:132},
+ {id:'gridst',cls:'grid',d:'M320 130 C302 144 280 152 256 156 M114 150 C104 150 96 154 92 162',lx:98,ly:146,end:1},
  {id:'use',cls:'use',d:'M116 198 C126 200 134 196 140 190',lx:150,ly:204},
- {id:'stcar',cls:'car',d:'M116 208 C150 228 214 228 247 208',lx:180,ly:238},
- {id:'gridcar',cls:'car',d:'M322 124 C306 142 278 154 252 158 M249 166 C250 182 249 196 247 206',lx:272,ly:178}];
+ {id:'gridcar',cls:'car',d:'M322 124 C306 142 278 154 252 158 M249 166 C250 182 249 196 247 206',lx:306,ly:176}];
 var MOTION=!(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches);
-(function(){var g=document.getElementById('links'),h='';LINKS.forEach(function(l){h+='<g id="lk-'+l.id+'" class="'+l.cls+'"><path class="lb" d="'+l.d+'"/><path class="lg" d="'+l.d+'"/><path class="lc" d="'+l.d+'"/><path class="lp" d="'+l.d+'"/>'+(l.lx?'<text class="val" x="'+l.lx+'" y="'+l.ly+'" text-anchor="middle"></text>':'')+'</g>'});g.innerHTML=h;
+(function(){var g=document.getElementById('links'),h='';LINKS.forEach(function(l){h+='<g id="lk-'+l.id+'" class="'+l.cls+'"><path class="lb" d="'+l.d+'"/><path class="lg" d="'+l.d+'"/><path class="lc" d="'+l.d+'"/><path class="lp" d="'+l.d+'"/>'+(l.lx?'<text class="val" x="'+l.lx+'" y="'+l.ly+'" text-anchor="'+(l.end?'end':(l.lx<20?'start':'middle'))+'"></text>':'')+'</g>'});g.innerHTML=h;
  LINKS.forEach(function(l){var gl=document.getElementById('lk-'+l.id);l.base=gl.querySelector('.lb');l.gl=gl.querySelector('.lg');l.core=gl.querySelector('.lc');l.el=gl.querySelector('.lp');l.tx=gl.querySelector('.val')||(l.chip?document.getElementById(l.chip):null);
   /* static glow + core; only the thin pulse layer moves (one Web Animation per line, no filters) */
   l.an=l.el.animate([{strokeDashoffset:0},{strokeDashoffset:-16.5}],{duration:1000,iterations:Infinity});l.an.playbackRate=0;l.rate=0})})();
 function rateFor(w){if(!(w>5))return 0;return Math.min(2.6,.35+Math.log10(w)*.62)}
 function fmtW(w){return w>=1000?(Math.round(w/100)/10).toString().replace('.',',')+' кВт':Math.round(w)+' Вт'}
 var rateAnim={};
-function setLink(id,state,w,dir){var l=LINKS.filter(function(x){return x.id===id})[0];if(!l)return;var on=state==='on'&&w>5,k=Math.min(1,.2+Math.log10(Math.max(w,1))/4.2);
- l.el.style.opacity=on?.95:0;l.core.style.opacity=on?(.45+.5*k):0;l.gl.style.opacity=on?(.06+.16*k):0;
+function setLink(id,state,w,dir){var l=LINKS.filter(function(x){return x.id===id})[0];if(!l)return;var on=state==='on'&&w>5,known=state==='known',k=Math.min(1,.2+Math.log10(Math.max(w,1))/4.2);
+ l.el.style.opacity=on?.95:0;l.core.style.opacity=on?(.45+.5*k):(known?.4:0);l.gl.style.opacity=on?(.06+.16*k):0;
  l.base.style.strokeDasharray=state==='stale'?'2 5':'';
  if(l.tx){l.tx.textContent=state==='stale'?(l.staleTxt||(l.chip?'—':'')):(on?fmtW(w):(l.chip?(state==='idle'?'0 Вт':'—'):''));l.tx.style.opacity=state==='stale'?.6:1}
  tweenRate(l,on&&MOTION?rateFor(w)*(dir||1):0)}
@@ -223,12 +224,27 @@ function txt(id,t){var e=document.getElementById(id);if(e&&e.textContent!==t)e.t
 /* ===================== Derived energy balance (single source of truth) =====================
    Station output = home part + car part (only when the car is charged from the station).
    Station input comes from grid or generator (whichever is confirmed on; generator wins during a session). */
-function balance(){var st=Tel.get('station'),gr=Tel.get('grid'),gn=Tel.get('gen'),car=Tel.get('car');
- var F={st:Tel.fresh('station'),gr:Tel.fresh('grid'),gn:Tel.fresh('gen'),car:Tel.fresh('car')};
- var carChg=car&&car.st===5,carW=carChg?Math.round(car.kW*1000):0,carFromSt=carChg&&car.src==='station',carFromGrid=carChg&&car.src==='grid';
- var stCarW=carFromSt?Math.min(carW,st?st.outW:0):0,homeW=st?Math.max(0,st.outW-stCarW):0;
- var inSrc=gn&&gn.on?'gen':(gr&&gr.on?'grid':null);
- return{st:st,gr:gr,gn:gn,car:car,F:F,carW:carW,carFromSt:carFromSt,carFromGrid:carFromGrid,stCarW:stCarW,homeW:homeW,inSrc:inSrc}}
+/* Energy topology of this home (enforced, whatever the input says):
+   - the house is fed by ONE source: generator (session on) > grid (present) > station (outage);
+   - generator and grid feed the house directly and may charge the station at the same time;
+   - the station feeds the house only when neither generator nor grid is available;
+   - Tesla charges only from the grid; a station -> Tesla flow does not exist in this system. */
+function balance(){var st=Tel.get('station'),gr=Tel.get('grid'),gn=Tel.get('gen'),car=Tel.get('car'),hm=Tel.get('home');
+ var F={st:Tel.fresh('station'),gr:Tel.fresh('grid'),gn:Tel.fresh('gen'),car:Tel.fresh('car'),hm:Tel.fresh('home')};
+ var genOn=!!(F.gn&&gn&&gn.on),gridOn=!!(F.gr&&gr&&gr.on),gridOff=!!(F.gr&&gr&&!gr.on),genOff=!!(F.gn&&gn&&!gn.on);
+ var feed=genOn?'gen':gridOn?'grid':(gridOff&&(genOff||!gn))?'station':'unknown';
+ var warn=[];
+ var stIn=st?st.inW:0,stOut=st?st.outW:0;
+ if(st&&feed!=='station'&&stOut>5)warn.push('вихід станції '+Math.round(stOut)+' Вт проігноровано: будинок живиться від '+(feed==='gen'?'генератора':feed==='grid'?'мережі':'невідомого джерела'));
+ if(st&&feed==='station'&&stIn>5)warn.push('вхід станції '+Math.round(stIn)+' Вт без підтвердженого джерела');
+ var homeW=F.hm&&hm?hm.W:null;           /* house load from a meter; null when unknown */
+ var carChg=!!(car&&car.st===5),carW=carChg?Math.round(car.kW*1000):0;
+ if(car&&car.src==='station')warn.push('джерело авто «станція» неможливе — потік не показано');
+ var carFromGrid=carChg&&gridOn;            /* the only allowed charging path */
+ var genTotal=genOn&&F.st?((homeW!=null?homeW:0)+stIn):null;
+ var gridTotal=gridOn&&F.st?((homeW!=null?homeW:0)+stIn+(carFromGrid?carW:0)):null;
+ return{st:st,gr:gr,gn:gn,car:car,F:F,feed:feed,homeW:homeW,stIn:stIn,stOut:stOut,carW:carW,carChg:carChg,carFromGrid:carFromGrid,genTotal:genTotal,gridTotal:gridTotal,homeKnown:homeW!=null,warn:warn,
+  carFromSt:false,stCarW:0,inSrc:feed==='gen'?'gen':feed==='grid'?'grid':null}}
 
 /* ===================== Paint: touches only changed nodes ===================== */
 function paint(){var B=balance(),st=B.st,F=B.F;
@@ -240,32 +256,36 @@ function paint(){var B=balance(),st=B.st,F=B.F;
  cls('heroWrap','stale',st&&!F.st);cls('met','stale',st&&!F.st);
  if(st){var p=Math.floor(st.pct);txt('pct',String(p));setArc(p);
   var chg=st.inW>st.outW+5;
-  if(F.st){num('vin',st.inW);num('vout',st.outW);txt('mode',chg?'заряджається':st.outW>5?(B.carFromSt?'живить будинок і авто':'живить будинок'):'очікування');
+  if(F.st){num('vin',st.inW);num('vout',st.outW);txt('mode',B.feed==='station'?(st.outW>5?'живить будинок':'очікування'):(st.inW>5?'заряджається':'очікування'));
    var mins=chg?st.tf:st.te;txt('rtl',chg?'До повного':'Запас');if(mins!=null){num('rt',mins/60,1);txt('rtu','год');txt('eta',(chg?'повна через ':'вистачить на ')+Math.floor(mins/60)+' год '+(mins%60)+' хв')}else{num('rt',null);txt('rtu','');txt('eta','')}}
   else{/* last known values stay, clearly marked; time forecast is not shown because it may be wrong now */
    num('vin',st.inW);num('vout',st.outW);num('rt',null);txt('rtu','');txt('rtl','Запас');txt('mode','останні відомі дані');txt('eta','отримано '+ago(Tel.age('station')))}}
  else{txt('pct','—');setArc(0);num('vin',null);num('vout',null);num('rt',null);txt('mode','немає даних');txt('eta','')}
  /* flows: each link needs only the sources it depends on */
  var L=function(o){return LINKS.filter(function(x){return x.id===o})[0]};
- L('gen').staleTxt='—';L('grid').staleTxt='—';L('use').staleTxt=st&&st.outW>5?'немає даних':'';
- L('stcar').staleTxt=B.carFromSt?'немає даних':'';L('gridcar').staleTxt=B.carFromGrid?'немає даних':'';
- setLink('gen',(F.gn&&F.st)?(B.inSrc==='gen'?'on':'idle'):(B.gn&&B.gn.on?'stale':'idle'),st?st.inW:0,1);/* source on but station silent => flow unknown */
- setLink('grid',(F.gr&&F.st)?(B.inSrc==='grid'?'on':'idle'):(B.gr&&B.gr.on?'stale':'idle'),st?st.inW:0,1);
- setLink('use',F.st?'on':(st?'stale':'idle'),B.homeW,1);
- setLink('stcar',B.carFromSt?((F.st&&F.car)?'on':'stale'):'idle',B.stCarW,1);
- setLink('gridcar',B.carFromGrid?((F.gr&&F.car&&B.gr&&B.gr.on)?'on':'stale'):'idle',B.carW,1);
- if(F.gr&&B.gr&&!B.gr.on)txt('gridv','немає');if(!F.gn)txt('genv','—');if(!F.gr)txt('gridv','—');if(F.gn&&B.gn&&!B.gn.on)txt('genv','вимкн.');
+ /* every link: 'on' only when the topology allows it AND its own sources are fresh */
+ var H=B.homeKnown?B.homeW:null,fe=B.feed;
+ L('genst').staleTxt=L('gridst').staleTxt=L('use').staleTxt='немає даних';L('gridcar').staleTxt=B.carChg?'немає даних':'';L('genhome').staleTxt=L('gridhome').staleTxt='';
+ setLink('genhome',fe==='gen'?(H!=null?'on':'known'):'idle',H||0,1);
+ setLink('genst',fe==='gen'?(F.st?'on':'stale'):'idle',B.stIn,1);
+ setLink('gridhome',fe==='grid'?(H!=null?'on':'known'):'idle',H||0,1);
+ setLink('gridst',fe==='grid'?(F.st?'on':'stale'):'idle',B.stIn,1);
+ setLink('use',fe==='station'?(F.st?'on':'stale'):(fe==='unknown'&&st&&!F.st?'stale':'idle'),fe==='station'?B.stOut:0,1);
+ setLink('gridcar',B.carChg?(B.carFromGrid?'on':(F.car&&F.gr?'idle':'stale')):'idle',B.carW,1);
+ txt('genv',!F.gn?'—':!(B.gn&&B.gn.on)?'вимкн.':B.genTotal!=null&&B.homeKnown?fmtW(B.genTotal):'працює');
+ txt('gridv',!F.gr?'—':!(B.gr&&B.gr.on)?'немає':B.gridTotal!=null&&B.homeKnown?fmtW(B.gridTotal):'є');
+ window.__warn=B.warn;var wn=document.getElementById('warn');if(wn)wn.textContent=B.warn.length?'Перевірка даних: '+B.warn.join('; '):'Перевірка даних: суперечностей немає';
  /* nodes */
  document.getElementById('n-gen').classList.toggle('off',!(F.gn&&B.gn&&B.gn.on));document.getElementById('n-grid').classList.toggle('off',!(F.gr&&B.gr&&B.gr.on));
  
- var lit=(F.st&&B.homeW>5)||(F.gr&&B.gr&&B.gr.on);['w1','w2','w3','w4'].forEach(function(w){var e=document.getElementById(w);e.setAttribute('fill',lit?'url(#gl)':'#262d2a')});document.getElementById('hglow').setAttribute('opacity',lit?1:0);var ep=document.querySelector('#carico .evport');if(ep)ep.setAttribute('opacity',(F.car&&B.car&&B.car.st===5)?1:0);document.getElementById('wcled').setAttribute('opacity',(F.car&&B.car&&B.car.st===5&&B.carFromGrid)?1:.3);
- document.getElementById('stglow').setAttribute('opacity',F.st&&st&&(st.inW>5||st.outW>5)?'1':'.3');
+ var lit=B.feed==='gen'||B.feed==='grid'||(B.feed==='station'&&F.st&&B.stOut>5);['w1','w2','w3','w4'].forEach(function(w){var e=document.getElementById(w);e.setAttribute('fill',lit?'url(#gl)':'#262d2a')});document.getElementById('hglow').setAttribute('opacity',lit?1:0);var ep=document.querySelector('#carico .evport');if(ep)ep.setAttribute('opacity',(F.car&&B.car&&B.car.st===5)?1:0);document.getElementById('wcled').setAttribute('opacity',(F.car&&B.car&&B.car.st===5&&B.carFromGrid)?1:.3);
+ document.getElementById('stglow').setAttribute('opacity',F.st&&st&&(B.stIn>5||(B.feed==='station'&&B.stOut>5))?'1':'.3');
  var cl=B.car?('Tesla · '+Math.floor(B.car.pct)+'%'+(!F.car?' · немає зв’язку':B.car.st===5?' · '+String(B.car.kW).replace('.',',')+' кВт':'')):'Tesla · немає даних';txt('carlbl',cl);
  /* device cards */
  if(st){txt('dpct',String(Math.floor(st.pct)));document.getElementById('dbar').style.width=Math.floor(st.pct)+'%'}else{txt('dpct','—');document.getElementById('dbar').style.width='0'}
  txt('dst',!st?'немає даних':F.st?'Bluetooth · на зв’язку':'немає зв’язку · '+ago(Tel.age('station')));cls('dst','on',F.st);cls('dcard','stale',st&&!F.st);
  var car=B.car;if(car){txt('cpct',String(Math.floor(car.pct)));document.getElementById('cbar').style.width=Math.floor(car.pct)+'%';
-  txt('cst',!F.car?'немає зв’язку · '+ago(Tel.age('car')):car.st===5?'заряджається від '+(car.src==='station'?'станції':'мережі')+' · '+String(car.kW).replace('.',',')+' кВт':'на зв’язку · не заряджається');cls('cst','on',F.car&&car.st===5);cls('ccard','stale',!F.car)}
+  txt('cst',!F.car?'немає зв’язку · '+ago(Tel.age('car')):car.st===5?(B.carFromGrid?'заряджається від мережі · ':'заряджається · джерело не підтверджено · ')+String(car.kW).replace('.',',')+' кВт':'на зв’язку · не заряджається');cls('cst','on',F.car&&car.st===5);cls('ccard','stale',!F.car)}
  else{txt('cpct','—');txt('cst','немає даних');document.getElementById('cbar').style.width='0'}
  txt('fst',st?(F.st?(Tel.age('station')<5000?'оновлено щойно':'оновлено '+ago(Tel.age('station'))):'станція: '+ago(Tel.age('station'))):'немає даних')}
 var pending=0;Tel.on(function(){if(!pending){pending=1;requestAnimationFrame(function(){pending=0;paint()})}});
@@ -276,14 +296,14 @@ var pending=0;Tel.on(function(){if(!pending){pending=1;requestAnimationFrame(fun
 function rnd(a){return (Math.random()-.5)*2*a}
 var sim={pct:72.4,cp:64};
 var SC={
- grid:{n:'Мережа є',f:function(s){var o=239+rnd(8);return{station:{pct:s.pct=Math.min(100,s.pct+.02),inW:549+rnd(12),outW:o,tf:85,te:null},grid:{on:1,V:229},gen:{on:0},car:{pct:s.cp,kW:0,st:7}}}},
- out:{n:'Відключення',f:function(s){var o=420+rnd(25);return{station:{pct:s.pct=Math.max(0,s.pct-.03),inW:0,outW:o,tf:null,te:Math.round(s.pct/100*2048/o*60)},grid:{on:0,V:0},gen:{on:0},car:{pct:s.cp,kW:0,st:7}}}},
- gen:{n:'Генератор',f:function(s){return{station:{pct:s.pct=Math.min(100,s.pct+.03),inW:910+rnd(30),outW:380+rnd(15),tf:64,te:null},grid:{on:0,V:0},gen:{on:1},car:{pct:s.cp,kW:0,st:7}}}},
- cargrid:{n:'Tesla від мережі',f:function(s){var o=240+rnd(8);return{station:{pct:s.pct=Math.min(100,s.pct+.02),inW:549+rnd(10),outW:o,tf:85,te:null},grid:{on:1,V:228},gen:{on:0},car:{pct:s.cp=Math.min(80,s.cp+.01),kW:7.2,st:5,src:'grid'}}}},
- carst:{n:'Tesla від станції',f:function(s){var home=240+rnd(8),car=1.8,o=home+car*1000;return{station:{pct:s.pct=Math.max(0,s.pct-.08),inW:0,outW:o,tf:null,te:Math.round(s.pct/100*2048/o*60)},grid:{on:0,V:0},gen:{on:0},car:{pct:s.cp=Math.min(80,s.cp+.003),kW:car,st:5,src:'station'}}}},
- low:{n:'Мала потужність',f:function(s){var o=18+rnd(3);return{station:{pct:s.pct,inW:0,outW:o,tf:null,te:Math.round(s.pct/100*2048/o*60)},grid:{on:0,V:0},gen:{on:0},car:{pct:s.cp,kW:0,st:7}}}},
- stlost:{n:'Станція без зв’язку',f:function(s){return{grid:{on:1,V:229},gen:{on:0},car:{pct:s.cp=Math.min(80,s.cp+.01),kW:7.2,st:5,src:'grid'}}},lost:['station']},
- none:{n:'Немає даних',f:null,lost:['station','grid','gen','car']}};
+ grid:{n:'Мережа є',f:function(s){var h=1180+rnd(40);return{station:{pct:s.pct=Math.min(100,s.pct+.02),inW:549+rnd(12),outW:0,tf:85,te:null},grid:{on:1,V:229},gen:{on:0},home:{W:h},car:{pct:s.cp,kW:0,st:7}}}},
+ out:{n:'Відключення',f:function(s){var o=420+rnd(25);return{station:{pct:s.pct=Math.max(0,s.pct-.03),inW:0,outW:o,tf:null,te:Math.round(s.pct/100*2048/o*60)},grid:{on:0,V:0},gen:{on:0},home:{W:o},car:{pct:s.cp,kW:0,st:7}}}},
+ gen:{n:'Генератор',f:function(s){return{station:{pct:s.pct=Math.min(100,s.pct+.03),inW:910+rnd(30),outW:0,tf:64,te:null},grid:{on:0,V:0},gen:{on:1},home:{W:780+rnd(30)},car:{pct:s.cp,kW:0,st:7}}}},
+ cargrid:{n:'Tesla від мережі',f:function(s){return{station:{pct:s.pct=Math.min(100,s.pct+.02),inW:549+rnd(10),outW:0,tf:85,te:null},grid:{on:1,V:228},gen:{on:0},home:{W:650+rnd(20)},car:{pct:s.cp=Math.min(80,s.cp+.01),kW:7.2,st:5,src:'grid'}}}},
+ low:{n:'Мала потужність',f:function(s){var o=18+rnd(3);return{station:{pct:s.pct,inW:0,outW:o,tf:null,te:Math.round(s.pct/100*2048/o*60)},grid:{on:0,V:0},gen:{on:0},home:{W:o},car:{pct:s.cp,kW:0,st:7}}}},
+ stlost:{n:'Станція без зв’язку',f:function(s){return{grid:{on:1,V:229},gen:{on:0},home:{W:640},car:{pct:s.cp=Math.min(80,s.cp+.01),kW:7.2,st:5,src:'grid'}}},lost:['station']},
+ bad:{n:'Помилкові дані',f:function(s){/* contradictory input: generator on, station claims 2 kW output, car claims station source */return{station:{pct:s.pct,inW:900,outW:2000,tf:60,te:null},grid:{on:0,V:0},gen:{on:1},home:{W:800},car:{pct:s.cp,kW:1.8,st:5,src:'station'}}}},
+ none:{n:'Немає даних',f:null,lost:['station','grid','gen','car','home']}};
 var cur='grid';
 function tick(){var s=SC[cur];if(!s.f)return;var o=s.f(sim);Object.keys(o).forEach(function(k){Tel.set(k,o[k])})}
 function setSc(k){cur=k;[].forEach.call(document.querySelectorAll('#scen button'),function(b){b.classList.toggle('on',b.dataset.k===k)});
