@@ -1560,6 +1560,132 @@ function efUi(){var e=document.getElementById('efst');if(e)e.textContent=efStLbl
  var d=btDown;btDown=function(){EF.on=0;EF.ses=0;EF.auth=0;if(EF.st!=='fail'&&EF.st!=='auth-fail')EF.st='';return d.apply(this,arguments)};
  var v=vBt;vBt=function(){var h=v();try{var cc=efCard();if(cc){var i=h.indexOf('<details class="card"');h=i>=0?h.slice(0,i)+cc+h.slice(i):h+cc}}catch(e){}return h};
  if(typeof btDevModel==='function'){var m=btDevModel;btDevModel=function(){if(BT.on&&btIsEF())return{brand:'EcoFlow',model:EF.model||''};return m()}}})();
+/* ===== Tesla over Bluetooth (official open vehicle-command protocol, read-only) =====
+   Key: P-256 (WebCrypto). Pairing role: Charging Manager (reads data, cannot unlock/drive).
+   Session: ECDH -> K=SHA1(Sx)[:16]; session info verified by HMAC; commands AES-GCM with metadata AAD. */
+var TSV='00000211-b2d1-43f0-9b88-960cebf8b91e',TSW='00000212-b2d1-43f0-9b88-960cebf8b91e',TSN='00000213-b2d1-43f0-9b88-960cebf8b91e';
+var TS={on:0,id:null,st:'',err:'',buf:[],q:[],ses:{},d:null,poll:null,busy:0};
+function tsCfg(){S.tesla=S.tesla||{};return S.tesla}
+var tsSub=function(){return window.crypto&&crypto.subtle};
+function tsU8(a){return a instanceof Uint8Array?a:new Uint8Array(a)}
+function tsA(b){return Array.prototype.slice.call(new Uint8Array(b))}
+function tsHex(a){return a.map(function(x){return ('0'+x.toString(16)).slice(-2)}).join('')}
+function tsUnhex(h){var r=[];for(var i=0;i<h.length;i+=2)r.push(parseInt(h.substr(i,2),16));return r}
+function tsStr(s){return Array.prototype.slice.call(new TextEncoder().encode(s))}
+
+/* ---- protobuf ---- */
+function pbVar(n){var r=[];n=Math.floor(n);do{var b=n%128;n=Math.floor(n/128);if(n)b|=128;r.push(b)}while(n);return r}
+function pbI(f,v){return pbVar(f*8).concat(pbVar(v))}
+function pbB(f,b){b=Array.isArray(b)?b:Array.prototype.slice.call(b);return pbVar(f*8+2).concat(pbVar(b.length),b)}
+function pbX(f,v){return pbVar(f*8+5).concat([v&255,(v>>>8)&255,(v>>>16)&255,(v>>>24)&255])}
+function pbD(b){var o={},i=0;b=Array.isArray(b)?b:Array.prototype.slice.call(b);function vi(){var r=0,m=1,x;do{x=b[i++];r+=(x&127)*m;m*=128}while(x&128&&i<b.length);return r}
+ while(i<b.length){var k=vi(),f=Math.floor(k/8),w=k&7,v;if(w===0)v=vi();else if(w===2){var l=vi();v=b.slice(i,i+l);i+=l}else if(w===5){v=(b[i]|b[i+1]<<8|b[i+2]<<16|b[i+3]<<24)>>>0;i+=4}else if(w===1){v=b.slice(i,i+8);i+=8}else break;(o[f]=o[f]||[]).push(v)}return o}
+function pb1(o,f){return o&&o[f]?o[f][0]:undefined}
+function pbSub(o,f){var v=pb1(o,f);return v?pbD(v):null}
+
+/* ---- crypto (WebCrypto) ---- */
+async function tsSha(alg,d){return tsA(await tsSub().digest(alg,tsU8(d)))}
+async function tsHmac(k,d){var key=await tsSub().importKey('raw',tsU8(k),{name:'HMAC',hash:'SHA-256'},false,['sign']);return tsA(await tsSub().sign('HMAC',key,tsU8(d)))}
+async function tsGcmE(k,iv,aad,pt){var key=await tsSub().importKey('raw',tsU8(k),'AES-GCM',false,['encrypt']);var r=tsA(await tsSub().encrypt({name:'AES-GCM',iv:tsU8(iv),additionalData:tsU8(aad),tagLength:128},key,tsU8(pt)));return{ct:r.slice(0,r.length-16),tag:r.slice(r.length-16)}}
+async function tsGcmD(k,iv,aad,ct,tag){var key=await tsSub().importKey('raw',tsU8(k),'AES-GCM',false,['decrypt']);return tsA(await tsSub().decrypt({name:'AES-GCM',iv:tsU8(iv),additionalData:tsU8(aad),tagLength:128},key,tsU8(ct.concat(tag))))}
+function tsRand(n){var a=new Uint8Array(n);crypto.getRandomValues(a);return tsA(a)}
+async function tsKey(){var c=tsCfg();if(TS.priv&&TS.pub)return;if(c.jwk){TS.priv=await tsSub().importKey('jwk',c.jwk,{name:'ECDH',namedCurve:'P-256'},true,['deriveBits']);TS.pub=c.pub;return}
+ var kp=await tsSub().generateKey({name:'ECDH',namedCurve:'P-256'},true,['deriveBits']);c.jwk=await tsSub().exportKey('jwk',kp.privateKey);c.pub=tsA(await tsSub().exportKey('raw',kp.publicKey));TS.priv=kp.privateKey;TS.pub=c.pub;save()}
+async function tsShared(vpub){var vk=await tsSub().importKey('raw',tsU8(vpub),{name:'ECDH',namedCurve:'P-256'},true,[]);var sx=tsA(await tsSub().deriveBits({name:'ECDH',public:vk},TS.priv,256));return (await tsSha('SHA-1',sx)).slice(0,16)}
+
+/* ---- metadata TLV ---- */
+function tsTlv(items){var r=[];items.sort(function(a,b){return a[0]-b[0]}).forEach(function(it){var v=it[1];r.push(it[0],v.length);r=r.concat(v)});r.push(255);return r}
+function tsBE(n){return[(n>>>24)&255,(n>>>16)&255,(n>>>8)&255,n&255]}
+
+/* ---- transport ---- */
+function tsLog(t,m){try{if(BLon)blog(t,'TESLA '+m)}catch(e){}}
+async function tsSend(b){var P=btPlug();var out=[b.length>>8,b.length&255].concat(b);tsLog('TX',b.length+'b');for(var i=0;i<out.length;i+=20){await P.write({deviceId:TS.id,service:TSV,characteristic:TSW,value:b2hex(out.slice(i,i+20))})}}
+function tsRx(b){if(TS.lastRx&&Date.now()-TS.lastRx>2000)TS.buf=[];TS.lastRx=Date.now();TS.buf=TS.buf.concat(b);for(var g=0;g<10;g++){if(TS.buf.length<2)return;var L=TS.buf[0]*256+TS.buf[1];if(L>4096){TS.buf=[];return}if(TS.buf.length<2+L)return;var m=TS.buf.slice(2,2+L);TS.buf=TS.buf.slice(2+L);TS.q.push(m);tsLog('RX',L+'b')}}
+function tsWait(pred,ms){return new Promise(function(res,rej){var t0=Date.now(),iv=setInterval(function(){for(var i=0;i<TS.q.length;i++){var r=pred(TS.q[i]);if(r){TS.q.splice(i,1);clearInterval(iv);res(r);return}}if(!TS.on){clearInterval(iv);rej(new Error('disconnected'))}else if(Date.now()-t0>ms){clearInterval(iv);rej(new Error('timeout'))}},60)})}
+function tsVin(){return String(tsCfg().vin||'').trim().toUpperCase()}
+async function tsLocalName(vin){var d=await tsSha('SHA-1',tsStr(vin));return 'S'+tsHex(d.slice(0,8))+'C'}
+
+/* ---- routable messages ---- */
+var TS_FAULT={1:['Система авто занята','Система авто зайнята'],2:['Авто не ответило','Авто не відповіло'],3:['Ключ не привязан к авто','Ключ не прив’язаний до авто'],4:['Ключ отключён','Ключ вимкнено'],7:['Недостаточно прав','Недостатньо прав'],12:['Не тот VIN','Не той VIN'],14:['В авто нет места для ключей','В авто немає місця для ключів'],21:['В авто выключен мобильный доступ','В авто вимкнено мобільний доступ']};
+function tsFaultMsg(f){var m=TS_FAULT[f];return m?L3(m[0],m[1],m[1]):(L3('Ошибка авто ','Помилка авто ','Vehicle error ')+f)}
+async function tsHandshake(dom){var vin=tsVin(),ra=tsRand(16),uuid=tsRand(16);
+ var msg=[].concat(pbB(6,pbI(1,dom)),pbB(7,pbB(2,ra)),pbB(14,pbB(1,TS.pub)),pbB(51,uuid));TS.q=[];await tsSend(msg);
+ var r=await tsWait(function(m){var o=pbD(m);var to=pbSub(o,6);var a=to&&pb1(to,2);if(!a||tsHex(a)!==tsHex(ra))return null;return o},8000);
+ var st=pbSub(r,12);if(st&&pb1(st,2))throw new Error(tsFaultMsg(pb1(st,2)));
+ var si=pb1(r,15);if(!si)throw new Error('no session info');var sd=pbSub(r,13),tagm=sd&&pbSub(sd,6),tag=tagm&&pb1(tagm,1);
+ var inf=pbD(si);if(pb1(inf,5)===1)throw new Error(tsFaultMsg(3));var vpub=pb1(inf,2);var K=await tsShared(vpub);
+ var sik=await tsHmac(K,tsStr('session info'));var exp=await tsHmac(sik,tsTlv([[0,[6]],[2,tsStr(vin)],[6,uuid]]).concat(si));
+ if(!tag||tsHex(exp)!==tsHex(tag))throw new Error('session info HMAC mismatch');
+ TS.ses[dom]={K:K,ctr:pb1(inf,1)||0,epoch:pb1(inf,3)||[],clock:pb1(inf,4)||0,at:Date.now()};tsLog('SYS','session ok domain '+dom);return TS.ses[dom]}
+async function tsCommand(dom,pt){var s=TS.ses[dom]||await tsHandshake(dom),vin=tsVin();s.ctr++;var ex=s.clock+Math.floor((Date.now()-s.at)/1000)+15,flags=2;
+ var M=tsTlv([[0,[5]],[1,[dom]],[2,tsStr(vin)],[3,s.epoch],[4,tsBE(ex)],[5,tsBE(s.ctr)],[7,tsBE(flags)]]);var aad=await tsSha('SHA-256',M);var nonce=tsRand(12);var g=await tsGcmE(s.K,nonce,aad,pt);
+ var ra=tsRand(16),uuid=tsRand(16);
+ var sig=[].concat(pbB(1,pbB(1,TS.pub)),pbB(5,[].concat(pbB(1,s.epoch),pbB(2,nonce),pbI(3,s.ctr),pbX(4,ex),pbB(5,g.tag))));
+ TS.q=[];await tsSend([].concat(pbB(6,pbI(1,dom)),pbB(7,pbB(2,ra)),pbB(10,g.ct),pbB(13,sig),pbI(52,flags),pbB(51,uuid)));
+ var r=await tsWait(function(m){var o=pbD(m);var to=pbSub(o,6);var a=to&&pb1(to,2);return a&&tsHex(a)===tsHex(ra)?o:null},10000);
+ var st=pbSub(r,12),fault=st&&pb1(st,2)||0;
+ if(fault){var si=pb1(r,15);if(si&&[5,6,15,17].indexOf(fault)>=0){delete TS.ses[dom]}throw new Error(tsFaultMsg(fault))}
+ var body=pb1(r,10)||[],sd=pbSub(r,13),rd=sd&&pbSub(sd,9);
+ if(rd){var rf=pb1(r,52)||0,rc=pb1(rd,2)||0,from=pbSub(r,7),rdom=from&&pb1(from,1)||dom;
+  var M2=tsTlv([[0,[9]],[1,[rdom]],[2,tsStr(vin)],[5,tsBE(rc)],[7,tsBE(rf)],[8,[5].concat(g.tag)],[9,tsBE(fault)]]);body=await tsGcmD(s.K,pb1(rd,1),await tsSha('SHA-256',M2),body,pb1(rd,3))}
+ return body}
+
+/* ---- data ---- */
+async function tsRead(){if(!TS.on||TS.busy)return;TS.busy=1;try{
+  var body=await tsCommand(3,pbB(2,pbB(1,pbB(2,[]))));var resp=pbD(body),as=pbSub(resp,1);
+  if(as&&pb1(as,1)===2){var rr=pbSub(as,2);throw new Error(L3('Авто отклонило запрос','Авто відхилило запит','Request rejected'))}
+  var vd=pbSub(resp,2),cs=vd&&pbSub(vd,3);if(!cs)throw new Error(L3('Нет данных зарядки','Немає даних зарядки','No charge data'));
+  var stt=pbSub(cs,1),code=stt?+Object.keys(stt)[0]:0;
+  TS.d={pct:pb1(cs,114),usable:pb1(cs,115),kw:pb1(cs,122),v:pb1(cs,119),a:pb1(cs,121),lim:pb1(cs,104),min:pb1(cs,123),st:code,t:Date.now()};
+  TS.st='ok';TS.err='';tsLog('RX','charge '+JSON.stringify(TS.d))}
+ catch(e){TS.err=String(e&&e.message||e);if(/timeout/.test(TS.err)){TS.err=L3('Авто не отвечает — возможно, спит','Авто не відповідає — можливо, спить','No answer — car may be asleep');delete TS.ses[3]}tsLog('ERR',TS.err)}
+ TS.busy=0;tsUi()}
+function tsStLbl(c){return({1:L3('неизвестно','невідомо','unknown'),2:L3('кабель не подключён','кабель не під’єднано','unplugged'),3:L3('нет питания','немає живлення','no power'),4:L3('запуск','запуск','starting'),5:L3('заряжается','заряджається','charging'),6:L3('заряжено','заряджено','complete'),7:L3('остановлено','зупинено','stopped'),8:L3('калибровка','калібрування','calibrating')})[c]||'—'}
+
+/* ---- connect / pair ---- */
+async function tsConnect(){var P=btPlug(),c=tsCfg(),vin=tsVin();if(!P)return toast(L3('Только в установленном APK','Лише в установленому APK','APK only'));if(vin.length!==17)return toast(L3('Введите VIN (17 символов)','Введіть VIN (17 символів)','Enter the 17-character VIN'));
+ if(!tsSub())return toast('WebCrypto');TS.st='conn';TS.err='';tsUi();
+ try{await tsKey();await P.initialize();var nm=await tsLocalName(vin);var d;
+  if(c.id){d={deviceId:c.id}}else{d=await P.requestDevice({name:nm,optionalServices:[TSV]});c.id=d.deviceId;save()}
+  TS.id=d.deviceId;await P.connect({deviceId:TS.id,timeout:12000});TS.on=1;TS.buf=[];TS.q=[];TS.ses={};
+  try{P.addListener('disconnected|'+TS.id,function(){TS.on=0;clearInterval(TS.poll);TS.st='';tsUi()})}catch(e){}
+  try{P.addListener('notification|'+TS.id+'|'+TSV+'|'+TSN,function(e){tsRx(hex2b(e&&e.value))})}catch(e){}
+  await P.startNotifications({deviceId:TS.id,service:TSV,characteristic:TSN});tsLog('SYS','connected '+nm);
+  if(!c.paired){TS.st='unpaired';tsUi();try{render()}catch(e){}return}
+  TS.st='ses';tsUi();await tsRead();clearInterval(TS.poll);TS.poll=setInterval(tsRead,30000)}
+ catch(e){TS.st='fail';TS.err=String(e&&e.message||e);tsLog('ERR','connect '+TS.err);if(/not found|No device|cancel/i.test(TS.err))TS.err=L3('Авто не найдено рядом','Авто не знайдено поруч','Car not found nearby');tsUi()}}
+async function tsDisc(){var P=btPlug();clearInterval(TS.poll);TS.on=0;TS.st='';try{await P.disconnect({deviceId:TS.id})}catch(e){}tsUi();try{render()}catch(e){}}
+async function tsPair(){if(!TS.on)return;var c=tsCfg();await tsKey();TS.st='pairing';TS.err='';tsUi();
+ var um=pbB(16,[].concat(pbB(5,[].concat(pbB(1,pbB(1,TS.pub)),pbI(4,6))),pbB(6,pbI(1,7))));
+ try{await tsSend(pbB(1,[].concat(pbB(2,um),pbI(3,2))));toast(L3('Приложите ключ-карту к центральной консоли авто','Прикладіть ключ-карту до центральної консолі авто','Tap your key card on the center console'));
+  var t0=Date.now(),done=false;while(!done&&Date.now()-t0<60000){await btSleep(1500);
+   try{TS.ses={};await tsHandshake(2);done=true}catch(e){if(/HMAC/.test(String(e.message)))throw new Error(L3('Ответ авто не прошёл проверку подлинности','Відповідь авто не пройшла перевірку справжності','Vehicle reply failed authenticity check'));if(!/Ключ не|not on/i.test(String(e.message))&&!/timeout/.test(String(e.message)))tsLog('ERR','pair check '+e.message)}}
+  if(!done)throw new Error(L3('Ключ не подтверждён картой за минуту','Ключ не підтверджено карткою за хвилину','Key not confirmed within a minute'));
+  c.paired=1;save();toast(L3('Ключ добавлен','Ключ додано','Key added'));TS.st='ses';tsUi();await tsRead();clearInterval(TS.poll);TS.poll=setInterval(tsRead,30000);try{render()}catch(e){}}
+ catch(e){TS.st='fail';TS.err=String(e&&e.message||e);tsUi()}}
+function tsSetVin(){var v=((document.getElementById('tsvin')||{}).value||'').trim().toUpperCase();if(!/^[A-HJ-NPR-Z0-9]{17}$/.test(v))return toast(L3('VIN — 17 латинских букв и цифр','VIN — 17 латинських літер і цифр','VIN must be 17 characters'));var c=tsCfg();if(c.vin!==v){c.vin=v;delete c.id;delete c.paired}save();render()}
+function tsForget(){var c=tsCfg();tsDisc();delete c.id;delete c.paired;delete c.vin;save();render()}
+
+/* ---- UI ---- */
+function tsLbl(){return{conn:L3('подключение…','підключення…','connecting…'),unpaired:L3('нужно добавить ключ','потрібно додати ключ','key needed'),pairing:L3('ждём ключ-карту…','чекаємо ключ-карту…','waiting for key card…'),ses:L3('вход…','вхід…','signing in…'),ok:L3('на связи','на зв’язку','connected'),fail:L3('ошибка','помилка','error')}[TS.st]||(TS.on?L3('на связи','на зв’язку','connected'):L3('не подключено','не під’єднано','not connected'))}
+function tsSummary(){var d=TS.d;if(!d||Date.now()-d.t>15*60000)return '';var t='Tesla <b>'+(d.pct!=null?d.pct+'%':'—')+'</b>';if(d.st===5||d.st===4){t+=' · '+tsStLbl(d.st);if(d.kw)t+=' <b>'+d.kw+' кВт</b>';if(d.v)t+=' · '+d.v+' В';if(d.a)t+=' · '+d.a+' А';if(d.min)t+=' · '+L3('до ','до ','full in ')+(d.min>=60?Math.floor(d.min/60)+' '+L3('ч ','год ','h ')+(d.min%60)+' '+L3('мин','хв','min'):d.min+' '+L3('мин','хв','min'))}else t+=' · '+tsStLbl(d.st);return t}
+function tsCard(){var c=tsCfg(),h='<div class="card" id="tscard"><h2>Tesla</h2>';
+ h+='<div class="kv"><span>'+L3('Состояние','Стан','Status')+'</span><b id="tsst">'+esc(tsLbl())+'</b></div>';if(TS.err)h+='<div class="mut" style="color:#ff8a7a;margin:4px 0" id="tserr">'+esc(TS.err)+'</div>';
+ var sm=tsSummary();if(sm)h+='<div style="margin:6px 0" id="tssum">'+sm+'</div>';
+ if(!c.vin)h+='<div class="mut" style="margin:6px 0">'+L3('Подключение напрямую по Bluetooth, без облака. Нужен VIN авто (в приложении Tesla или на лобовом стекле).','Підключення напряму через Bluetooth, без хмари. Потрібен VIN авто (у застосунку Tesla або на лобовому склі).','Direct Bluetooth, no cloud. Enter the car VIN.')+'</div><input id="tsvin" placeholder="VIN" autocapitalize="characters" style="width:100%;margin:4px 0;text-transform:uppercase"><button class="sec sm" onclick="tsSetVin()">OK</button>';
+ else{h+='<div class="kv"><span>VIN</span><b>…'+esc(c.vin.slice(-6))+'</b></div>';
+  if(!TS.on)h+='<div class="row"><button onclick="tsConnect()"'+(TS.st==='conn'?' disabled':'')+'>'+L3('Подключить Tesla','Під’єднати Tesla','Connect Tesla')+'</button></div>';
+  else{if(TS.st==='unpaired'||(!c.paired&&TS.st==='fail'))h+='<div class="mut" style="margin:6px 0">'+L3('Приложение нужно один раз добавить как ключ с правами «зарядка»: оно сможет только видеть заряд, но не откроет и не заведёт авто. Нажмите кнопку, затем приложите ключ-карту к консоли.','Застосунок треба один раз додати як ключ з правами «зарядка»: він зможе лише бачити заряд, але не відчинить і не заведе авто. Натисніть кнопку, потім прикладіть ключ-карту до консолі.','Add the app once as a charging-only key, then tap the key card.')+'</div><div class="row"><button onclick="tsPair()"'+(TS.st==='pairing'?' disabled':'')+'>'+L3('Добавить ключ','Додати ключ','Add key')+'</button></div>';
+   else h+='<div class="row"><button class="sec" onclick="tsRead()">'+L3('Обновить','Оновити','Refresh')+'</button><button class="sec" onclick="tsDisc()">'+L3('Отключить','Від’єднати','Disconnect')+'</button></div>'}
+  h+='<div style="margin-top:8px"><button class="sec sm" onclick="tsForget()">'+L3('Забыть авто','Забути авто','Forget car')+'</button></div>'}
+ return h+'</div>'}
+function tsUi(){var e=document.getElementById('tsst');if(e)e.textContent=tsLbl();if(document.getElementById('tscard')&&tab==='bt'){try{var el=document.getElementById('tscard');var tmp=document.createElement('div');tmp.innerHTML=tsCard();el.replaceWith(tmp.firstChild)}catch(e){}}
+ var g=document.getElementById('pbtesla');if(g){var t=tsSummary();g.innerHTML=t;g.hidden=!t}}
+
+/* ---- hooks: Bluetooth tab card, home line, auto-connect ---- */
+(function(){var v=vBt;vBt=function(){var h=v();try{var cc=tsCard();var i=h.indexOf('<details class="card"');h=i>=0?h.slice(0,i)+cc+h.slice(i):h+cc}catch(e){}return h};
+ if(typeof pbMetrics==='function'){var m=pbMetrics;pbMetrics=function(){var h=m.apply(this,arguments);var t=tsSummary();return h+'<div id="pbtesla" class="pbgrid"'+(t?'':' hidden')+'>'+t+'</div>'}}
+ setTimeout(function(){try{var c=tsCfg();if(c.vin&&c.id&&c.paired&&btPlug())tsConnect()}catch(e){}},6000)})();
 
 try{render()}catch(e){window.__bootCheck&&setTimeout(window.__bootCheck,0);throw e}
 try{initNativeApp()}catch(e){console.error('BLACKOUT native init',e)}
