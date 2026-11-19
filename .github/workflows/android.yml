@@ -6,6 +6,10 @@ on:
         description: 'Тестова збірка: скільки днів працює (0 = без обмежень)'
         required: false
         default: '0'
+      proto:
+        description: 'Прототип BLACKOUT 4.0 окремим застосунком (порожньо = звичайна збірка; v3 = proto/overview-4.0-v3.html)'
+        required: false
+        default: ''
   push:
     branches: [main, "test/**", "design/**"]
     paths: [index.html, .github/workflows/android.yml]
@@ -32,6 +36,14 @@ jobs:
         run: |
           mkdir www
           cp index.html www/index.html
+          P="${{ github.event.inputs.proto }}"
+          APPID=com.blackout.log; APPNAME=Blackout
+          if [ -n "$P" ]; then
+            # separate test app: own id and name, installs next to BLACKOUT 3.4 and never touches its data
+            cp "proto/overview-4.0-$P.html" www/index.html
+            APPID=com.blackout.proto4; APPNAME="BLACKOUT 4.0 test"
+            echo "PROTOTYPE build: proto/overview-4.0-$P.html as $APPID"
+          fi
           D="${{ github.event.inputs.trial_days }}"
           if [ -n "$D" ] && [ "$D" -gt 0 ] 2>/dev/null; then
             EXP=$(( ($(date +%s) + D*86400) * 1000 ))
@@ -41,7 +53,8 @@ jobs:
           fi
           npm init -y
           npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6 @capacitor-community/bluetooth-le@6 @capacitor/geolocation@6 @capacitor/app@6 @capacitor/local-notifications@6 @capacitor-community/keep-awake@5
-          echo '{"appId":"com.blackout.log","appName":"Blackout","webDir":"www"}' > capacitor.config.json
+          echo "{\"appId\":\"$APPID\",\"appName\":\"$APPNAME\",\"webDir\":\"www\"}" > capacitor.config.json
+          cat capacitor.config.json
       - run: npx cap add android
       - run: npx cap sync android
       - name: Use fixed signing key (APK updates install over the old one, data is kept)
@@ -75,6 +88,6 @@ jobs:
           $ANDROID_HOME/build-tools/$BT/apksigner verify --print-certs android/app/build/outputs/apk/debug/app-debug.apk | grep -i "SHA-256"
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event.inputs.trial_days != '' && github.event.inputs.trial_days != '0' && format('blackout-apk-trial-{0}d', github.event.inputs.trial_days) || 'blackout-apk' }}
+          name: ${{ github.event.inputs.proto != '' && github.event.inputs.proto != null && format('blackout-4.0-proto-{0}-apk', github.event.inputs.proto) || (github.event.inputs.trial_days != '' && github.event.inputs.trial_days != '0' && format('blackout-apk-trial-{0}d', github.event.inputs.trial_days) || 'blackout-apk') }}
           path: android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 14
