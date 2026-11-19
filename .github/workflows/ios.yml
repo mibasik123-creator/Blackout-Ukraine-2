@@ -1,0 +1,41 @@
+name: Build iOS (unsigned IPA)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, "test/**", "design/**"]
+    paths: [index.html, .github/workflows/ios.yml]
+jobs:
+  ios:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 20}
+      - name: Prepare Capacitor iOS project
+        run: |
+          mkdir www && cp index.html www/index.html
+          npm init -y >/dev/null
+          npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/ios@6 @capacitor-community/bluetooth-le@6 @capacitor/geolocation@6 @capacitor/app@6 @capacitor/local-notifications@6 @capacitor-community/keep-awake@5
+          echo '{"appId":"com.blackout.log","appName":"Blackout","webDir":"www"}' > capacitor.config.json
+          npx cap add ios
+          P=ios/App/App/Info.plist
+          plutil -replace NSBluetoothAlwaysUsageDescription -string "Bluetooth потрібен для читання даних зарядної станції." $P
+          plutil -replace NSBluetoothPeripheralUsageDescription -string "Bluetooth потрібен для читання даних зарядної станції." $P
+          plutil -replace NSLocationWhenInUseUsageDescription -string "Геолокація потрібна, щоб позначати місце роботи генератора." $P
+          npx cap sync ios
+      - name: Build unsigned app
+        run: |
+          cd ios/App
+          xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -sdk iphoneos -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" MARKETING_VERSION=3.4 CURRENT_PROJECT_VERSION=${{ github.run_number }} build | tail -40
+      - name: Package IPA
+        run: |
+          cd ios/App/build/Build/Products/Release-iphoneos
+          mkdir Payload && cp -R App.app Payload/
+          zip -qr ../../../../../../Blackout-unsigned.ipa Payload
+          cd - && ls -la Blackout-unsigned.ipa
+      - uses: actions/upload-artifact@v4
+        with:
+          name: blackout-ios-unsigned-ipa
+          path: Blackout-unsigned.ipa
+          retention-days: 14
