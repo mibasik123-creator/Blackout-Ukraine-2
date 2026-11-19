@@ -1322,6 +1322,26 @@ function accApply(){if(tab!=='gen'&&tab!=='st')return;var st=accState(),def=ACC_
 function btIsEF(){return /^EF-|ecoflow/i.test(String(BT.name||''))}
 (function(){var _c=btConnect;btConnect=async function(){var r=await _c.apply(this,arguments);try{if(BT.on&&btIsEF()){if(BLon)blog('SYS','EcoFlow detected: encrypted protocol, not supported yet');toast(L3('EcoFlow подключена, но её протокол зашифрован — чтение данных пока не поддерживается. Станция может сама отключиться через ~20 с.','EcoFlow підключена, але її протокол зашифрований — читання даних поки не підтримується. Станція може сама відключитися через ~20 с.','EcoFlow connected, but its protocol is encrypted — reading data is not supported yet. The station may disconnect in ~20 s.'))}}catch(e){}return r}})();
 
+/* Fossibot output control (USB/DC/AC). Holding regs 24/25/26 = 0/1, func 06, CRC high byte first.
+   State is read back from input reg 41 (System State H): bit 9 USB, 10 DC, 11 AC. Allowlist only. */
+var FBO={usb:{reg:24,bit:9,n:'USB'},dc:{reg:25,bit:10,n:'DC'},ac:{reg:26,bit:11,n:'AC'}},FBO_BUSY=0;
+function fbIs(){return !!(BT.on&&BT.tx&&!(typeof BLUP!='undefined'&&BLUP.on)&&!btIsEF())}
+function fbState(k){var r=BT.regs;if(!r||r[41]==null)return null;return !!(r[41]&(1<<FBO[k].bit))}
+function fbWriteFrame(reg,val){if([24,25,26].indexOf(reg)<0||(val!==0&&val!==1))throw new Error('blocked');var b=[parseInt(BC().a,16)||17,6,reg>>8,reg&255,0,val],k=crc16(b);b.push(k>>8,k&255);return b}
+async function fbSet(k,on){if(!fbIs()||FBO_BUSY)return;var o=FBO[k];if(!o)return;
+ if(!on&&!confirm(L3('Выключить выход '+o.n+'? Подключённые устройства обесточатся.','Вимкнути вихід '+o.n+'? Підключені пристрої знеструмляться.','Turn off '+o.n+' output? Connected devices will lose power.')))return;
+ var b;try{b=fbWriteFrame(o.reg,on?1:0)}catch(e){return}
+ FBO_BUSY=1;fbUi();var before=fbState(k);if(BLon)blog('CMD',o.n+' -> '+(on?1:0)+' reg '+o.reg+' was '+before);
+ try{var p=BT.tx(b);if(p&&p.then)await p}catch(e){if(BLon)blog('ERR','cmd '+(e&&e.message||e))}
+ var t0=Date.now();await new Promise(function(res){var iv=setInterval(function(){try{btReq()}catch(e){}if(fbState(k)===on||Date.now()-t0>6000){clearInterval(iv);res()}},1000)});
+ FBO_BUSY=0;var ok=fbState(k)===on;if(BLon)blog('CMD',o.n+' result '+(ok?'OK':'NO CHANGE')+' state='+fbState(k));
+ toast(ok?(o.n+' '+(on?L3('включён','увімкнено','on'):L3('выключен','вимкнено','off'))):L3('Станция не подтвердила команду '+o.n,'Станція не підтвердила команду '+o.n,'Station did not confirm '+o.n));fbUi()}
+function fbCard(){if(!fbIs())return '';var h='<div class="card" id="fbcard"><h2>'+L3('Управление выходами','Керування виходами','Output control')+' <span class="mut" style="font-size:11px">'+L3('тест','тест','test')+'</span></h2><div id="fbrows">'+fbRows()+'</div><div class="mut" style="margin-top:8px;font-size:12px">'+L3('Состояние берётся из данных станции. Работает по Bluetooth рядом со станцией.','Стан береться з даних станції. Працює через Bluetooth поруч зі станцією.','State is read from the station. Works over Bluetooth near the station.')+'</div></div>';return h}
+function fbRows(){var h='';['ac','dc','usb'].forEach(function(k){var s=fbState(k),o=FBO[k];h+='<div class="kv" style="align-items:center"><span>'+o.n+' <b style="font-weight:600;color:'+(s?'var(--em)':'var(--mut,#888)')+'">'+(s==null?'—':s?L3('вкл','увімк','on'):L3('выкл','вимк','off'))+'</b></span><span style="display:flex;gap:6px"><button class="sec sm"'+(FBO_BUSY||s===true?' disabled':'')+' onclick="fbSet(\''+k+'\',true)">'+L3('Вкл','Увімк','On')+'</button><button class="sec sm"'+(FBO_BUSY||s===false?' disabled':'')+' onclick="fbSet(\''+k+'\',false)">'+L3('Выкл','Вимк','Off')+'</button></span></div>'});return h}
+function fbUi(){var e=document.getElementById('fbrows');if(e)e.innerHTML=fbRows()}
+(function(){var v=vBt;vBt=function(){var h=v();try{var c=fbCard();if(c){var i=h.indexOf('<details class="card"');h=i>=0?h.slice(0,i)+c+h.slice(i):h+c}}catch(e){}return h}})();
+(function(){var b=btFrame2;btFrame2=function(){b();try{fbUi()}catch(e){}}})();
+
 /* ===== Автооновлення графіка: неофіційний сервіс svitlo.live (як у інтеграції Svitlo Live для Home Assistant) ===== */
 var SV_NEW='https://dtek-api.svitlo-proxy.workers.dev/',SV_OLD='https://svitlo-proxy.svitlo-proxy.workers.dev';
 var SV_REG=[['dnipro-dnem','Дніпро · ДТЕК ДнЕМ'],['dnipro-cek','Дніпро · ЦЕК'],['dnipro-city','Дніпро (місто)'],['dnipropetrovska-oblast','Дніпропетровська обл.'],['kyiv','Київ'],['kiivska-oblast','Київська обл.'],['odeska-oblast','Одеська обл.'],['lvivska-oblast','Львівська обл.'],['kharkivska-oblast','Харківська обл.'],['poltavska-oblast','Полтавська обл.'],['zaporizka-oblast','Запорізька обл.']];
