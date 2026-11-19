@@ -1087,7 +1087,7 @@ function btLogShow(){var t=document.getElementById('bll');if(t)t.value=BL.join('
 function btLogCopy(){btLogShow();var t=document.getElementById('bll');if(!t||!t.value)return toast(L3('Журнал пуст','Журнал порожній','Log is empty'));try{navigator.clipboard.writeText(t.value).then(function(){toast(L3('Скопировано','Скопійовано','Copied'))},function(){t.select();document.execCommand('copy');toast(L3('Скопировано','Скопійовано','Copied'))})}catch(e){t.select();try{document.execCommand('copy');toast(L3('Скопировано','Скопійовано','Copied'))}catch(x){}}}
 function btRecStop(){if(BLon)blog('SYS','stop');BLon=0;render()}
 async function btRec(){var P=btPlug();if(!P)return toast(L3('Запись работает только в установленном APK','Запис працює лише в встановленому APK','Recording works only in the installed APK'));
- if(!BT.on){await btConnect();if(!BT.on)return}
+ if(!BT.on){await btConnectAny();if(!BT.on)return}
  BL=[];BLt0=Date.now();BLon=1;blog('SYS','start device='+BT.name+' id='+BT.id+' app=3.4.0 ua='+(navigator.userAgent||'').slice(0,80));blog('SYS','cfg addr='+BC().a+' regs='+BC().n+' pct='+JSON.stringify(BC().p)+' w='+JSON.stringify(BC().w)+' in='+JSON.stringify(BC().i));render();
  var svcs=[];try{var r=await P.getServices({deviceId:BT.id});svcs=r&&r.services||[]}catch(e){blog('ERR','getServices '+(e&&e.message||e))}
  for(var i=0;i<svcs.length;i++){var s=svcs[i];blog('SVC',s.uuid);var cs=s.characteristics||[];
@@ -1103,7 +1103,7 @@ function btMk(a,f,st,n,sw){var b=[a,f,st>>8,st&255,n>>8,n&255],k=crc16(b);if(sw)
 function btSleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
 async function btWr(ch,b,nr){var P=btPlug();if(!P||!BT.id)return;try{var o={deviceId:BT.id,service:SV,characteristic:ch,value:b2hex(b)};if(nr&&P.writeWithoutResponse)await P.writeWithoutResponse(o);else await P.write(o)}catch(e){blog('ERR','write '+ch.slice(4,8)+' '+(e&&e.message||e))}}
 async function btProbe(){if(BPr){BPr=0;return}var P=btPlug();if(!P)return toast(L3('Пробы работают только в APK','Проби працюють лише в APK','Probes work only in the APK'));
- if(!BT.on){await btConnect();if(!BT.on)return}
+ if(!BT.on){await btConnectAny();if(!BT.on)return}
  if(!BLon){await btRec()}
  BPr=1;clearInterval(BT.poll);blog('PROBE','begin: polling paused');render();
  var C4='0000c304-0000-1000-8000-00805f9b34fb',C2='0000c302-0000-1000-8000-00805f9b34fb',C3='0000c303-0000-1000-8000-00805f9b34fb';
@@ -1317,6 +1317,10 @@ function accApply(){if(tab!=='gen'&&tab!=='st')return;var st=accState(),def=ACC_
   h.onclick=function(){var o=!c.classList.contains('open');c.classList.toggle('open',o);h.setAttribute('aria-expanded',o?'true':'false');var s2=accState();s2[key]=o?1:0;try{localStorage.setItem('bo_acc',JSON.stringify(s2))}catch(e){}};
   h.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();h.onclick()}}})}
 (function(){var r=render;render=function(){r();try{accApply()}catch(e){}}})();
+
+/* EcoFlow: encrypted BLE protocol (ECDH + auth) not supported yet - tell the user honestly */
+function btIsEF(){return /^EF-|ecoflow/i.test(String(BT.name||''))}
+(function(){var _c=btConnect;btConnect=async function(){var r=await _c.apply(this,arguments);try{if(BT.on&&btIsEF()){if(BLon)blog('SYS','EcoFlow detected: encrypted protocol, not supported yet');toast(L3('EcoFlow подключена, но её протокол зашифрован — чтение данных пока не поддерживается. Станция может сама отключиться через ~20 с.','EcoFlow підключена, але її протокол зашифрований — читання даних поки не підтримується. Станція може сама відключитися через ~20 с.','EcoFlow connected, but its protocol is encrypted — reading data is not supported yet. The station may disconnect in ~20 s.'))}}catch(e){}return r}})();
 
 /* ===== Автооновлення графіка: неофіційний сервіс svitlo.live (як у інтеграції Svitlo Live для Home Assistant) ===== */
 var SV_NEW='https://dtek-api.svitlo-proxy.workers.dev/',SV_OLD='https://svitlo-proxy.svitlo-proxy.workers.dev';
