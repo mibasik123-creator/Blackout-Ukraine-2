@@ -361,6 +361,12 @@ body.lite .tsport{animation:none}
 
 .tsflow{animation:tsflow 1.2s linear infinite}@keyframes tsflow{to{stroke-dashoffset:-24}}.tsflow.still,.tsport.still{animation:none}
 @media (prefers-reduced-motion:reduce){.tsflow{animation:none}}
+
+.tsph{position:relative;margin:8px 0 10px;border-radius:14px;overflow:hidden;aspect-ratio:16/9;background:#0b0e10}.tsph img{width:100%;height:100%;object-fit:cover;display:block}
+.tsph-chg{position:absolute;left:10px;top:10px;padding:4px 10px;border-radius:20px;background:rgba(10,13,11,.72);color:var(--em);font-weight:700;font-size:13px;backdrop-filter:blur(6px);animation:tspulse 1.8s ease-in-out infinite}
+.tsph-flow{position:absolute;left:0;right:0;bottom:0;height:3px;background:repeating-linear-gradient(90deg,var(--em) 0 8px,transparent 8px 22px);background-size:44px 3px;animation:tsbar 1s linear infinite;opacity:.9}
+@keyframes tsbar{to{background-position:44px 0}}.tsph-chg.still,.tsph-flow.still{animation:none}
+@media (prefers-reduced-motion:reduce){.tsph-chg,.tsph-flow{animation:none}}
 </style>
 </head>
 <body>
@@ -1688,7 +1694,7 @@ function tsLbl(){return{conn:L3('подключение…','підключен�
 function tsSummary(){var d=TS.d||tsCfg().last;if(!d)return '';var t='Tesla <b>'+(d.pct!=null?d.pct+'%':'—')+'</b>';if(d.st===5||d.st===4){t+=' · '+tsStLbl(d.st);if(d.kw)t+=' <b>'+d.kw+' кВт</b>';if(d.v)t+=' · '+d.v+' В';if(d.a)t+=' · '+d.a+' А';if(d.min)t+=' · '+L3('до ','до ','full in ')+(d.min>=60?Math.floor(d.min/60)+' '+L3('ч ','год ','h ')+(d.min%60)+' '+L3('мин','хв','min'):d.min+' '+L3('мин','хв','min'))}else t+=' · '+tsStLbl(d.st);return t}
 function tsCard(){var c=tsCfg(),h='<div class="card" id="tscard"><h2>'+esc(vinInfo(c.vin).name||'Tesla')+'</h2>';
  h+='<div class="kv"><span>'+L3('Состояние','Стан','Status')+'</span><b id="tsst">'+esc(tsLbl())+'</b></div>';h+='<div class="mut" style="color:#ff8a7a;margin:4px 0" id="tserr">'+esc(TS.err||'')+'</div>';
- h+='<div style="margin:6px 0" id="tssum">'+tsSummary()+'</div>';if(c.vin)h+=tsColorPick();
+ h+='<div style="margin:6px 0" id="tssum">'+tsSummary()+'</div>';if(c.vin){h+='<div class="row" style="margin:8px 0"><button class="sec sm" onclick="tsPhoto()">📷 '+L3('Фото своего авто','Фото свого авто','Photo of your car')+'</button>'+(c.photo?'<button class="sec sm" onclick="tsPhotoDel()">'+L3('Убрать фото','Прибрати фото','Remove photo')+'</button>':'')+'</div>';if(!c.photo)h+=tsColorPick()}
  if(!c.vin)h+='<div class="mut" style="margin:6px 0">'+L3('Подключение напрямую по Bluetooth, без облака. Нужен VIN авто (в приложении Tesla или на лобовом стекле).','Підключення напряму через Bluetooth, без хмари. Потрібен VIN авто (у застосунку Tesla або на лобовому склі).','Direct Bluetooth, no cloud. Enter the car VIN.')+'</div><input id="tsvin" placeholder="VIN" autocapitalize="characters" style="width:100%;margin:4px 0;text-transform:uppercase"><button class="sec sm" onclick="tsSetVin()">OK</button>';
  else{h+='<div class="kv"><span>VIN</span><b>…'+esc(c.vin.slice(-6))+'</b></div>';
   if(!TS.on)h+='<div class="row"><button onclick="tsConnect()"'+(TS.st==='conn'?' disabled':'')+'>'+L3('Подключить Tesla','Під’єднати Tesla','Connect Tesla')+'</button></div>';
@@ -1729,12 +1735,16 @@ function tsFlow(kw){var fx=pbFx(),dur=Math.max(.45,2.4-(+kw||0)/5).toFixed(2),pa
 function tsAgo(t){var m=Math.round((Date.now()-t)/60000);return m<1?L3('только что','щойно','just now'):m<60?m+' '+L3('мин назад','хв тому','min ago'):Math.round(m/60)+' '+L3('ч назад','год тому','h ago')}
 function tsHomeInner(){var c=tsCfg(),vi=vinInfo(c.vin),d=TS.d||c.last,chg=d&&(d.st===4||d.st===5),live=TS.on&&TS.d&&Date.now()-TS.d.t<120000;
  var h='<div class="tsh-top"><div><div class="tsh-n">'+esc(vi.name||L3('Авто','Авто','Car'))+'</div><div class="mut">'+(vi.year?vi.year+' · ':'')+(live?'<span class="tsh-live">● '+L3('на связи','на зв’язку','live')+'</span>':(d?L3('обновлено ','оновлено ','updated ')+tsAgo(d.t):L3('не подключено','не під’єднано','not connected')))+'</div></div>'+
-  '<div class="tsh-p"><b>'+(d&&d.pct!=null?d.pct:'—')+'</b><small>%</small></div></div>'+tsCarSvg(tsColor(),vi.suv!==false,chg,d&&d.kw);
+  '<div class="tsh-p"><b>'+(d&&d.pct!=null?d.pct:'—')+'</b><small>%</small></div></div>'+(c.photo?tsPhotoBox(chg,d&&d.kw):tsCarSvg(tsColor(),vi.suv!==false,chg,d&&d.kw));
  if(d){var lim=d.lim||100;h+='<div class="tsh-bar"><i style="width:'+Math.max(0,Math.min(100,d.pct||0))+'%"></i><em style="left:'+lim+'%"></em></div>';
   var s=tsStLbl(d.st);if(chg){if(d.kw)s+=' · <b>'+d.kw+' кВт</b>';if(d.v)s+=' · '+d.v+' В';if(d.a)s+=' · '+d.a+' А'}h+='<div class="tsh-s">'+s+(d.lim?' · '+L3('лимит ','ліміт ','limit ')+d.lim+'%':'')+(chg&&d.min?' · '+L3('до полного ','до повного ','full in ')+(d.min>=60?Math.floor(d.min/60)+' '+L3('ч ','год ','h ')+(d.min%60)+' '+L3('мин','хв','min'):d.min+' '+L3('мин','хв','min')):'')+'</div>'}
  return h}
 function tsHome(){if(!tsCfg().vin)return '';return '<div class="card tsh" id="tshome" onclick="try{localStorage.setItem(\'bo_btg\',\'car\')}catch(e){};setTab(\'bt\')">'+tsHomeInner()+'</div>'}
 function tsHomeUpd(){var e=document.getElementById('tshome');if(e)e.innerHTML=tsHomeInner()}
+/* own photo of the car instead of the drawn one */
+function tsPhoto(){var f=document.createElement('input');f.type='file';f.accept='image/*';f.onchange=function(){if(!f.files[0])return;var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){var k=Math.min(1,900/Math.max(im.width,im.height)),cv=document.createElement('canvas');cv.width=Math.round(im.width*k);cv.height=Math.round(im.height*k);cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);var c=tsCfg(),old=c.photo;c.photo=cv.toDataURL('image/jpeg',0.78);if(!save()){c.photo=old;toast(L3('Мало места для фото','Замало місця для фото','Not enough space'));return}render()};im.src=r.result};r.readAsDataURL(f.files[0])};f.click()}
+function tsPhotoDel(){delete tsCfg().photo;save();render()}
+function tsPhotoBox(chg,kw){var c=tsCfg();return '<div class="tsph"><img src="'+c.photo+'" alt="">'+(chg?'<div class="tsph-chg'+(pbFx()?'':' still')+'"><span>⚡</span>'+(kw?kw+' кВт':L3('заряжается','заряджається','charging'))+'</div><div class="tsph-flow'+(pbFx()?'':' still')+'"></div>':'')+'</div>'}
 /* ===== Bluetooth tab: sub-tabs Станція / Авто / Сервіс ===== */
 function btgGet(){try{return localStorage.getItem('bo_btg')||'st'}catch(e){return 'st'}}
 function btgGroup(el){if(el.id==='tscard')return 'car';if(el.id==='btseg')return 'all';var h=el.querySelector&&el.querySelector(':scope>h2,:scope>summary'),t=(h?h.textContent:'').trim().toLowerCase();
