@@ -59,6 +59,9 @@ function sync(){if(BO_DEV)return;var now=Date.now();
   if(d&&typeof d.t==='number')Tel.set('car',{pct:d.pct,kW:d.kw,st:d.st,t:d.t,link:!!(TS.on&&TS.d)});else if(Tel.d.car){delete Tel.d.car;Tel.emit('car')}}}catch(e){}
  /* grid V/A/Hz line (measured by the station) */
  var gl=$('gline');if(gl){var gt='';try{if(fresh&&S.run)gt=pbGridTxt();if(gt&&S.run)gt=gt.replace(/^[^<]+/,'Вхід від генератора ')}catch(e){}if(gl.innerHTML!==gt)gl.innerHTML=gt;gl.hidden=!gt;gl.classList.toggle('gen',!!S.run)}
- txt('loc',S.locs&&S.locs[S.loc]?S.locs[S.loc]:'');try{s3Inv()}catch(e){}}
+ txt('loc',S.locs&&S.locs[S.loc]?S.locs[S.loc]:'');try{s3Inv()}catch(e){}try{s3Brand()}catch(e){}}
+/* scene station drawn in the style of the station's brand (generic shape, no logos) */
+var S3_BR=[['fossibot',/fossibot|power-/],['ecoflow',/ecoflow|delta|river/],['bluetti',/bluetti/],['jackery',/jackery|explorer/],['anker',/anker|solix/],['must',/\bmust\b|hbp|em1024/]];
+function s3Brand(){var sv=$('s3');if(!sv)return;var n='';try{n=BT.on?stName():''}catch(e){}if(!n){var sn=S.sts[si]||S.sts[0];n=sn?sn.n:''}n=String(n||'').toLowerCase();var b='generic';for(var i=0;i<S3_BR.length;i++)if(S3_BR[i][1].test(n)){b=S3_BR[i][0];break}if(!n)b='fossibot';if(sv.getAttribute('data-st')!==b)sv.setAttribute('data-st',b)}
 setInterval(function(){if(ACTIVE())sync()},2000);
 window.BO4={attach:attach,sync:sync,frame:function(){stT=Date.now();if(ACTIVE())sync()},lost:function(){if(ACTIVE())sync()},active:ACTIVE};

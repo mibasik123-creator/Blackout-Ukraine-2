@@ -93,7 +93,8 @@ _C=_c.cos(_c.radians(30))
 P0=v.p(CAR0[0]+82,CAR0[1]+34.6,0)
 strip={'P0':[round(P0[0],2),round(P0[1],2)],'ex':[-_C*v.k,-.5*v.k],'ez':[0,-v.k]}
 o.append('<g id="s3-car" class="s3-tap">'+cs+'</g>')
-st=M.station(v,*ST0)
+import stations as SS
+st=''.join('<g class="stb" data-b="%s">%s</g>'%(b,SS.station(v,*ST0,style=b)) for b in SS.STYLES)
 o.append('<g id="s3-st" class="s3-tap">'+st+'</g>')
 # station <-> house: a real power cable, plugged into the station's AC socket and into a wall socket on the gable
 import math as _mm
@@ -171,7 +172,7 @@ css='''#s3{display:block;width:calc(100% + 40px);margin:0 -20px;height:auto;over
 #s3 #s3-genpool{opacity:0;transition:opacity .8s}#s3 #s3-genpool.on{opacity:.16}
 #s3 #s3-house.dark .win,#s3 #s3-house.dark [fill="url(#g-light)"]{fill:#1c2622;animation:none}#s3 #s3-pool{transition:opacity .8s}#s3 #s3-pool.off{opacity:0}
 #s3 #s3-pyl.off{opacity:.55}#s3 #s3-car.idle #s3-liq{opacity:.55}#s3 #s3-car.idle #s3-liqg{display:none}#s3 #s3-neonw{display:none}#s3 #s3-car:not(.idle) #s3-neonw{display:inline}
-#s3 #s3-pv,#s3 #s3-inv{display:none}#s3.pv #s3-pv,#s3.inv #s3-inv{display:inline}#s3 #s3-wb.off circle{display:none}#s3 .s3-tap{cursor:pointer}
+#s3 #s3-pv,#s3 #s3-inv{display:none}#s3.pv #s3-pv,#s3.inv #s3-inv{display:inline}#s3 .stb{display:none}#s3:not([data-st]) .stb[data-b=fossibot],#s3[data-st=fossibot] .stb[data-b=fossibot],#s3[data-st=ecoflow] .stb[data-b=ecoflow],#s3[data-st=bluetti] .stb[data-b=bluetti],#s3[data-st=jackery] .stb[data-b=jackery],#s3[data-st=anker] .stb[data-b=anker],#s3[data-st=must] .stb[data-b=must],#s3[data-st=generic] .stb[data-b=generic]{display:inline}#s3 #s3-wb.off circle{display:none}#s3 .s3-tap{cursor:pointer}
 @media (prefers-reduced-motion:reduce){#s3 *{animation:none!important}}'''
 json.dump({'svg':svg,'css':css,'strip':strip},open('/tmp/claude-0/-home-claude/b376be36-0118-5eb7-9409-c56e988e0bd8/scratchpad/gen2/s3.json','w'),ensure_ascii=False)
 print(len(svg))
