@@ -187,7 +187,7 @@ _S3 = _json.load(open('/home/claude/ec/s3.json', encoding='utf-8'))
 _S3['css'] = _S3['css'].replace('#s3{display:block;width:calc(100% + 40px);margin:0 -20px;', '#s3{display:block;width:calc(100% + 12px);margin:0 -6px;')
 S3_VIEWBOX = '0 108 350 345'
 def patch_css3(css):
-    return css + '#s3 #s3-car.idle g[clip-path]{display:none}' + '.scene{position:absolute!important;width:0!important;height:0!important;overflow:hidden!important;visibility:hidden!important;margin:0!important}' + _S3['css']
+    return css + '.scene{position:absolute!important;width:0!important;height:0!important;overflow:hidden!important;visibility:hidden!important;margin:0!important}' + _S3['css']
 def patch_html3(html):
     svg = _S3['svg'].replace('VIEWBOX', S3_VIEWBOX)
     ids_new = set(re.findall(r'id="([^"]+)"', svg)); ids_old = set(re.findall(r'id="([^"]+)"', html))
@@ -219,11 +219,20 @@ function s3Paint(R){var sv=$('s3');if(!sv)return;var F=R.flows||{},f=R.feed,st=R
  txt('s3-cs',!hasCar?'':chg?'+'+String(c.kW!=null?c.kW:'').replace('.',',')+' кВт':st.car==='ONLINE'?'не заряджається':'немає зв’язку');
  txt('s3-g2',st.gen!=='ONLINE'?'':g.on?'працює'+(g.fuel!=null?' · бак '+Math.round(g.fuel)+'%%':''):'вимкнено');fill('s3-g1',run?'#F3BA70':'#65736A');fill('s3-g2',run?'#F3BA70':'#65736A');
  txt('s3-p2',st.grid==='ONLINE'&&gr.on===false?'немає':'');fill('s3-p1',gridOn?'#72C9ED':'#65736A');
- var p=hasCar&&c.pct!=null?Math.max(0,Math.min(100,c.pct))/100:0,A=S3_STRIP,L=function(a,b){return [a[0]+(b[0]-a[0])*p,a[1]+(b[1]-a[1])*p]},e0=L(A.a0,A.b0),e1=L(A.a1,A.b1);
- var d=p>0?'M'+A.a0[0]+' '+A.a0[1]+' L'+e0[0].toFixed(1)+' '+e0[1].toFixed(1)+' L'+e1[0].toFixed(1)+' '+e1[1].toFixed(1)+' L'+A.a1[0]+' '+A.a1[1]+' Z':'';
- ['s3-stripfill','s3-stripglow','s3-stripclip'].forEach(function(id){var e=$(id);if(e&&e.getAttribute('d')!==d)e.setAttribute('d',d)});
- try{s3Inv()}catch(x){}
- var sh=ROOT.querySelector('#sh-path');if(sh&&p>0)sh.setAttribute('d','M'+((A.a0[0]+A.a1[0])/2).toFixed(1)+' '+((A.a0[1]+A.a1[1])/2).toFixed(1)+' L'+((e0[0]+e1[0])/2).toFixed(1)+' '+((e0[1]+e1[1])/2).toFixed(1))}
+ S3C.p=hasCar&&c.pct!=null?Math.max(0,Math.min(100,c.pct)):0;S3C.chg=chg&&hasCar;s3Liq();
+ try{s3Inv()}catch(x){}}
+/* car charge: liquid fill of the body side + neon outline (charging only) */
+var S3C={p:0,chg:false,raf:0,t0:0};
+function s3Liq(){if(S3C.raf)return;S3C.raf=requestAnimationFrame(s3LiqFrame)}
+function s3LiqFrame(t){S3C.raf=0;var A=S3_STRIP,p=S3C.p,mv=S3C.chg&&MOTION&&ACTIVE();if(!S3C.t0)S3C.t0=t;var ph=(t-S3C.t0)/1000;
+ function P(x,z){return (A.P0[0]+x*A.ex[0]+z*A.ez[0]).toFixed(1)+' '+(A.P0[1]+x*A.ex[1]+z*A.ez[1]).toFixed(1)}
+ var zl=8+(25.2-8)*p/100,d='',s='';
+ if(p>0){for(var i=0;i<=24;i++){var x=-3+88*i/24,z=zl+(mv&&p<100?.9*Math.sin(i/24*Math.PI*4+ph*2.4)+.4*Math.sin(i/24*Math.PI*9-ph*3.1):0),q=P(x,z);d+=(i?' L':'M')+q;s+=(i?' L':'M')+q}
+  d+=' L'+P(85,4)+' L'+P(-3,4)+' Z'}
+ ['s3-liq','s3-liqg'].forEach(function(id){var e=$(id);if(e)e.setAttribute('d',d)});var ls=$('s3-liqs');if(ls)ls.setAttribute('d',p<100?s:'');
+ var da=S3C.chg?p+' '+(100.01-p):'0 100';['s3-neon','s3-neonG'].forEach(function(id){var e=$(id);if(e&&e.getAttribute('stroke-dasharray')!==da)e.setAttribute('stroke-dasharray',da)});
+ var sp=$('s3-spark'),ne=$('s3-neon');if(sp&&ne){if(mv&&p>0){var L=ne.getTotalLength(),pt=ne.getPointAtLength(L*p/100*((ph*.35)%%1));sp.setAttribute('cx',pt.x.toFixed(1));sp.setAttribute('cy',pt.y.toFixed(1))}else sp.setAttribute('cx',-99)}
+ if(mv)S3C.raf=requestAnimationFrame(s3LiqFrame)}
 """
 def patch_js3(js):
     js = rep(js, 'var LAST=null;', S3_JS % _json.dumps(_S3['strip']) + 'var LAST=null;')

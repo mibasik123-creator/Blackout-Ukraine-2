@@ -80,15 +80,19 @@ o.append('<g id="s3-inv">'+'\n'.join(inv)+'</g>')
 pvd=v.d([(HL+OV,HD-4,HH-3),(HL+OV,HD-4,HH-8),(IX+.4,iy1-2,iz1+2),(IX+.4,iy1-2,iz1)],False)
 pvf=M.flow('s3-pvf-p',pvd,'grid','slow',1.4).replace('#48B9E8','#F5C842').replace('#2c5b6e','#6b5a1e').replace('#CDEFFB','#FCE9A8').replace('#EAF8FD','#FFF6D6')
 o.append('<g id="s3-pvf" class="s3f"><g class="lv">%s</g><g class="dd"></g></g>'%pvf)
-cs,port,portw=M.car(v,*CAR0,charging=True,flip=True)
-# strip geometry for any percentage
-X=lambda x:CAR0[0]+(82-x);Y=lambda y:CAR0[1]+y;W=34
-def pt(x,z):return v.p(X(x),Y(W)+.5,z)
-strip={'a0':pt(6,10.4),'a1':pt(6,12.2),'b0':pt(76,10.4),'b1':pt(76,12.2)}
-cs=re.sub(r'<clipPath id="cl-strip"><path d="[^"]*"></path></clipPath>','<clipPath id="cl-strip"><path id="s3-stripclip" d=""></path></clipPath>',cs)
-cs=re.sub(r'<path d="([^"]*)" fill="url\(#g-strip\)"></path>',r'<path id="s3-stripfill" d="" fill="url(#g-strip)"></path>',cs,1)
-cs=re.sub(r'<path d="([^"]*)" fill="#A8D957" opacity=".55" filter="url\(#f-soft\)"></path>',r'<path id="s3-stripglow" d="" fill="#A8D957" opacity=".55" filter="url(#f-soft)"></path>',cs,1)
-cs=cs.replace('<path id="sh-path" d="','<path id="sh-path" data-x="1" d="')
+import carr
+# charge = liquid fill of the body side (A) + neon outline with a spark (C); geometry of the side plane goes to the app
+hook=('<clipPath id="cl-side"><path d="SIDEPATH"></path></clipPath><g id="s3-liqw" clip-path="url(#cl-side)">'
+      '<path id="s3-liq" d="" fill="url(#g-liq)" opacity=".92"></path><path id="s3-liqg" d="" fill="#C4E58A" opacity=".3" filter="url(#f-soft)"></path>'
+      '<path id="s3-liqs" d="" fill="none" stroke="#F1FFD6" stroke-width="1" opacity=".85" filter="url(#f-dotsm)"></path></g>'
+      '<g id="s3-neonw"><path id="s3-neonG" d="SIDEPATH" pathLength="100" fill="none" stroke="#A8D957" stroke-width="5" stroke-opacity=".5" filter="url(#f-glow)" stroke-linecap="round" stroke-dasharray="0 100"></path>'
+      '<path id="s3-neon" d="SIDEPATH" pathLength="100" fill="none" stroke="#E3F5C4" stroke-width="1.2" stroke-linecap="round" stroke-dasharray="0 100"></path>'
+      '<circle id="s3-spark" r="2.2" fill="#F4FFE6" filter="url(#f-dot)" cx="-99" cy="-99"></circle></g>')
+cs,port,portw=carr.car(v,*CAR0,charging=False,flip=True,hook=hook)
+import math as _c
+_C=_c.cos(_c.radians(30))
+P0=v.p(CAR0[0]+82,CAR0[1]+34.6,0)
+strip={'P0':[round(P0[0],2),round(P0[1],2)],'ex':[-_C*v.k,-.5*v.k],'ez':[0,-v.k]}
 o.append('<g id="s3-car" class="s3-tap">'+cs+'</g>')
 st=M.station(v,*ST0)
 o.append('<g id="s3-st" class="s3-tap">'+st+'</g>')
@@ -150,8 +154,8 @@ cx,cy=v.p(CAR0[0]+41,CAR0[1]+17,0);o.append(T('s3-cp',cx,cy+34,'','#C4E58A',14,6
 o.append(T('s3-g1',gx,gy-52,'ГЕНЕРАТОР','#65736A',10.5,None,1));o.append(T('s3-g2',gx,gy-40,'','#65736A',10.5))
 o.append(T('s3-p1',PY[0],PY[1]-118,'МЕРЕЖА','#72C9ED',10.5,None,1));o.append(T('s3-p2',PY[0],PY[1]-104,'','#65736A',10.5))
 inner='\n'.join(o)
-defs=M.DEFS.replace('<defs>','<defs>\n<linearGradient id="g-pv" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2c4a7a"></stop><stop offset="100%" stop-color="#16243f"></stop></linearGradient>\n<filter id="f-dotsm" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation=".5"></feGaussianBlur></filter>')
-for need in ('g-wbx','g-strip','g-crear'):
+defs=M.DEFS.replace('<defs>','<defs>\n<linearGradient id="g-liq" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D4F59A"></stop><stop offset=".18" stop-color="#A8D957"></stop><stop offset="1" stop-color="#3f7a1e"></stop></linearGradient>\n<linearGradient id="g-pv" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2c4a7a"></stop><stop offset="100%" stop-color="#16243f"></stop></linearGradient>\n<filter id="f-dotsm" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation=".5"></feGaussianBlur></filter>')
+for need in ('g-wbx','g-crear','g-liq'):
     assert need in defs or need in inner, need
 svg='<svg id="s3" viewBox="VIEWBOX" role="img" aria-label="Схема енергії: будинок, мережа, генератор, станція, авто">'+defs+'<g transform="translate(-52 4) scale(1.25)">'+inner+'</g></svg>'
 css='''#s3{display:block;width:calc(100% + 40px);margin:0 -20px;height:auto;overflow:visible}
@@ -165,7 +169,7 @@ css='''#s3{display:block;width:calc(100% + 40px);margin:0 -20px;height:auto;over
 #s3 #s3-gen{opacity:.62;transition:opacity .6s}#s3 #s3-gen.run{opacity:1}#s3 #s3-gen.run .smk{display:inline}
 #s3 #s3-genpool{opacity:0;transition:opacity .8s}#s3 #s3-genpool.on{opacity:.16}
 #s3 #s3-house.dark .win,#s3 #s3-house.dark [fill="url(#g-light)"]{fill:#1c2622;animation:none}#s3 #s3-pool{transition:opacity .8s}#s3 #s3-pool.off{opacity:0}
-#s3 #s3-pyl.off{opacity:.55}#s3 #s3-car.idle [fill="#C4E58A"]{fill:#9EDCF5}#s3 #s3-car .strip-on{display:none}
+#s3 #s3-pyl.off{opacity:.55}#s3 #s3-car.idle #s3-liq{opacity:.55}#s3 #s3-car.idle #s3-liqg{display:none}#s3 #s3-neonw{display:none}#s3 #s3-car:not(.idle) #s3-neonw{display:inline}
 #s3 #s3-pv,#s3 #s3-inv{display:none}#s3.pv #s3-pv,#s3.inv #s3-inv{display:inline}#s3 #s3-wb.off circle{display:none}#s3 .s3-tap{cursor:pointer}
 @media (prefers-reduced-motion:reduce){#s3 *{animation:none!important}}'''
 json.dump({'svg':svg,'css':css,'strip':strip},open('/tmp/claude-0/-home-claude/b376be36-0118-5eb7-9409-c56e988e0bd8/scratchpad/gen2/s3.json','w'),ensure_ascii=False)

@@ -3,7 +3,7 @@
    the app's styles never touch it. Data comes only from what the app really measures. */
 var HOST=null,ROOT=null,stT=0,BO4_STN='',BO4_GEN='';
 function ACTIVE(){return !!(HOST&&HOST.isConnected&&!document.hidden)}
-function onVis(){var a=ACTIVE();Flow.pauseAll(true);var s3=$('s3');if(s3&&s3.pauseAnimations){if(a)s3.unpauseAnimations();else s3.pauseAnimations()}if(!a){for(var id in NUM){var e=$(id);if(e&&e._r){cancelAnimationFrame(e._r);e._r=0}}pending=0}else paint()}
+function onVis(){var a=ACTIVE();Flow.pauseAll(true);var s3=$('s3');if(s3&&s3.pauseAnimations){if(a)s3.unpauseAnimations();else s3.pauseAnimations()}if(a){try{s3Liq()}catch(e){}}if(!a){for(var id in NUM){var e=$(id);if(e&&e._r){cancelAnimationFrame(e._r);e._r=0}}pending=0}else paint()}
 document.addEventListener('visibilitychange',onVis);
 function build(){HOST=document.createElement('div');HOST.id='bo4host';ROOT=HOST.attachShadow({mode:'open'});ROOT.innerHTML='<style>'+BO4_CSS+'</style>'+BO4_HTML;
  Flow.init();
