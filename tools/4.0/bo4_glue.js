@@ -1,7 +1,7 @@
 /* ---------- BLACKOUT 4.0 inside the app: shadow-DOM mount + real data adapters ----------
    The overview lives in its own shadow root, so its styles never touch other screens and
    the app's styles never touch it. Data comes only from what the app really measures. */
-var HOST=null,ROOT=null,stT=0;
+var HOST=null,ROOT=null,stT=0,BO4_STN='',BO4_GEN='';
 function ACTIVE(){return !!(HOST&&HOST.isConnected&&!document.hidden)}
 function onVis(){var a=ACTIVE();Flow.pauseAll(!a);if(!a){for(var id in NUM){var e=$(id);if(e&&e._r){cancelAnimationFrame(e._r);e._r=0}}pending=0}else paint()}
 document.addEventListener('visibilitychange',onVis);
@@ -28,13 +28,13 @@ function stName(){try{var m=btDevModel(),c=BC(),idx=(c.map&&BT.id&&c.map[BT.id]!
 function sync(){if(BO_DEV)return;var now=Date.now();
  /* station: the connected station's own measurements, time = when its frame arrived */
  if(BT.on&&stT&&(BT.pct!=null||BT.w!=null||BT.wi!=null)){var nm=stName();BO_STATION_AC_MAX_W=ratedW(nm);
-  Tel.set('station',{pct:BT.pct,inW:BT.wi,outW:BT.w,tf:BT.tf,te:BT.te,t:stT});txt('stname',nm);txt('stname2',nm)}
+  Tel.set('station',{pct:BT.pct,inW:BT.wi,outW:BT.w,tf:BT.tf,te:BT.te,t:stT});BO4_STN=nm;txt('stname2',nm)}
  else{var s0=Tel.get('station');if(s0&&s0.link!==false)Tel.markOffline('station')}
  /* generator: the generator sends no data; its state is the session started/stopped in the app */
  var g=S.gens[S.g]||S.gens[0];if(g){
   /* fuel: the app's own estimate — fills minus sessions, the running one included at the generator's rated l/h */
   var fl=null;if(S.fills.length){var left=fuelLeft(g);fl=Math.max(0,Math.min(100,left/fuelCap(g)*100))}
-  Tel.set('gen',{on:!!S.run,fuel:fl,t:now});txt('gname',g.n)}
+  Tel.set('gen',{on:!!S.run,fuel:fl,t:now});txt('gname',g.n);BO4_GEN=g.n}
  var ng=$('n-gen');if(ng)ng.classList.toggle('run',!!S.run&&MOTION);
  /* row buttons */
  function btn(id,label,show,c,dis){var e=$(id);if(!e)return;e.hidden=!show;if(e.textContent!==label)e.textContent=label;e.className='act '+(c||'');e.disabled=!!dis}
@@ -49,7 +49,7 @@ function sync(){if(BO_DEV)return;var now=Date.now();
  try{var c=tsCfg();if(c.vin){var d=TS.d||c.last;var vi=vinInfo(c.vin);txt('cname',((vi.make||'Tesla')+' '+(vi.model||'')).trim());HOST&&HOST.style.setProperty('--carc',tsColor());
   if(d&&typeof d.t==='number')Tel.set('car',{pct:d.pct,kW:d.kw,st:d.st,t:d.t,link:!!(TS.on&&TS.d)});else if(Tel.d.car){delete Tel.d.car;Tel.emit('car')}}}catch(e){}
  /* grid V/A/Hz line (measured by the station) */
- var gl=$('gline');if(gl){var gt='';try{if(fresh)gt=pbGridTxt();if(gt&&S.run)gt=gt.replace(/^[^<]+/,'Вхід від генератора ')}catch(e){}if(gl.innerHTML!==gt)gl.innerHTML=gt;gl.hidden=!gt;gl.classList.toggle('gen',!!S.run)}
+ var gl=$('gline');if(gl){var gt='';try{if(fresh&&S.run)gt=pbGridTxt();if(gt&&S.run)gt=gt.replace(/^[^<]+/,'Вхід від генератора ')}catch(e){}if(gl.innerHTML!==gt)gl.innerHTML=gt;gl.hidden=!gt;gl.classList.toggle('gen',!!S.run)}
  txt('loc',S.locs&&S.locs[S.loc]?S.locs[S.loc]:'')}
 setInterval(function(){if(ACTIVE())sync()},2000);
 window.BO4={attach:attach,sync:sync,frame:function(){stT=Date.now();if(ACTIVE())sync()},lost:function(){if(ACTIVE())sync()},active:ACTIVE};
