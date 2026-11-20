@@ -1225,7 +1225,7 @@ async function btConnectAny(){if(BT.on)btDisc();BT.any=1;try{await btConnect()}f
 /* ===== Не вимикати екран (keep awake) ===== */
 var KA={on:false,wl:null};
 function kaPref(){try{return localStorage.getItem('blackout_awake')||'live'}catch(e){return 'live'}}
-function kaWant(){var p=kaPref();if(p==='off'||document.hidden)return false;if(p==='always')return true;return tab==='pan'||!!BT.on}
+function kaWant(){var p=kaPref();if(p==='off'||document.hidden)return false;if(p==='always')return true;if(tab==='pan'||tab==='bt'||!!BT.on||!!S.run)return true;try{if(TS.on||TS.connecting||(window.TY&&TY.busy)||(window.INV&&INV.on))return true}catch(e){}return false}
 function kaPlug(){var c=window.Capacitor;return c&&c.Plugins&&c.Plugins.KeepAwake||null}
 function kaSync(){var want=kaWant();if(want===KA.on)return;KA.on=want;var P=kaPlug();
  try{if(P){(want?P.keepAwake():P.allowSleep()).catch(function(){})}
@@ -1234,7 +1234,7 @@ function kaSet(v){try{localStorage.setItem('blackout_awake',v)}catch(e){}KA.on=n
 document.addEventListener('visibilitychange',function(){KA.on=null;try{kaSync()}catch(e){}});
 setInterval(function(){try{kaSync()}catch(e){}},5000);
 (function(){var r=render;render=function(){r();try{kaSync()}catch(e){}};
- var so=vSetAll;vSetAll=function(){var h=so(),cur=kaPref(),o=[['live',L3('Пока открыт главный экран или подключена станция','Поки відкрито головний екран або підключено станцію','On main screen or while a station is connected')],['always',L3('Всегда, пока приложение открыто','Завжди, поки застосунок відкрито','Always while the app is open')],['off',L3('Нет (как в системе)','Ні (як у системі)','No (system default)')]];
+ var so=vSetAll;vSetAll=function(){var h=so(),cur=kaPref(),o=[['live',L3('Пока открыта Главная или Подключения, или есть активное подключение','Поки відкрито Головну чи Підключення, або є активне з’єднання','On Home or Connect, or while a device is connected')],['always',L3('Всегда, пока приложение открыто','Завжди, поки застосунок відкрито','Always while the app is open')],['off',L3('Нет (как в системе)','Ні (як у системі)','No (system default)')]];
   var c='<div class="card"><h2>'+L3('Не выключать экран','Не вимикати екран','Keep screen on')+'</h2><select onchange="kaSet(this.value)">'+o.map(function(x){return '<option value="'+x[0]+'"'+(x[0]==cur?' selected':'')+'>'+x[1]+'</option>'}).join('')+'</select><div class="mut" style="margin-top:6px">'+L3('Экран не гаснет, Bluetooth и графики продолжают обновляться. Расходует больше батареи телефона.','Екран не гасне, Bluetooth і графіки продовжують оновлюватися. Витрачає більше батареї телефону.','Screen stays on so Bluetooth and charts keep updating. Uses more phone battery.')+'</div></div>';
   var k=h.indexOf('<div class="card"><h2>Язык</h2>');return k>=0?h.slice(0,k)+c+h.slice(k):h+c};
  for(var i=0;i<SEC.length;i++)if(SEC[i].k==='look')SEC[i].m=SEC[i].m.concat(['Не выключать экран','Не вимикати екран','Keep screen on'])})();
@@ -2384,14 +2384,24 @@ function tyStart(){clearInterval(TY.timer);TY.timer=setInterval(function(){if(do
 /* grid sensor: a plug wired to the city grid only, while the generator session is off */
 function tyGrid(){var now=Date.now(),best=null;tyCfg().forEach(function(p){var st=TY.plugs[p.dev];if(p.grid&&st&&st.t&&st.d&&st.d.V!=null&&(!best||st.t>best.t))best={t:st.t,V:st.d.V}});return best}
 /* --- discovery --- */
+async function tyUdpKey(){if(!TY_UDPKEY){var m=await crypto.subtle.digest('MD5',tyStr('yGAdlopoPVldABfn')).catch(function(){return null});TY_UDPKEY=m?Array.prototype.slice.call(new Uint8Array(m)):tyMd5(tyStr('yGAdlopoPVldABfn'))}return TY_UDPKEY}
+/* discovery request for newer firmware (3.5): {"from":"app","ip":phone} as a 6699 frame, cmd 0x25, broadcast to UDP 7000 */
+async function tyProbe(ip){var k=await tyUdpKey();return tyHex(await tyPack({ver:3.5,seq:0,key:k},0x25,tyStr(JSON.stringify({from:'app',ip:ip}))))}
+async function tyParseBc(it){var b=tyUnhex(it.hex),j=null,k=await tyUdpKey();
+ try{if(b[2]===0x66){var mm=await tyUnpackAll({ver:3.5,key:k},b);if(mm[0]&&mm[0].good)j=JSON.parse(tyTxt(mm[0].body).replace(/\u0000+$/,'').replace(/^[^{]*/,''))}
+  else{var m2=await tyUnpackAll({ver:3.3,key:k},b);var body=m2[0]?m2[0].body:b;var t=body[0]===0x7b?tyTxt(body):tyTxt(AES128.ecbDec(k,body));j=JSON.parse(t.slice(t.indexOf('{'),t.lastIndexOf('}')+1))}}catch(e){}
+ return j&&j.gwId?{ip:j.ip||it.ip,dev:j.gwId,ver:j.version||'',pk:j.productKey||''}:null}
+/* search: listen for broadcasts (6666/6667/7000) + ask newer firmware on 7000 + check which hosts of the phone's network accept TCP 6668 */
 async function tyFind(){var N=tyNet();if(!N||!N.udpListen){TY.err='потрібна нова версія застосунку';tyUi(true);return}
- TY.busy=1;TY.found=null;tyUi(true);var res=[];
- try{var r=await N.udpListen({timeout:7000});if(!TY_UDPKEY){var m=await crypto.subtle.digest('MD5',tyStr('yGAdlopoPVldABfn')).catch(function(){return null});TY_UDPKEY=m?Array.prototype.slice.call(new Uint8Array(m)):tyMd5(tyStr('yGAdlopoPVldABfn'))}
-  for(var k=0;k<(r.items||[]).length;k++){var it=r.items[k],b=tyUnhex(it.hex),j=null;
-   try{var s={ver:3.3,key:TY_UDPKEY};if(b[2]===0x66){s.ver=3.5;var mm=await tyUnpackAll(s,b);if(mm[0])j=JSON.parse(tyTxt(mm[0].body).replace(/\u0000+$/,'').replace(/^[^{]*/,''))}
-    else{var m2=await tyUnpackAll({ver:3.3,key:TY_UDPKEY},b);var body=m2[0]?m2[0].body:b;var t=body[0]===0x7b?tyTxt(body):tyTxt(AES128.ecbDec(TY_UDPKEY,body));j=JSON.parse(t.slice(t.indexOf('{'),t.lastIndexOf('}')+1))}}catch(e){}
-   if(j&&j.gwId&&!res.some(function(x){return x.dev===j.gwId}))res.push({ip:j.ip||it.ip,dev:j.gwId,ver:j.version||'',pk:j.productKey||''})}
-  TY.found=res;tyLog('FIND',JSON.stringify(res))}catch(e){TY.err='пошук: '+(e&&e.message||e)}
+ TY.busy=1;TY.found=null;TY.err='';TY.note='пошук ~10 с…';tyUi(true);var res=[],me='';
+ try{try{var li=await N.localIp();me=li.ip;tyLog('NET','телефон '+li.ip+'/'+li.prefix)}catch(e){tyLog('NET','IP телефону невідомий: '+(e&&e.message||e))}
+  var probe=me?await tyProbe(me):'';
+  var pu=N.udpListen({timeout:10000,probe:probe}).catch(function(e){tyLog('UDP','помилка '+(e&&e.message||e));return {items:[]}});
+  var ps=N.scan?N.scan({port:6668,timeout:600}).catch(function(e){tyLog('SCAN','помилка '+(e&&e.message||e));return {items:[]}}):Promise.resolve({items:[]});
+  var r=await pu,sc=await ps;tyLog('UDP','пакетів '+(r.items||[]).length+(r.bound?' · порти '+r.bound.join(','):''));tyLog('SCAN','6668 відкрито: '+((sc.items||[]).join(', ')||'жодного'));
+  for(var k=0;k<(r.items||[]).length;k++){var f=await tyParseBc(r.items[k]);if(f&&!res.some(function(x){return x.dev===f.dev}))res.push(f)}
+  (sc.items||[]).forEach(function(ip){if(!res.some(function(x){return x.ip===ip}))res.push({ip:ip,dev:'',ver:'',pk:''})});
+  TY.found=res;TY.note='';tyLog('FIND',JSON.stringify(res))}catch(e){TY.err='пошук: '+(e&&e.message||e);TY.note=''}
  TY.busy=0;tyUi(true)}
 /* MD5 (WebCrypto has none) — only for the public discovery key */
 function tyMd5(b){function r(x,c){return x<<c|x>>>(32-c)}var K=[],s=[7,12,17,22,5,9,14,20,4,11,16,23,6,10,15,21],i;for(i=0;i<64;i++)K[i]=Math.floor(Math.abs(Math.sin(i+1))*4294967296)>>>0;
@@ -2409,8 +2419,8 @@ async function tyCloud(id,secret,region,path,token){var N=tyNet(),t=String(Date.
 async function tyCloudKeys(){var id=(document.getElementById('tyaid')||{}).value||'',sec=(document.getElementById('tyasec')||{}).value||'',reg=(document.getElementById('tyreg')||{}).value||'eu';
  if(!tyNet()||!tyNet().http){TY.err='потрібна нова версія застосунку';tyUi(true);return}if(!id||!sec){TY.err='вкажіть Access ID і Access Secret';tyUi(true);return}
  TY.busy=1;TY.err='';tyUi(true);try{var tk=await tyCloud(id.trim(),sec.trim(),reg,'/v1.0/token?grant_type=1');var list=await tyCloud(id.trim(),sec.trim(),reg,'/v1.0/iot-01/associated-users/devices?size=50',tk.access_token);
-  var devs=(list.devices||list.list||[]),n=0;devs.forEach(function(d){if(!d.local_key)return;var ex=tyCfg().filter(function(p){return p.dev===d.id})[0];
-   if(ex){ex.key=d.local_key;n++}else{var f=(TY.found||[]).filter(function(x){return x.dev===d.id})[0];tyCfg().push({name:d.name||'Розетка',dev:d.id,key:d.local_key,ip:f?f.ip:(d.ip&&/^(10|192\.168|172\.)/.test(d.ip)?d.ip:''),ver:f&&f.ver?f.ver:'auto',grid:false});n++}});
+  var devs=(list.devices||list.list||[]),n=0;devs.forEach(function(d){if(!d.local_key)return;var ex=tyCfg().filter(function(p){return p.dev===d.id})[0];if(!ex){var blank=tyCfg().filter(function(p){return !p.dev});if(blank.length===1){ex=blank[0];ex.dev=d.id;if(d.name&&/^Розетка \d+$/.test(ex.name))ex.name=d.name}}var anon=(TY.found||[]).filter(function(x){return !x.dev});
+   if(ex){ex.key=d.local_key;n++}else{var f=(TY.found||[]).filter(function(x){return x.dev===d.id})[0];tyCfg().push({name:d.name||'Розетка',dev:d.id,key:d.local_key,ip:f?f.ip:anon.length===1?anon[0].ip:(d.ip&&/^(10|192\.168|172\.)/.test(d.ip)?d.ip:''),ver:f&&f.ver?f.ver:'auto',grid:false});n++}});
   save();TY.err='';TY.note='отримано ключів: '+n+(n?'':' — у проєкті не знайдено пристроїв (прив’яжіть акаунт Smart Life)');tyLog('CLOUD','devices '+devs.length)}catch(e){TY.err='Tuya Cloud: '+(e&&e.message||e)}
  TY.busy=0;tyUi(true)}
 /* --- UI (Підключення › Розетки) --- */
@@ -2427,12 +2437,12 @@ function tyCardHtml(){var L=tyCfg(),N=tyNet();
    +'<div class="mut tyst">'+(st.busy?'зв’язок…':st.err?'<span style="color:var(--bad,#EF665B)">'+tyEsc(st.err)+'</span>':st.t?(d.on?'увімкнена':'вимкнена')+(d.V!=null?' · '+d.V.toFixed(0)+' В':'')+(d.A!=null?' · '+d.A.toFixed(2).replace('.',',')+' А':'')+(d.W!=null?' · '+d.W.toFixed(0)+' Вт':'')+' · '+Math.round((Date.now()-st.t)/1000)+' с тому':'ще не опитувалась')+'</div>'
    +'<details'+(p.key?'':' open')+'><summary class="mut" style="font-size:12px">Налаштування</summary>'
    +'<div class="invf"><label>IP<input inputmode="decimal" placeholder="192.168.1.60" value="'+tyEsc(p.ip)+'" onchange="tySet('+i+',\'ip\',this.value)"></label><label>Версія<select onchange="tySet('+i+',\'ver\',this.value)">'+['auto','3.3','3.4','3.5'].map(function(v){return '<option value="'+v+'"'+(String(p.ver)===v?' selected':'')+'>'+(v==='auto'?'авто':v)+'</option>'}).join('')+'</select></label></div>'
-   +'<label class="mut" style="font-size:12px">Device ID<input value="'+tyEsc(p.dev)+'" onchange="tySet('+i+',\'dev\',this.value)"></label>'
+   +'<label class="mut" style="font-size:12px">Device ID <span style="opacity:.7">(Smart Life → розетка → ✎ → Інформація про пристрій → Віртуальний ID)</span><input value="'+tyEsc(p.dev)+'" onchange="tySet('+i+',\'dev\',this.value)"></label>'
    +'<label class="mut" style="font-size:12px">Local Key (16 символів)<input value="'+tyEsc(p.key)+'" autocomplete="off" onchange="tySet('+i+',\'key\',this.value)"></label>'
    +'<label style="display:flex;gap:8px;align-items:center;font-size:13px;margin:8px 0"><input type="checkbox" style="width:auto"'+(p.grid?' checked':'')+' onchange="tySet('+i+',\'grid\',this.checked)">Живиться лише від міської мережі — датчик «є світло»</label>'
    +'<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="sm" onclick="tyPoll('+i+')">Перевірити</button><button class="sm" onclick="tyDel('+i+')">Видалити</button></div></details></div>'});
  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="sm" onclick="tyFind()"'+(TY.busy?' disabled':'')+'>Знайти розетки в мережі</button><button class="sm" onclick="tyAdd()">Додати вручну</button></div>';
- if(TY.found)h+='<div style="margin-top:8px">'+(TY.found.length?TY.found.map(function(f,k){var have=tyCfg().some(function(p){return p.dev===f.dev});return '<button class="sm" style="margin:0 6px 6px 0"'+(have?' disabled':'')+' onclick=\'tyAdd('+JSON.stringify(f).replace(/'/g,'&#39;')+')\'>'+tyEsc(f.ip)+' · '+tyEsc(f.ver||'?')+(have?' · додана':' · додати')+'</button>'}).join(''):'<span class="mut">не знайдено — розетка має бути в тій самій Wi-Fi мережі; можна додати вручну</span>')+'</div>';
+ if(TY.found)h+='<div style="margin-top:8px">'+(TY.found.length?TY.found.map(function(f,k){var have=tyCfg().some(function(p){return f.dev?p.dev===f.dev:p.ip===f.ip});return '<button class="sm" style="margin:0 6px 6px 0"'+(have?' disabled':'')+' onclick=\'tyAdd('+JSON.stringify(f).replace(/'/g,'&#39;')+')\'>'+tyEsc(f.ip)+' · '+(f.dev?tyEsc(f.ver||'?'):'ID невідомий')+(have?' · додана':' · додати')+'</button>'}).join(''):'<span class="mut">не знайдено. Телефон і розетка мають бути в одній Wi-Fi мережі (не гостьовій). IP розетки можна подивитися в роутері (список клієнтів) і додати вручну.</span>')+'</div>';
  h+='<details style="margin-top:10px"><summary class="mut" style="font-size:12px">Отримати Local Key з Tuya Cloud</summary>'
   +'<div class="mut" style="font-size:12px;line-height:1.5;margin:6px 0">1) iot.tuya.com → Cloud → Create Cloud Project (Smart Home, дата-центр Central Europe).<br>2) У проєкті: Devices → Link App Account → відскануйте QR у Smart Life (Я → значок сканера).<br>3) Overview: скопіюйте Access ID і Access Secret сюди. Секрет не зберігається.</div>'
   +'<label class="mut" style="font-size:12px">Access ID<input id="tyaid" autocomplete="off"></label><label class="mut" style="font-size:12px">Access Secret<input id="tyasec" type="password" autocomplete="off"></label>'

@@ -17,6 +17,16 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.net.Inet4Address;
+import java.net.InterfaceAddress;
+import java.net.NetworkInterface;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.io.BufferedReader;
@@ -197,42 +207,111 @@ public class BoNet extends Plugin {
         call.resolve(new JSObject());
     }
 
-    /** {ports:[6666,6667], timeout} -> {items:[{ip, port, hex}]}: listens for device broadcasts (Tuya announces itself every few seconds). */
+    /** Phone's own Wi-Fi IPv4 and prefix (for the Tuya discovery request and the subnet scan). */
+    private static InterfaceAddress wifiAddr() {
+        InterfaceAddress best = null;
+        try {
+            Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces();
+            while (en != null && en.hasMoreElements()) {
+                NetworkInterface ni = en.nextElement();
+                if (!ni.isUp() || ni.isLoopback()) continue;
+                for (InterfaceAddress ia : ni.getInterfaceAddresses()) {
+                    InetAddress a = ia.getAddress();
+                    if (!(a instanceof Inet4Address) || !a.isSiteLocalAddress()) continue;
+                    if (ni.getName().startsWith("wlan")) return ia;
+                    if (best == null) best = ia;
+                }
+            }
+        } catch (Exception ignored) {}
+        return best;
+    }
+
+    /** {} -> {ip, prefix} */
+    @PluginMethod
+    public void localIp(final PluginCall call) {
+        InterfaceAddress ia = wifiAddr();
+        if (ia == null) { call.reject("no wifi"); return; }
+        JSObject ret = new JSObject(); ret.put("ip", ia.getAddress().getHostAddress()); ret.put("prefix", (int) ia.getNetworkPrefixLength()); call.resolve(ret);
+    }
+
+    /** {port, timeout} -> {ip, items:[ip]}: which hosts of the phone's /24 accept a TCP connection on port (Tuya plugs listen on 6668). Connect only, nothing is sent. */
+    @PluginMethod
+    public void scan(final PluginCall call) {
+        final int port = call.getInt("port", 6668);
+        final int timeout = call.getInt("timeout", 500);
+        final InterfaceAddress ia = wifiAddr();
+        if (ia == null) { call.reject("no wifi"); return; }
+        new Thread(() -> {
+            byte[] me = ia.getAddress().getAddress();
+            final String base = (me[0] & 255) + "." + (me[1] & 255) + "." + (me[2] & 255) + ".";
+            final int self = me[3] & 255;
+            final List<String> open = Collections.synchronizedList(new ArrayList<>());
+            ExecutorService ex = Executors.newFixedThreadPool(48);
+            for (int i = 1; i < 255; i++) {
+                if (i == self) continue;
+                final String h = base + i;
+                ex.execute(() -> { Socket s = new Socket(); try { s.connect(new InetSocketAddress(h, port), timeout); open.add(h); } catch (Exception ignored) {} finally { try { s.close(); } catch (Exception ignored) {} } });
+            }
+            ex.shutdown();
+            try { ex.awaitTermination(20, TimeUnit.SECONDS); } catch (Exception ignored) {}
+            JSArray items = new JSArray(); synchronized (open) { for (String h : open) items.put(h); }
+            JSObject ret = new JSObject(); ret.put("ip", ia.getAddress().getHostAddress()); ret.put("items", items); call.resolve(ret);
+        }).start();
+    }
+
+    /** {timeout, probe(hex)} -> {items:[{ip, port, hex}]}: listens for Tuya broadcasts on 6666/6667 (3.1–3.4) and 7000 (3.5);
+        if probe is given it is broadcast to port 7000 every 2 s — newer Tuya firmware answers only to that request. */
     @PluginMethod
     public void udpListen(final PluginCall call) {
         final int timeout = call.getInt("timeout", 6000);
-        final int[] ports = {6666, 6667};
+        final String probe = call.getString("probe", "");
+        final int[] ports = {6666, 6667, 7000};
         new Thread(() -> {
             WifiManager.MulticastLock lock = null;
             DatagramSocket[] socks = new DatagramSocket[ports.length];
+            DatagramSocket tx = null;
             try {
                 try {
                     WifiManager wm = (WifiManager) getContext().getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                     if (wm != null) { lock = wm.createMulticastLock("blackout-discovery"); lock.setReferenceCounted(false); lock.acquire(); }
                 } catch (Exception ignored) {}
                 for (int i = 0; i < ports.length; i++) {
-                    try { DatagramSocket d = new DatagramSocket(null); d.setReuseAddress(true); d.setBroadcast(true); d.bind(new InetSocketAddress(ports[i])); d.setSoTimeout(200); socks[i] = d; } catch (Exception ignored) {}
+                    try { DatagramSocket d = new DatagramSocket(null); d.setReuseAddress(true); d.setBroadcast(true); d.bind(new InetSocketAddress(ports[i])); d.setSoTimeout(150); socks[i] = d; } catch (Exception ignored) {}
                 }
+                InterfaceAddress ia = wifiAddr();
+                String self = ia != null ? ia.getAddress().getHostAddress() : "";
+                byte[] pb = probe.isEmpty() ? null : unhex(probe);
+                List<InetAddress> dst = new ArrayList<>();
+                dst.add(InetAddress.getByName("255.255.255.255"));
+                if (ia != null && ia.getBroadcast() != null) dst.add(ia.getBroadcast());
+                if (pb != null) { tx = new DatagramSocket(); tx.setBroadcast(true); }
                 JSArray items = new JSArray();
                 HashSet<String> seen = new HashSet<>();
-                long end = System.currentTimeMillis() + timeout;
+                long end = System.currentTimeMillis() + timeout, nextProbe = 0;
                 byte[] buf = new byte[2048];
                 while (System.currentTimeMillis() < end) {
+                    if (tx != null && System.currentTimeMillis() >= nextProbe) {
+                        for (InetAddress a : dst) try { tx.send(new DatagramPacket(pb, pb.length, a, 7000)); } catch (Exception ignored) {}
+                        nextProbe = System.currentTimeMillis() + 2000;
+                    }
                     for (int i = 0; i < socks.length; i++) {
                         if (socks[i] == null) continue;
                         DatagramPacket p = new DatagramPacket(buf, buf.length);
                         try { socks[i].receive(p); } catch (SocketTimeoutException e) { continue; }
-                        String h = hex(p.getData(), p.getLength());
                         String ip = p.getAddress().getHostAddress();
-                        if (seen.add(ip + h.length())) {
+                        if (ip.equals(self)) continue;
+                        String h = hex(p.getData(), p.getLength());
+                        if (seen.add(ip + ":" + ports[i] + ":" + h.length())) {
                             JSObject it = new JSObject(); it.put("ip", ip); it.put("port", ports[i]); it.put("hex", h); items.put(it);
                         }
                     }
                 }
-                JSObject ret = new JSObject(); ret.put("items", items); call.resolve(ret);
+                JSArray bound = new JSArray(); for (int i = 0; i < ports.length; i++) if (socks[i] != null) bound.put(ports[i]);
+                JSObject ret = new JSObject(); ret.put("items", items); ret.put("bound", bound); call.resolve(ret);
             } catch (Exception e) { call.reject(String.valueOf(e.getMessage()));
             } finally {
                 for (DatagramSocket d : socks) if (d != null) d.close();
+                if (tx != null) tx.close();
                 if (lock != null) try { lock.release(); } catch (Exception ignored) {}
             }
         }).start();

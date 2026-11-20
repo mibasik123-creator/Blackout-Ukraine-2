@@ -97,6 +97,8 @@ t = t[:i] + src + t[j:]
 t = rep(t, "\ntry{render()}catch(e){window.__bootCheck", '\n' + core + "\ntry{render()}catch(e){window.__bootCheck")
 t = rep(t, "function btgGroup(el){if(el.id==='tscard')return 'car';", "function btgGroup(el){if(el.id==='tscard')return 'car';if(el.id==='invcard')return 'inv';if(el.id==='tycard')return 'plug';")
 t = rep(t, "['car',L3('Авто','Авто','Car')],['svc',", "['car',L3('Авто','Авто','Car')],['inv',L3('Инвертор','Інвертор','Inverter')],['plug',L3('Розетки','Розетки','Plugs')],['svc',")
+t = rep(t, "if(p==='always')return true;return tab==='pan'||!!BT.on}", "if(p==='always')return true;if(tab==='pan'||tab==='bt'||!!BT.on||!!S.run)return true;try{if(TS.on||TS.connecting||(window.TY&&TY.busy)||(window.INV&&INV.on))return true}catch(e){}return false}")
+t = rep(t, "L3('Пока открыт главный экран или подключена станция','Поки відкрито головний екран або підключено станцію','On main screen or while a station is connected')", "L3('Пока открыта Главная или Подключения, или есть активное подключение','Поки відкрито Головну чи Підключення, або є активне з’єднання','On Home or Connect, or while a device is connected')")
 t = rep(t, "var CS=[", "var CS=[['Must HBP1800-3024OS',3072,2024],['Must HBP1800-2024OS',2560,2024],['Must HBP1800-1012 (100 А·год)',1280,2024],['Must HBP1800-1012 (75 А·год)',960,2024],['Must EM1024S',1280,2024],")
 t = rep(t, "\ntry{render()}catch(e){window.__bootCheck", "\n(function(){var v=vBt;vBt=function(){return v.apply(this,arguments)+invCard()+tyCardHtml()}})();\ntry{render()}catch(e){window.__bootCheck")
 t = rep(t, "T=['gen','st','pan','hist','bt'],L={gen:[svgi('gen'),'Генератор'],st:[svgi('bat'),'Станции'],pan:[svgi('bolt',30),'Панель'],hist:[svgi('hist'),'История'],bt:[svgi('bt'),'Bluetooth']};",
