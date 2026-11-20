@@ -119,7 +119,7 @@ HERO_CSS = (
  '.charge[data-src=none] .state span{color:var(--t2)}'
  '.ring .c svg.hico{width:62px;height:80px;color:var(--grid-v);display:block;transform:none}'
  '.hico{width:44px;height:56px;color:var(--grid-v);display:block}.charge[data-src=none] .hico{color:var(--t3)}.charge[data-src=conflict] .hico{color:var(--err)}'
- '.hsrc{font-weight:500;color:var(--t1)}.eta b{font-weight:600;color:var(--grid-v)}'
+ '#met.gone{display:none}.hsrc{font-weight:500;color:var(--t1)}.eta b{font-weight:600;color:var(--grid-v)}'
 )
 PYLON = ('<svg id="hico" class="hico" viewBox="0 0 44 56" style="display:none"><path d="M22 2 13 54M22 2l9 52M10 12h24M12 22h20M15 36h14M14 22l15 14M30 22 15 36M16 36l13 18M28 36 16 54" '
          'fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>')
@@ -173,7 +173,7 @@ def patch_js2(js):
     s0 = " cls('heroWrap','stale',!stOn);cls('met','stale',!stOn);\n"
     i = js.index(s0); j = js.index(" num('vin',st.inW);", i)
     block = js[i + len(s0):j]
-    js = js[:i] + " cls('met','stale',!stOn);\n if(heroSrc(R)==='station'){cls('heroWrap','stale',!stOn);\n" + block + " }\n" + js[j:]
+    js = js[:i] + " cls('met','stale',!stOn);cls('met','gone',R.states.station!=='ONLINE'&&R.states.station!=='STALE');\n if(heroSrc(R)==='station'){cls('heroWrap','stale',!stOn);\n" + block + " }\n" + js[j:]
     js = rep(js, 'var LAST=null;', HERO_JS + 'var LAST=null;')
     # house on the grid by default -> energy visibly flows from the grid
     js = rep(js, " for(var k in R.flows)Flow.set(k,R.flows[k]);", " for(var k in R.flows)Flow.set(k,R.flows[k]);if(R.feed==='unknown'&&R.flows.gridhome.state!=='conflict')Flow.set('gridhome',{state:'supply',w:null});")
