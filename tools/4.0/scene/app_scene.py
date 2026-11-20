@@ -5,7 +5,33 @@ import scene as M
 v=M.V((178,214))
 H0=(0,0);G0=(-112,4);ST0=(110,30);CAR0=(-2,98);PY=(286,212)
 o=[]
-o.append('<g stroke="#18201c" stroke-width="1">'+''.join('<path d="%s"></path>'%v.d([(-120,y,0),(220,y,0)],False) for y in (-40,40,120,200))+''.join('<path d="%s"></path>'%v.d([(x,-120,0),(x,200,0)],False) for x in (-40,40,120,200))+'</g>')
+import random, math as _m
+def rrect(x0,y0,x1,y1,r,n=6):
+    pts=[]
+    for cx,cy,a0 in ((x1-r,y1-r,0),(x0+r,y1-r,90),(x0+r,y0+r,180),(x1-r,y0+r,270)):
+        for i in range(n+1):
+            an=_m.radians(a0+i*90/n);pts.append((cx+r*_m.cos(an),cy+r*_m.sin(an),0))
+    return v.d(pts)
+# lawn plot with a soft edge
+o.append('<path d="%s" fill="#0d1a10" opacity=".9" filter="url(#f-soft)"></path>'%rrect(-150,-40,170,168,40))
+o.append('<path d="%s" fill="url(#g-lawn)"></path>'%rrect(-142,-34,162,160,36))
+o.append('<path d="%s" fill="none" stroke="#2f4a2c" stroke-opacity=".6" stroke-width="1"></path>'%rrect(-142,-34,162,160,36))
+# grass tufts (deterministic)
+random.seed(7);tf=[]
+for i in range(120):
+    x=random.uniform(-130,150);y=random.uniform(-25,150)
+    if -6<x<104 and -6<y<84: continue          # under the house
+    if -10<x<88 and 92<y<140: continue         # driveway
+    if 104<x<160 and 22<y<66: continue         # station pad
+    if -118<x<-70 and -2<y<34: continue        # generator pad
+    a,b=v.p(x,y,0);h=random.uniform(2,3.6);tf.append('M%.1f %.1f l-1 -%.1f M%.1f %.1f l1.2 -%.1f'%(a,b,h,a+1.5,b,h*.8,))
+o.append('<path d="%s" stroke="#3d6236" stroke-width=".9" stroke-linecap="round" opacity=".55" fill="none"></path>'%' '.join(tf))
+# driveway under the car (pavers) to the plot edge, path to the porch, pads for the station and the generator
+o.append('<path d="%s" fill="#2a302d"></path>'%rrect(-10,90,92,160,4))
+o.append('<path d="%s" fill="none" stroke="#353c38" stroke-width=".7"></path>'%' '.join(v.d([(x,90,0),(x,160,0)],False) for x in range(2,92,12)))
+o.append('<path d="%s" fill="#3a4240"></path>'%v.d([(50,80,0),(68,80,0),(68,90,0),(50,90,0)]))
+o.append('<path d="%s" fill="#2c3330"></path>'%rrect(104,22,160,68,4))
+o.append('<path d="%s" fill="#2c3330"></path>'%rrect(-120,-4,-68,36,4))
 hx,hy=v.p(48,36,0)
 o.append('<ellipse id="s3-pool" cx="%.1f" cy="%.1f" rx="130" ry="50" fill="#E9B866" opacity=".13" filter="url(#f-big)"></ellipse>'%(hx,hy+20))
 gx,gy=v.p(G0[0]+17,G0[1]+12,0)

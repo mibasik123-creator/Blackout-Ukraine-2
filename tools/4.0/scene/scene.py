@@ -29,9 +29,6 @@ def house(v,x0,y0,lit=True):
     o.append(E('path',d=v.d([(X(-ov),Y(D+ov),H-3),(X(L+ov),Y(D+ov),H-3),(X(L+ov),Y(D/2),H+R),(X(-ov),Y(D/2),H+R)]),fill='url(#g-roof)'))
     o.append(E('path',d=v.d([(X(-ov),Y(D+ov),H-3),(X(L+ov),Y(D+ov),H-3),(X(L+ov),Y(D+ov),H-6),(X(-ov),Y(D+ov),H-6)]),fill='#1f1815'))
     o.append(E('path',d=v.d([(X(L+ov),Y(D+ov),H-3),(X(L+ov),Y(D/2),H+R),(X(L+ov),Y(-ov),H-3),(X(L+ov),Y(-ov),H-6),(X(L+ov),Y(D/2),H+R-3),(X(L+ov),Y(D+ov),H-6)]),fill='#3b2f2a'))
-    for i in range(1,9):
-        xx=-ov+i*(L+2*ov)/9
-        o.append(E('path',d=v.d([(X(xx),Y(D+ov),H-3),(X(xx),Y(D/2),H+R)],False),stroke='#2c231f',stroke_width='.8',fill='none'))
     o.append(E('path',d=v.d([(X(-ov),Y(D/2),H+R),(X(L+ov),Y(D/2),H+R)],False),stroke='#7a6458',stroke_width='1.4',fill='none'))
     # windows front (3) + door + porch light
     gl='url(#g-light)' if lit else '#1c2622'
@@ -262,6 +259,7 @@ DEFS='''<defs>
 <linearGradient id="g-wf" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2e3a34"></stop><stop offset="100%" stop-color="#1c2521"></stop></linearGradient>
 <linearGradient id="g-ws" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3a4842"></stop><stop offset="100%" stop-color="#25302b"></stop></linearGradient>
 <linearGradient id="g-roof" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#55433a"></stop><stop offset="100%" stop-color="#33292400"></stop><stop offset="100%" stop-color="#332924"></stop></linearGradient>
+<linearGradient id="g-lawn" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1f3a22"></stop><stop offset="55%" stop-color="#18301b"></stop><stop offset="100%" stop-color="#122416"></stop></linearGradient>
 <linearGradient id="g-light" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FFE6B0"></stop><stop offset="100%" stop-color="#E9B866"></stop></linearGradient>
 <linearGradient id="g-cside" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#6b757c"></stop><stop offset="45%" stop-color="#4a5359"></stop><stop offset="100%" stop-color="#2a3035"></stop></linearGradient>
 <linearGradient id="g-ctop" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#8d979e"></stop><stop offset="100%" stop-color="#5a646a"></stop></linearGradient>
