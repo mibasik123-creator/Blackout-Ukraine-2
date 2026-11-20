@@ -86,16 +86,23 @@ def station(v,x0,y0,style='fossibot'):
         o.append(E('path',d=v.d([(X(0),Y(W)+.12,H-1.2),(X(L),Y(W)+.12,H-1.2)],False),stroke=s['acc'],stroke_width='1.6',fill='none'))
     # AC sockets — same place on every model (the house cable plugs into the first one)
     sk='#0c110f' if s['front'] is None or style=='must' else '#05070a'
-    for sx in (24.5,34.5):
+    for sx in ((24.5,34.5) if style!='ecoflow' else ()):
         o.append(E('path',d=v.cxz(X(sx),Y(W)+.2,13,4.3,24),fill=sk,stroke=_shade(body,1.2) if s['front'] is None else '#59665f',stroke_width='.7'))
         for dd in (-1.5,1.5):
             a,b=v.p(X(sx+dd),Y(W)+.3,13);o.append('<circle cx="%.1f" cy="%.1f" r=".75" fill="#9aa7a0"></circle>'%(a,b))
+    if style=='ecoflow':
+        for yy in (W-8,W-18):
+            o.append(E('path',d=v.cyz(X(L)+.2,Y(yy),13,4.1,24),fill='#16191b',stroke='#8d9498',stroke_width='.7'))
+            for dd in (-1.4,1.4):
+                a,b=v.p(X(L)+.3,Y(yy+dd),13);o.append('<circle cx="%.1f" cy="%.1f" r=".7" fill="#9aa7a0"></circle>'%(a,b))
+        for i in range(7):
+            xx=22+i*2.4;o.append(E('path',d=v.d([(X(xx),Y(W)+.2,4),(X(xx),Y(W)+.2,9)],False),stroke='#2a2f33',stroke_width='1',stroke_linecap='round',fill='none'))
     # USB row + power button
     for ux in (5,9,13):
         o.append(E('path',d=v.d([(X(ux),Y(W)+.2,8.4),(X(ux+2.6),Y(W)+.2,8.4),(X(ux+2.6),Y(W)+.2,6.8),(X(ux),Y(W)+.2,6.8)]),fill='#0c110f',stroke='#59665f',stroke_width='.4'))
     o.append(E('path',d=v.cxz(X(9.5),Y(W)+.2,12.6,2,16),fill='none',stroke=s['acc'],stroke_width='.9'))
     # side vents
-    for i in range(5 if H<35 else 8):
+    for i in (range(5 if H<35 else 8) if style!='ecoflow' else range(0)):
         z=8+i*2.6;o.append(E('path',d=v.d([(X(L)+.1,Y(6),z),(X(L)+.1,Y(W-6),z)],False),stroke=_shade(side,.6),stroke_width='1.1',stroke_linecap='round',fill='none'))
     return '\n'.join(o)
 

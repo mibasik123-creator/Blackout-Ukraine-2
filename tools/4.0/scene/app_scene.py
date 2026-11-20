@@ -94,7 +94,7 @@ P0=v.p(CAR0[0]+82,CAR0[1]+34.6,0)
 strip={'P0':[round(P0[0],2),round(P0[1],2)],'ex':[-_C*v.k,-.5*v.k],'ez':[0,-v.k]}
 o.append('<g id="s3-car" class="s3-tap">'+cs+'</g>')
 import stations as SS
-st=''.join('<g class="stb" data-b="%s">%s</g>'%(b,SS.station(v,*ST0,style=b)) for b in SS.STYLES)
+st=''.join('<g class="stb" data-b="%s">%s</g>'%(b,SS.station(v,*ST0,style=b)) for b in ('fossibot','ecoflow','bluetti','jackery'))
 o.append('<g id="s3-st" class="s3-tap">'+st+'</g>')
 # station <-> house: a real power cable, plugged into the station's AC socket and into a wall socket on the gable
 import math as _mm
@@ -102,38 +102,49 @@ SX=ST0[0]+24.5;SY=ST0[1]+26
 WALL=(96,66,9)
 def ring_pts(cx,cy,cz,r,face,n=20):
     return [((cx,cy+r*_mm.cos(2*_mm.pi*i/n),cz+r*_mm.sin(2*_mm.pi*i/n)) if face=='x' else (cx+r*_mm.cos(2*_mm.pi*i/n),cy,cz+r*_mm.sin(2*_mm.pi*i/n))) for i in range(n)]
-way=[(WALL[0]+4.4,WALL[1],WALL[2]-1.2),(WALL[0]+5.6,WALL[1]+.6,WALL[2]-4.5),(WALL[0]+6.2,WALL[1]+1.4,.7),(WALL[0]+11,WALL[1]+.6,.6),
-     (ST0[0]+2,ST0[1]+35,.6),(SX-6,SY+7.5,.6),(SX-.4,SY+6.4,1.2),(SX,SY+4.6,5.5),(SX,SY+3.4,11.4)]
-pts=[v.p(*q) for q in way];cd=M.catmull(pts)
-shd=M.catmull([v.p(q[0]+1.2,q[1]+1.2,0) for q in way[2:7]])
+W0=[(WALL[0]+4.4,WALL[1],WALL[2]-1.2),(WALL[0]+5.6,WALL[1]+.6,WALL[2]-4.5),(WALL[0]+6.2,WALL[1]+1.4,.7),(WALL[0]+11,WALL[1]+.6,.6),(ST0[0]+2,ST0[1]+35,.6)]
+# d: default socket on the front; e: EcoFlow-style socket on the right end
+EX=ST0[0]+42;EY=ST0[1]+18
+VAR={'d':dict(way=W0+[(SX-6,SY+7.5,.6),(SX-.4,SY+6.4,1.2),(SX,SY+4.6,5.5),(SX,SY+3.4,11.4)],glow=(SX,SY+2,13)),
+     'e':dict(way=W0+[(ST0[0]+20,ST0[1]+38,.6),(ST0[0]+40,ST0[1]+35,.6),(EX+6.5,ST0[1]+30,.6),(EX+6.6,EY+2.5,1.2),(EX+5.2,EY+.6,5.5),(EX+3.6,EY,11.4)],glow=(EX+2,EY,13))}
+def plug_front():
+    return [E2('path',d=v.d([(SX-2.4,SY+.2,13-2.6),(SX+2.4,SY+.2,13-2.6),(SX+2.4,SY+3.4,13-2.6),(SX+2.4,SY+3.4,13+2.6),(SX-2.4,SY+3.4,13+2.6),(SX-2.4,SY+.2,13+2.6)]),fill='#1c2326'),
+            E2('path',d=v.d([(SX-2.4,SY+3.4,13-2.6),(SX+2.4,SY+3.4,13-2.6),(SX+2.4,SY+3.4,13+2.6),(SX-2.4,SY+3.4,13+2.6)]),fill='#2a3236'),
+            E2('path',d=v.d([(SX-2.4,SY+.2,13+2.6),(SX+2.4,SY+.2,13+2.6),(SX+2.4,SY+3.4,13+2.6),(SX-2.4,SY+3.4,13+2.6)]),fill='#3a4448')]
+def plug_end():
+    return [E2('path',d=v.d([(EX+.2,EY-2.4,13-2.6),(EX+3.4,EY-2.4,13-2.6),(EX+3.4,EY+2.4,13-2.6),(EX+3.4,EY+2.4,13+2.6),(EX+.2,EY+2.4,13+2.6)]),fill='#1c2326'),
+            E2('path',d=v.d([(EX+3.4,EY-2.4,13-2.6),(EX+3.4,EY+2.4,13-2.6),(EX+3.4,EY+2.4,13+2.6),(EX+3.4,EY-2.4,13+2.6)]),fill='#2a3236'),
+            E2('path',d=v.d([(EX+.2,EY-2.4,13+2.6),(EX+3.4,EY-2.4,13+2.6),(EX+3.4,EY+2.4,13+2.6),(EX+.2,EY+2.4,13+2.6)]),fill='#3a4448')]
+for k,vv in VAR.items():
+    vv['cd']=M.catmull([v.p(*q) for q in vv['way']])
+    vv['shd']=M.catmull([v.p(q[0]+1.2,q[1]+1.2,0) for q in vv['way'][2:-3]])
+    vv['plug']=plug_front() if k=='d' else plug_end()
 cab=[]
-cab.append('<path d="%s" fill="none" stroke="#000" stroke-opacity=".5" stroke-width="3.6" stroke-linecap="round" filter="url(#f-soft)"></path>'%shd)
-# wall socket plate + plug body (house side)
 wx,wy,wz=WALL
 cab.append(E2('path',d=v.d([(wx+.2,wy-4.2,wz-4.2),(wx+.2,wy+4.2,wz-4.2),(wx+.2,wy+4.2,wz+4.2),(wx+.2,wy-4.2,wz+4.2)]),fill='#E7ECE9',stroke='#9aa7a0',stroke_width='.4'))
 cab.append(E2('path',d=v.d(ring_pts(wx+.3,wy,wz,2.9,'x')),fill='#cfd6d2'))
 cab.append(E2('path',d=v.d([(wx+.4,wy-2.2,wz-2.2),(wx+3.8,wy-2.2,wz-2.2),(wx+3.8,wy+2.2,wz-2.2),(wx+3.8,wy+2.2,wz+2.2),(wx+.4,wy+2.2,wz+2.2)]),fill='#1c2326'))
 cab.append(E2('path',d=v.d([(wx+3.8,wy-2.2,wz-2.2),(wx+3.8,wy+2.2,wz-2.2),(wx+3.8,wy+2.2,wz+2.2),(wx+3.8,wy-2.2,wz+2.2)]),fill='#2a3236'))
 cab.append(E2('path',d=v.d([(wx+.4,wy-2.2,wz+2.2),(wx+3.8,wy-2.2,wz+2.2),(wx+3.8,wy+2.2,wz+2.2),(wx+.4,wy+2.2,wz+2.2)]),fill='#3a4448'))
-# the cable itself
-cab.append('<path id="s3-cab-p" d="%s" fill="none" stroke="#151b1e" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"></path>'%cd)
-cab.append('<path d="%s" fill="none" stroke="#56636b" stroke-width=".7" stroke-linecap="round" stroke-opacity=".75" transform="translate(-.4 -.6)"></path>'%cd)
-# plug in the station's AC socket (station side)
-cab.append(E2('path',d=v.d([(SX-2.4,SY+.2,13-2.6),(SX+2.4,SY+.2,13-2.6),(SX+2.4,SY+3.4,13-2.6),(SX+2.4,SY+3.4,13+2.6),(SX-2.4,SY+3.4,13+2.6),(SX-2.4,SY+.2,13+2.6)]),fill='#1c2326'))
-cab.append(E2('path',d=v.d([(SX-2.4,SY+3.4,13-2.6),(SX+2.4,SY+3.4,13-2.6),(SX+2.4,SY+3.4,13+2.6),(SX-2.4,SY+3.4,13+2.6)]),fill='#2a3236'))
-cab.append(E2('path',d=v.d([(SX-2.4,SY+.2,13+2.6),(SX+2.4,SY+.2,13+2.6),(SX+2.4,SY+3.4,13+2.6),(SX-2.4,SY+3.4,13+2.6)]),fill='#3a4448'))
+for k,vv in VAR.items():
+    g=['<path d="%s" fill="none" stroke="#000" stroke-opacity=".5" stroke-width="3.6" stroke-linecap="round" filter="url(#f-soft)"></path>'%vv['shd'],
+       '<path id="s3-cab-%s" d="%s" fill="none" stroke="#151b1e" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"></path>'%(k,vv['cd']),
+       '<path d="%s" fill="none" stroke="#56636b" stroke-width=".7" stroke-linecap="round" stroke-opacity=".75" transform="translate(-.4 -.6)"></path>'%vv['cd']]+vv['plug']
+    cab.append('<g class="cv cv-%s">%s</g>'%(k,'\n'.join(g)))
 o.append('<g id="s3-cab">'+'\n'.join(cab)+'</g>')
 def cable_live(gid,col,core,dot,rev,dur):
-    k='1;0' if rev else '0;1'
-    s='<path d="%s" fill="none" stroke="%s" stroke-opacity=".45" stroke-width="7" stroke-linecap="round" filter="url(#f-glow)"><animate attributeName="stroke-opacity" values=".25;.55;.25" dur="2.4s" repeatCount="indefinite"></animate></path>'%(cd,col)
-    s+='<path d="%s" fill="none" stroke="#151b1e" stroke-width="2.6" stroke-linecap="round"></path>'%cd
-    s+='<path class="fl evd" d="%s" fill="none" stroke="%s" stroke-width="1.1" stroke-linecap="round" filter="url(#f-dotsm)"%s></path>'%(cd,core,' style="animation-direction:reverse"' if rev else '')
-    for i,b in enumerate((0,dur/3,2*dur/3)):
-        s+='<circle r="%s" fill="%s" filter="url(#f-dot)"><animateMotion dur="%.2fs" begin="-%.2fs" repeatCount="indefinite" keyPoints="%s" keyTimes="0;1" calcMode="linear"><mpath href="#s3-cab-p"></mpath></animateMotion></circle>'%((2.2,1.8,1.5)[i],dot,dur,b,k)
-    # glow at both plugs
-    for (q,r0) in ((WALL,8),((SX,SY+2,13),8)):
-        a,b2=v.p(q[0]+(2 if q is WALL else 0),q[1],q[2]);s+='<circle cx="%.1f" cy="%.1f" r="%d" fill="%s" opacity=".3" filter="url(#f-glow)"><animate attributeName="opacity" values=".15;.45;.15" dur="2.4s" repeatCount="indefinite"></animate></circle>'%(a,b2,r0,col)
-    return '<g id="%s" class="s3f"><g class="lv">%s</g><g class="dd"></g></g>'%(gid,s)
+    kp='1;0' if rev else '0;1';out=''
+    for k,vv in VAR.items():
+        cd=vv['cd'];s='<path d="%s" fill="none" stroke="%s" stroke-opacity=".45" stroke-width="7" stroke-linecap="round" filter="url(#f-glow)"><animate attributeName="stroke-opacity" values=".25;.55;.25" dur="2.4s" repeatCount="indefinite"></animate></path>'%(cd,col)
+        s+='<path d="%s" fill="none" stroke="#151b1e" stroke-width="2.6" stroke-linecap="round"></path>'%cd
+        s+='<path class="fl evd" d="%s" fill="none" stroke="%s" stroke-width="1.1" stroke-linecap="round" filter="url(#f-dotsm)"%s></path>'%(cd,core,' style="animation-direction:reverse"' if rev else '')
+        for i,b in enumerate((0,dur/3,2*dur/3)):
+            s+='<circle r="%s" fill="%s" filter="url(#f-dot)"><animateMotion dur="%.2fs" begin="-%.2fs" repeatCount="indefinite" keyPoints="%s" keyTimes="0;1" calcMode="linear"><mpath href="#s3-cab-%s"></mpath></animateMotion></circle>'%((2.2,1.8,1.5)[i],dot,dur,b,kp,k)
+        for (q,r0) in ((WALL,8),(vv['glow'],8)):
+            a,b2=v.p(q[0]+(2 if q is WALL else 0),q[1],q[2]);s+='<circle cx="%.1f" cy="%.1f" r="%d" fill="%s" opacity=".3" filter="url(#f-glow)"><animate attributeName="opacity" values=".15;.45;.15" dur="2.4s" repeatCount="indefinite"></animate></circle>'%(a,b2,r0,col)
+        s+=''.join(vv['plug'])
+        out+='<g class="cv cv-%s">%s</g>'%(k,s)
+    return '<g id="%s" class="s3f"><g class="lv">%s</g><g class="dd"></g></g>'%(gid,out)
 o.append(cable_live('s3-use','#A8D957','#E3F5C4','#F4FFE6',True,1.9))
 o.append(cable_live('s3-hs','#48B9E8','#CDEFFB','#EAF8FD',False,2.4))
 # generator charging the station goes the real way: generator -> house wiring -> the same cable -> station
@@ -172,7 +183,7 @@ css='''#s3{display:block;width:calc(100% + 40px);margin:0 -20px;height:auto;over
 #s3 #s3-genpool{opacity:0;transition:opacity .8s}#s3 #s3-genpool.on{opacity:.16}
 #s3 #s3-house.dark .win,#s3 #s3-house.dark [fill="url(#g-light)"]{fill:#1c2622;animation:none}#s3 #s3-pool{transition:opacity .8s}#s3 #s3-pool.off{opacity:0}
 #s3 #s3-pyl.off{opacity:.55}#s3 #s3-car.idle #s3-liq{opacity:.55}#s3 #s3-car.idle #s3-liqg{display:none}#s3 #s3-neonw{display:none}#s3 #s3-car:not(.idle) #s3-neonw{display:inline}
-#s3 #s3-pv,#s3 #s3-inv{display:none}#s3.pv #s3-pv,#s3.inv #s3-inv{display:inline}#s3 .stb{display:none}#s3:not([data-st]) .stb[data-b=fossibot],#s3[data-st=fossibot] .stb[data-b=fossibot],#s3[data-st=ecoflow] .stb[data-b=ecoflow],#s3[data-st=bluetti] .stb[data-b=bluetti],#s3[data-st=jackery] .stb[data-b=jackery],#s3[data-st=anker] .stb[data-b=anker],#s3[data-st=must] .stb[data-b=must],#s3[data-st=generic] .stb[data-b=generic]{display:inline}#s3 #s3-wb.off circle{display:none}#s3 .s3-tap{cursor:pointer}
+#s3 #s3-pv,#s3 #s3-inv{display:none}#s3.pv #s3-pv,#s3.inv #s3-inv{display:inline}#s3 .cv-e{display:none}#s3[data-st=ecoflow] .cv-e{display:inline}#s3[data-st=ecoflow] .cv-d{display:none}#s3 .stb{display:none}#s3:not([data-st]) .stb[data-b=fossibot],#s3[data-st=fossibot] .stb[data-b=fossibot],#s3[data-st=ecoflow] .stb[data-b=ecoflow],#s3[data-st=bluetti] .stb[data-b=bluetti],#s3[data-st=jackery] .stb[data-b=jackery],#s3[data-st=anker] .stb[data-b=anker],#s3[data-st=must] .stb[data-b=must],#s3[data-st=generic] .stb[data-b=generic]{display:inline}#s3 #s3-wb.off circle{display:none}#s3 .s3-tap{cursor:pointer}
 @media (prefers-reduced-motion:reduce){#s3 *{animation:none!important}}'''
 json.dump({'svg':svg,'css':css,'strip':strip},open('/tmp/claude-0/-home-claude/b376be36-0118-5eb7-9409-c56e988e0bd8/scratchpad/gen2/s3.json','w'),ensure_ascii=False)
 print(len(svg))
