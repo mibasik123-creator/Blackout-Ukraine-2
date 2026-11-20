@@ -11,6 +11,12 @@ function build(){HOST=document.createElement('div');HOST.id='bo4host';ROOT=HOST.
  go('dcard',function(){try{localStorage.setItem('bo_btg','st')}catch(e){}setTab('bt')});
  go('gcard',function(){setTab('gen')});
  go('ccard',function(){try{localStorage.setItem('bo_btg','car')}catch(e){}setTab('bt')});
+ go('n-gen',function(){setTab('gen')});go('n-st',function(){try{localStorage.setItem('bo_btg','st')}catch(e){}setTab('bt')});go('carico',function(){try{localStorage.setItem('bo_btg','car')}catch(e){}setTab('bt')});
+ /* row buttons: real app actions; the tap does not open the row */
+ function act(id,f){var e=$(id);if(e)e.addEventListener('click',function(ev){ev.stopPropagation();if(e.disabled)return;try{f()}catch(x){console.error(x)}setTimeout(sync,60);setTimeout(sync,1500)})}
+ act('gact',function(){S.run?stopG():startG()});
+ act('dact',function(){if(BT.on){try{localStorage.setItem('bo_btg','st')}catch(e){}setTab('bt')}else btConnect()});
+ act('cact',function(){var c=tsCfg();if(!c.paired){try{localStorage.setItem('bo_btg','car')}catch(e){}setTab('bt')}else if(TS.on)tsRead();else tsConnect()});
  if(BO_DEV){startDev();var tl=$('testlbl');if(tl)tl.style.display=''}else{var lab=ROOT.querySelector('.lab');if(lab)lab.style.display='none'}}
 function attach(){var slot=document.getElementById('bo4slot');
  if(!slot){if(HOST&&HOST.isConnected)HOST.remove();if(HOST)onVis();return}
@@ -25,7 +31,16 @@ function sync(){if(BO_DEV)return;var now=Date.now();
   Tel.set('station',{pct:BT.pct,inW:BT.wi,outW:BT.w,tf:BT.tf,te:BT.te,t:stT});txt('stname',nm);txt('stname2',nm)}
  else{var s0=Tel.get('station');if(s0&&s0.link!==false)Tel.markOffline('station')}
  /* generator: the generator sends no data; its state is the session started/stopped in the app */
- var g=S.gens[S.g]||S.gens[0];if(g){Tel.set('gen',{on:!!S.run,fuel:S.fills.length?Math.round(fuelLeft(g)/fuelCap(g)*100):null,t:now});txt('gname',g.n)}
+ var g=S.gens[S.g]||S.gens[0];if(g){
+  /* fuel: the app's own estimate — fills minus sessions, the running one included at the generator's rated l/h */
+  var fl=null;if(S.fills.length){var left=fuelLeft(g);fl=Math.max(0,Math.min(100,left/fuelCap(g)*100))}
+  Tel.set('gen',{on:!!S.run,fuel:fl,t:now});txt('gname',g.n)}
+ var ng=$('n-gen');if(ng)ng.classList.toggle('run',!!S.run&&MOTION);
+ /* row buttons */
+ function btn(id,label,show,c,dis){var e=$(id);if(!e)return;e.hidden=!show;if(e.textContent!==label)e.textContent=label;e.className='act '+(c||'');e.disabled=!!dis}
+ btn('gact',S.run?'Стоп':'Старт',!!g,S.run?'gen':'go');
+ btn('dact',BT.on?'Керувати':'Підключити',true,BT.on?'':'go');
+ try{var tc=tsCfg();btn('cact',!tc.paired?'Налаштувати':TS.connecting?'Підключення…':TS.on?'Оновити':'Підключити',!!tc.vin,TS.on?'':'go',!!TS.connecting)}catch(e){}
  /* grid: confirmed only by the Fossibot AC-input measurement and only while the generator session is off */
  var fresh=BT.on&&stT&&now-stT<BO_LIMITS.station,acKnown=!!(BT.tx&&!(window.BLUP&&BLUP.on)&&!btIsEF()&&BT.regs&&BT.regs[22]!=null);
  if(S.run){if(Tel.d.grid){delete Tel.d.grid;Tel.emit('grid')}}
