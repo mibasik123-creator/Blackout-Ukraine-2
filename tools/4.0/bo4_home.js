@@ -2,7 +2,7 @@
    Головна · Історія · Налаштування. Device screens (Пристрої, Генератор, Станції, Авто, Загальні)
    live inside Налаштування as a segment bar; on the home screen a tap opens a bottom sheet. */
 var BO_CFG=[['bt',''],['gen',''],['st',''],['car',''],['set','']];
-TABS=['pan','hist','bt','gen','st','car','set','cat'];
+TABS=['hist','pan','bt','gen','st','car','set','cat'];
 function boInCfg(t){return t==='cat'||BO_CFG.some(function(x){return x[0]===t})}
 function boCfgLast(){return 'set'}
 try{ACC_OPEN.bt=(ACC_OPEN.bt||[]).concat(['Інвертор','Инвертор','Inverter','Розетки','Plugs']);ACC_OPEN.gen=(ACC_OPEN.gen||[]).concat(['Паливо','Топливо','Fuel'])}catch(e){}
