@@ -59,6 +59,7 @@ import importlib.util as _u
 _sp=_u.spec_from_file_location('p41','/home/claude/ec/bo4_patch41.py');P41=_u.module_from_spec(_sp);_sp.loader.exec_module(P41)
 css = P41.patch_css(css); html = P41.patch_html(html); js = P41.patch_js(js)
 css = P41.patch_css2(css); html = P41.patch_html2(html); js = P41.patch_js2(js)
+css = P41.patch_css3(css); html = P41.patch_html3(html); js = P41.patch_js3(js)
 glue = open('/home/claude/ec/bo4_glue.js', encoding='utf-8').read()
 core = ('/* ===== BLACKOUT 4.0 overview (engine + renderer from proto/overview-4.0-v5.html) ===== */\n(function(){\n'
         'var BO4_CSS=' + json.dumps(css, ensure_ascii=False) + ';\nvar BO4_HTML=' + json.dumps(html, ensure_ascii=False) + ';\n'

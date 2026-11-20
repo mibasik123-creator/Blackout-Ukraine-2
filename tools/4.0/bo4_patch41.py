@@ -180,3 +180,47 @@ def patch_js2(js):
     js = rep(js, "var lit=R.feed==='gen'||R.feed==='grid'||", "var lit=R.feed==='gen'||R.feed==='grid'||R.feed==='unknown'||")
     js = rep(js, "cls('n-grid','off',!(gr.state==='ONLINE'&&gr.on===true));", "cls('n-grid','off',!(gr.state==='ONLINE'&&gr.on===true)&&R.feed!=='unknown');")
     return js
+
+# ---------------- 4.0.7: scene 3 (iso house, generator behind it, car by the porch) ----------------
+import json as _json
+_S3 = _json.load(open(''+__import__('os').path.join(__import__('os').path.dirname(__file__),'s3.json')+'', encoding='utf-8'))
+_S3['css'] = _S3['css'].replace('#s3{display:block;width:calc(100% + 40px);margin:0 -20px;', '#s3{display:block;width:calc(100% + 12px);margin:0 -6px;')
+S3_VIEWBOX = '0 108 350 345'
+def patch_css3(css):
+    return css + '#s3 #s3-car.idle g[clip-path]{display:none}' + '.scene{position:absolute!important;width:0!important;height:0!important;overflow:hidden!important;visibility:hidden!important;margin:0!important}' + _S3['css']
+def patch_html3(html):
+    svg = _S3['svg'].replace('VIEWBOX', S3_VIEWBOX)
+    ids_new = set(re.findall(r'id="([^"]+)"', svg)); ids_old = set(re.findall(r'id="([^"]+)"', html))
+    clash = ids_new & ids_old
+    assert not clash, ('id clash', sorted(clash)[:10])
+    return rep(html, '<div class="scene">', svg + '\n<div class="scene">')
+S3_JS = r"""
+var S3_STRIP=%s;
+function s3Paint(R){var sv=$('s3');if(!sv)return;var F=R.flows||{},f=R.feed,st=R.states||{};
+ function live(k){var s=F[k]&&F[k].state;return s==='on'||s==='supply'}
+ function on(id,c,cf){var e=$(id);if(!e)return;e.classList.toggle('on',!!c);e.classList.toggle('cf',!!cf)}
+ function fill(id,c){var e=$(id);if(e)e.setAttribute('fill',c)}
+ var assumed=f==='unknown',conf=f==='conflict';
+ on('s3-wire',live('gridhome')||live('gridst')||live('gridcar')||assumed,conf);
+ on('s3-hs',live('gridst'),conf);on('s3-gh',live('genhome'),conf);on('s3-gs',live('genst'),conf);on('s3-use',live('use'));
+ var c=R.car||{},hasCar=!!Tel.get('car'),chg=!!(live('gridcar')||(assumed&&c.charging));
+ var ev=$('s3-ev');if(ev){ev.classList.toggle('on',chg);ev.classList.toggle('none',!hasCar)}
+ cls('s3-badge','on',chg);txt('s3-kw',c.kW!=null?String(c.kW).replace('.',',')+' кВт':'');cls('s3-wb','off',!chg);cls('s3-car','idle',!chg);
+ var g=R.gen||{},run=!!g.on&&st.gen==='ONLINE';cls('s3-gen','run',run&&MOTION);cls('s3-genpool','on',run);
+ var lit=f==='gen'||f==='grid'||f==='station'||f==='unknown';cls('s3-house','dark',!lit);cls('s3-pool','off',!lit);
+ var gr=R.grid||{},gridOn=(st.grid==='ONLINE'&&gr.on===true)||assumed;cls('s3-pyl','off',!gridOn);
+ var s=R.station||{};txt('s3-stp',s.pct!=null?Math.floor(s.pct)+'%%':'—');
+ txt('s3-sts',st.station==='ONLINE'?(s.inW>5?'+'+fmtW(s.inW):s.outW>5?'−'+fmtW(s.outW):''):(st.station==='UNKNOWN'?'':'немає зв’язку'));
+ txt('s3-cp',hasCar&&c.pct!=null?Math.round(c.pct)+'%%':'');
+ txt('s3-cs',!hasCar?'':chg?'+'+String(c.kW!=null?c.kW:'').replace('.',',')+' кВт':st.car==='ONLINE'?'не заряджається':'немає зв’язку');
+ txt('s3-g2',st.gen!=='ONLINE'?'':g.on?'працює'+(g.fuel!=null?' · бак '+Math.round(g.fuel)+'%%':''):'вимкнено');fill('s3-g1',run?'#F3BA70':'#65736A');fill('s3-g2',run?'#F3BA70':'#65736A');
+ txt('s3-p2',st.grid==='ONLINE'&&gr.on===false?'немає':'');fill('s3-p1',gridOn?'#72C9ED':'#65736A');
+ var p=hasCar&&c.pct!=null?Math.max(0,Math.min(100,c.pct))/100:0,A=S3_STRIP,L=function(a,b){return [a[0]+(b[0]-a[0])*p,a[1]+(b[1]-a[1])*p]},e0=L(A.a0,A.b0),e1=L(A.a1,A.b1);
+ var d=p>0?'M'+A.a0[0]+' '+A.a0[1]+' L'+e0[0].toFixed(1)+' '+e0[1].toFixed(1)+' L'+e1[0].toFixed(1)+' '+e1[1].toFixed(1)+' L'+A.a1[0]+' '+A.a1[1]+' Z':'';
+ ['s3-stripfill','s3-stripglow','s3-stripclip'].forEach(function(id){var e=$(id);if(e&&e.getAttribute('d')!==d)e.setAttribute('d',d)});
+ var sh=ROOT.querySelector('#sh-path');if(sh&&p>0)sh.setAttribute('d','M'+((A.a0[0]+A.a1[0])/2).toFixed(1)+' '+((A.a0[1]+A.a1[1])/2).toFixed(1)+' L'+((e0[0]+e1[0])/2).toFixed(1)+' '+((e0[1]+e1[1])/2).toFixed(1))}
+"""
+def patch_js3(js):
+    js = rep(js, 'var LAST=null;', S3_JS % _json.dumps(_S3['strip']) + 'var LAST=null;')
+    js = rep(js, "LAST=R;window.__R=R;", "LAST=R;window.__R=R;try{s3Paint(R)}catch(e){console.error('s3',e)}")
+    return js

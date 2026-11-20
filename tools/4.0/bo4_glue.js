@@ -3,7 +3,7 @@
    the app's styles never touch it. Data comes only from what the app really measures. */
 var HOST=null,ROOT=null,stT=0,BO4_STN='',BO4_GEN='';
 function ACTIVE(){return !!(HOST&&HOST.isConnected&&!document.hidden)}
-function onVis(){var a=ACTIVE();Flow.pauseAll(!a);if(!a){for(var id in NUM){var e=$(id);if(e&&e._r){cancelAnimationFrame(e._r);e._r=0}}pending=0}else paint()}
+function onVis(){var a=ACTIVE();Flow.pauseAll(true);var s3=$('s3');if(s3&&s3.pauseAnimations){if(a)s3.unpauseAnimations();else s3.pauseAnimations()}if(!a){for(var id in NUM){var e=$(id);if(e&&e._r){cancelAnimationFrame(e._r);e._r=0}}pending=0}else paint()}
 document.addEventListener('visibilitychange',onVis);
 function build(){HOST=document.createElement('div');HOST.id='bo4host';ROOT=HOST.attachShadow({mode:'open'});ROOT.innerHTML='<style>'+BO4_CSS+'</style>'+BO4_HTML;
  Flow.init();
@@ -11,7 +11,7 @@ function build(){HOST=document.createElement('div');HOST.id='bo4host';ROOT=HOST.
  go('dcard',function(){try{localStorage.setItem('bo_btg','st')}catch(e){}setTab('bt')});
  go('gcard',function(){setTab('gen')});
  go('ccard',function(){try{localStorage.setItem('bo_btg','car')}catch(e){}setTab('bt')});
- go('n-gen',function(){setTab('gen')});go('n-st',function(){try{localStorage.setItem('bo_btg','st')}catch(e){}setTab('bt')});go('carico',function(){try{localStorage.setItem('bo_btg','car')}catch(e){}setTab('bt')});
+ go('n-gen',function(){setTab('gen')});go('s3-gen',function(){setTab('gen')});go('s3-st',function(){try{localStorage.setItem('bo_btg','st')}catch(e){}setTab('bt')});go('s3-car',function(){try{localStorage.setItem('bo_btg','car')}catch(e){}setTab('bt')});go('n-st',function(){try{localStorage.setItem('bo_btg','st')}catch(e){}setTab('bt')});go('carico',function(){try{localStorage.setItem('bo_btg','car')}catch(e){}setTab('bt')});
  /* row buttons: real app actions; the tap does not open the row */
  function act(id,f){var e=$(id);if(e)e.addEventListener('click',function(ev){ev.stopPropagation();if(e.disabled)return;try{f()}catch(x){console.error(x)}setTimeout(sync,60);setTimeout(sync,1500)})}
  /* on/off switches: generator session, station AC output (Fossibot), Tesla charging */
