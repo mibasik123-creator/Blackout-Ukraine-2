@@ -183,7 +183,7 @@ def patch_js2(js):
 
 # ---------------- 4.0.7: scene 3 (iso house, generator behind it, car by the porch) ----------------
 import json as _json
-_S3 = _json.load(open(''+__import__('os').path.join(__import__('os').path.dirname(__file__),'s3.json')+'', encoding='utf-8'))
+_S3 = _json.load(open('/home/claude/ec/s3.json', encoding='utf-8'))
 _S3['css'] = _S3['css'].replace('#s3{display:block;width:calc(100% + 40px);margin:0 -20px;', '#s3{display:block;width:calc(100% + 12px);margin:0 -6px;')
 S3_VIEWBOX = '0 108 350 345'
 def patch_css3(css):
@@ -196,6 +196,10 @@ def patch_html3(html):
     return rep(html, '<div class="scene">', svg + '\n<div class="scene">')
 S3_JS = r"""
 var S3_STRIP=%s;
+/* solar array + inverter: drawn only while an inverter is set up and has answered in the last 2 min */
+function s3Inv(){var sv=$('s3');if(!sv)return;var I=window.INV,d=I&&I.d,ok=!!(d&&I.t&&Date.now()-I.t<120000),pv=ok&&d.pv!=null;
+ sv.classList.toggle('inv',ok);sv.classList.toggle('pv',pv);var f=$('s3-pvf');if(f)f.classList.toggle('on',pv&&d.pv>20);
+ txt('s3-invw',pv?(d.pv>=1000?(d.pv/1000).toFixed(1).replace('.',',')+' кВт':Math.round(d.pv)+' Вт'):'');cls('s3-invled','off',!ok)}
 function s3Paint(R){var sv=$('s3');if(!sv)return;var F=R.flows||{},f=R.feed,st=R.states||{};
  function live(k){var s=F[k]&&F[k].state;return s==='on'||s==='supply'}
  function on(id,c,cf){var e=$(id);if(!e)return;e.classList.toggle('on',!!c);e.classList.toggle('cf',!!cf)}
@@ -218,6 +222,7 @@ function s3Paint(R){var sv=$('s3');if(!sv)return;var F=R.flows||{},f=R.feed,st=R
  var p=hasCar&&c.pct!=null?Math.max(0,Math.min(100,c.pct))/100:0,A=S3_STRIP,L=function(a,b){return [a[0]+(b[0]-a[0])*p,a[1]+(b[1]-a[1])*p]},e0=L(A.a0,A.b0),e1=L(A.a1,A.b1);
  var d=p>0?'M'+A.a0[0]+' '+A.a0[1]+' L'+e0[0].toFixed(1)+' '+e0[1].toFixed(1)+' L'+e1[0].toFixed(1)+' '+e1[1].toFixed(1)+' L'+A.a1[0]+' '+A.a1[1]+' Z':'';
  ['s3-stripfill','s3-stripglow','s3-stripclip'].forEach(function(id){var e=$(id);if(e&&e.getAttribute('d')!==d)e.setAttribute('d',d)});
+ try{s3Inv()}catch(x){}
  var sh=ROOT.querySelector('#sh-path');if(sh&&p>0)sh.setAttribute('d','M'+((A.a0[0]+A.a1[0])/2).toFixed(1)+' '+((A.a0[1]+A.a1[1])/2).toFixed(1)+' L'+((e0[0]+e1[0])/2).toFixed(1)+' '+((e0[1]+e1[1])/2).toFixed(1))}
 """
 def patch_js3(js):

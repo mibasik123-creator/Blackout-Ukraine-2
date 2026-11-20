@@ -54,6 +54,34 @@ o.append(fl('s3-hs',M.curve(v,(86,73,1),(ST0[0]+3,ST0[1]+24,2),14),'grid','slow'
 use=M.flow('s3-use-p',M.curve(v,(ST0[0]+3,ST0[1]+22,2),(84,73,1),14),'grid','mid',1.8).replace('#48B9E8','#A8D957').replace('#2c5b6e','#3c5a24').replace('#CDEFFB','#E3F5C4').replace('#EAF8FD','#F4FFE6')
 o.append('<g id="s3-use" class="s3f"><g class="lv">%s</g><g class="dd"></g></g>'%use)
 o.append('<g id="s3-house">'+M.house(v,*H0,lit=True)+'</g>')
+# solar array on the front roof slope + inverter on the gable wall: hidden until an inverter is added and answering
+HL,HD,HH,HR,OV=96,72,54,34,5
+def rs(x,t,lift=.6):
+    y=HD+OV-t*(HD/2+OV);z=HH-3+t*(HR+3);return (x,y,z+lift)
+pv=[]
+cols=[(8,26),(28,46),(50,68),(70,88)];rows=[(.14,.47),(.51,.84)]
+for (x0,x1) in cols:
+    for (t0,t1) in rows:
+        pv.append('<path d="%s" fill="#0e1626"></path>'%v.d([rs(x0-.6,t0-.02,.4),rs(x1+.6,t0-.02,.4),rs(x1+.6,t1+.02,.4),rs(x0-.6,t1+.02,.4)]))
+        pv.append('<path d="%s" fill="url(#g-pv)"></path>'%v.d([rs(x0,t0),rs(x1,t0),rs(x1,t1),rs(x0,t1)]))
+        ln=[]
+        for k in range(1,4):
+            xx=x0+(x1-x0)*k/4;ln.append(v.d([rs(xx,t0,.7),rs(xx,t1,.7)],False))
+        tm=(t0+t1)/2;ln.append(v.d([rs(x0,tm,.7),rs(x1,tm,.7)],False))
+        pv.append('<path d="%s" stroke="#5f82b8" stroke-opacity=".45" stroke-width=".5" fill="none"></path>'%' '.join(ln))
+        pv.append('<path d="%s" fill="#9EDCF5" opacity=".10"></path>'%v.d([rs(x0,t1-.12),rs(x0+(x1-x0)*.5,t1),rs(x0+(x1-x0)*.35,t1),rs(x0,t1-.04)]))
+o.append('<g id="s3-pv">'+'\n'.join(pv)+'</g>')
+IX=HL+.3;iy0,iy1,iz0,iz1=46,60,12,30
+inv=['<path d="%s" fill="#000" opacity=".35" filter="url(#f-soft)"></path>'%v.d([(IX+.2,iy0-1,iz0-2),(IX+.2,iy1+1,iz0-2),(IX+.2,iy1+1,iz1),(IX+.2,iy0-1,iz1)]),
+ '<path d="%s" fill="#D9DEDB"></path>'%v.d([(IX,iy0,iz0),(IX,iy1,iz0),(IX,iy1,iz1),(IX,iy0,iz1)]),
+ '<path d="%s" fill="#AEB5B1"></path>'%v.d([(IX,iy0,iz1),(IX,iy1,iz1),(IX+2.2,iy1,iz1),(IX+2.2,iy0,iz1)]),
+ '<path d="%s" fill="#1b2420"></path>'%v.d([(IX+.1,iy0+3,iz0+9),(IX+.1,iy1-3,iz0+9),(IX+.1,iy1-3,iz1-3),(IX+.1,iy0+3,iz1-3)])]
+a,b=v.p(IX+.2,iy0+4.5,iz0+5);inv.append('<circle id="s3-invled" cx="%.1f" cy="%.1f" r="1.1" fill="#A8D957"></circle>'%(a,b))
+a,b=v.p(IX+.2,iy0+(iy1-iy0)/2,iz0+12.5);inv.append('<text id="s3-invw" x="%.1f" y="%.1f" text-anchor="middle" fill="#C4E58A" font-size="3.6" font-weight="600" font-family="Inter, sans-serif"></text>'%(a,b))
+o.append('<g id="s3-inv">'+'\n'.join(inv)+'</g>')
+pvd=v.d([(HL+OV,HD-4,HH-3),(HL+OV,HD-4,HH-8),(IX+.4,iy1-2,iz1+2),(IX+.4,iy1-2,iz1)],False)
+pvf=M.flow('s3-pvf-p',pvd,'grid','slow',1.4).replace('#48B9E8','#F5C842').replace('#2c5b6e','#6b5a1e').replace('#CDEFFB','#FCE9A8').replace('#EAF8FD','#FFF6D6')
+o.append('<g id="s3-pvf" class="s3f"><g class="lv">%s</g><g class="dd"></g></g>'%pvf)
 cs,port,portw=M.car(v,*CAR0,charging=True,flip=True)
 # strip geometry for any percentage
 X=lambda x:CAR0[0]+(82-x);Y=lambda y:CAR0[1]+y;W=34
@@ -84,7 +112,7 @@ cx,cy=v.p(CAR0[0]+41,CAR0[1]+17,0);o.append(T('s3-cp',cx,cy+34,'','#C4E58A',14,6
 o.append(T('s3-g1',gx,gy-52,'ГЕНЕРАТОР','#65736A',10.5,None,1));o.append(T('s3-g2',gx,gy-40,'','#65736A',10.5))
 o.append(T('s3-p1',PY[0],PY[1]-118,'МЕРЕЖА','#72C9ED',10.5,None,1));o.append(T('s3-p2',PY[0],PY[1]-104,'','#65736A',10.5))
 inner='\n'.join(o)
-defs=M.DEFS.replace('<defs>','<defs>\n<filter id="f-dotsm" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation=".5"></feGaussianBlur></filter>')
+defs=M.DEFS.replace('<defs>','<defs>\n<linearGradient id="g-pv" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2c4a7a"></stop><stop offset="100%" stop-color="#16243f"></stop></linearGradient>\n<filter id="f-dotsm" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation=".5"></feGaussianBlur></filter>')
 for need in ('g-wbx','g-strip','g-crear'):
     assert need in defs or need in inner, need
 svg='<svg id="s3" viewBox="VIEWBOX" role="img" aria-label="Схема енергії: будинок, мережа, генератор, станція, авто">'+defs+'<g transform="translate(-52 4) scale(1.25)">'+inner+'</g></svg>'
@@ -100,7 +128,7 @@ css='''#s3{display:block;width:calc(100% + 40px);margin:0 -20px;height:auto;over
 #s3 #s3-genpool{opacity:0;transition:opacity .8s}#s3 #s3-genpool.on{opacity:.16}
 #s3 #s3-house.dark .win,#s3 #s3-house.dark [fill="url(#g-light)"]{fill:#1c2622;animation:none}#s3 #s3-pool{transition:opacity .8s}#s3 #s3-pool.off{opacity:0}
 #s3 #s3-pyl.off{opacity:.55}#s3 #s3-car.idle [fill="#C4E58A"]{fill:#9EDCF5}#s3 #s3-car .strip-on{display:none}
-#s3 #s3-wb.off circle{display:none}#s3 .s3-tap{cursor:pointer}
+#s3 #s3-pv,#s3 #s3-inv{display:none}#s3.pv #s3-pv,#s3.inv #s3-inv{display:inline}#s3 #s3-wb.off circle{display:none}#s3 .s3-tap{cursor:pointer}
 @media (prefers-reduced-motion:reduce){#s3 *{animation:none!important}}'''
 json.dump({'svg':svg,'css':css,'strip':strip},open('/tmp/claude-0/-home-claude/b376be36-0118-5eb7-9409-c56e988e0bd8/scratchpad/gen2/s3.json','w'),ensure_ascii=False)
 print(len(svg))

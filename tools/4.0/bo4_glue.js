@@ -8,16 +8,16 @@ document.addEventListener('visibilitychange',onVis);
 function build(){HOST=document.createElement('div');HOST.id='bo4host';ROOT=HOST.attachShadow({mode:'open'});ROOT.innerHTML='<style>'+BO4_CSS+'</style>'+BO4_HTML;
  Flow.init();
  function go(id,f){var e=$(id);if(e)e.addEventListener('click',f)}
- go('dcard',function(){try{localStorage.setItem('bo_btg','st')}catch(e){}setTab('bt')});
+ go('dcard',function(){setTab('st')});
  go('gcard',function(){setTab('gen')});
- go('ccard',function(){try{localStorage.setItem('bo_btg','car')}catch(e){}setTab('bt')});
- go('n-gen',function(){setTab('gen')});go('s3-gen',function(){setTab('gen')});go('s3-st',function(){try{localStorage.setItem('bo_btg','st')}catch(e){}setTab('bt')});go('s3-car',function(){try{localStorage.setItem('bo_btg','car')}catch(e){}setTab('bt')});go('n-st',function(){try{localStorage.setItem('bo_btg','st')}catch(e){}setTab('bt')});go('carico',function(){try{localStorage.setItem('bo_btg','car')}catch(e){}setTab('bt')});
+ go('ccard',function(){setTab('car')});
+ go('n-gen',function(){setTab('gen')});go('s3-gen',function(){setTab('gen')});go('s3-st',function(){setTab('st')});go('s3-car',function(){setTab('car')});go('n-st',function(){setTab('st')});go('carico',function(){setTab('car')});
  /* row buttons: real app actions; the tap does not open the row */
  function act(id,f){var e=$(id);if(e)e.addEventListener('click',function(ev){ev.stopPropagation();if(e.disabled)return;try{f()}catch(x){console.error(x)}setTimeout(sync,60);setTimeout(sync,1500)})}
  /* on/off switches: generator session, station AC output (Fossibot), Tesla charging */
  act('gact',function(){if(S.run){if(confirm('Зупинити генератор?'))stopG()}else startG()});
  act('dact',function(){if(!BT.on){btConnect();return}if(fbIs()){var a=fbState('ac');if(a!=null)fbSet('ac',!a);return}if(confirm('Відключити станцію від застосунку?'))btDisc()});
- act('cact',function(){var c=tsCfg();if(!c.paired){try{localStorage.setItem('bo_btg','car')}catch(e){}setTab('bt');return}if(!TS.on){tsConnect();return}
+ act('cact',function(){var c=tsCfg();if(!c.paired){setTab('car');return}if(!TS.on){tsConnect();return}
   var d=TS.d,chg=d&&(d.st===4||d.st===5);if(chg){if(confirm('Зупинити заряджання Tesla?'))tsCharge(false)}else tsCharge(true)});
  if(BO_DEV){startDev();var tl=$('testlbl');if(tl)tl.style.display=''}else{var lab=ROOT.querySelector('.lab');if(lab)lab.style.display='none'}}
 function attach(){var slot=document.getElementById('bo4slot');
@@ -59,6 +59,6 @@ function sync(){if(BO_DEV)return;var now=Date.now();
   if(d&&typeof d.t==='number')Tel.set('car',{pct:d.pct,kW:d.kw,st:d.st,t:d.t,link:!!(TS.on&&TS.d)});else if(Tel.d.car){delete Tel.d.car;Tel.emit('car')}}}catch(e){}
  /* grid V/A/Hz line (measured by the station) */
  var gl=$('gline');if(gl){var gt='';try{if(fresh&&S.run)gt=pbGridTxt();if(gt&&S.run)gt=gt.replace(/^[^<]+/,'Вхід від генератора ')}catch(e){}if(gl.innerHTML!==gt)gl.innerHTML=gt;gl.hidden=!gt;gl.classList.toggle('gen',!!S.run)}
- txt('loc',S.locs&&S.locs[S.loc]?S.locs[S.loc]:'')}
+ txt('loc',S.locs&&S.locs[S.loc]?S.locs[S.loc]:'');try{s3Inv()}catch(e){}}
 setInterval(function(){if(ACTIVE())sync()},2000);
 window.BO4={attach:attach,sync:sync,frame:function(){stT=Date.now();if(ACTIVE())sync()},lost:function(){if(ACTIVE())sync()},active:ACTIVE};
