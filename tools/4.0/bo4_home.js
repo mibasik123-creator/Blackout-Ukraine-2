@@ -80,3 +80,11 @@ function boSlotSchedule(){var host=document.getElementById('bo4host');if(!host)r
  [].slice.call(host.children).forEach(function(c){if(c.getAttribute('slot')==='sch')c.remove()});
  var n=host.nextElementSibling;if(n&&n.classList&&n.classList.contains('sch')){n.setAttribute('slot','sch');host.appendChild(n)}}
 (function(){var r=render;render=function(){r.apply(this,arguments);if(tab==='pan')try{boSlotSchedule()}catch(e){}}})();
+
+/* ---- show on the home screen only what the user actually has ---- */
+function boHas(k){var h=S.home||{};if(h[k]!=null)return !!h[k];
+ if(k==='gen')return (S.gens||[]).length>0;if(k==='st')return (S.sts||[]).length>0||!!BT.on;if(k==='car')return !!tsCfg().vin;return true}
+function boHomeSet(k,v){S.home=S.home||{};S.home[k]=!!v;save();try{BO4.sync()}catch(e){}}
+function boHomeCard(){var it=[['st','Станція','bat'],['gen','Генератор','gen'],['car','Авто','car']];
+ return '<div class="bo-gh">На головному екрані</div><div class="card bo-homecard">'+it.map(function(x){return '<label class="svtg"><input type="checkbox"'+(boHas(x[0])?' checked':'')+' onchange="boHomeSet(\''+x[0]+'\',this.checked)"> <span>'+x[1]+'</span></label>'}).join('')+'<div class="mut" style="font-size:12.5px;margin-top:4px">Вимкніть те, чого у вас немає — воно зникне з картинки і списку на головній.</div></div>'}
+(function(){var d=boDevList;boDevList=function(){return d.apply(this,arguments)+boHomeCard()}})();
