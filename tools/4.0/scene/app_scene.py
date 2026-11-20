@@ -49,7 +49,6 @@ def fl(id,d,kind,speed,w):
     return '<g id="%s" class="s3f"><g class="lv">%s</g><g class="dd">%s</g></g>'%(id,M.flow(id+'-p',d,kind,speed,w),M.dead(d))
 gen_out=(G0[0]+34,G0[1]+16,4);house_in=(0,64,3);st_in=(ST0[0]+4,ST0[1]+6,3);hs_from=(96,40,1)
 o.append(fl('s3-gh',M.curve(v,gen_out,house_in,12),'gen','mid',2.4))
-o.append(fl('s3-gs',M.curve(v,gen_out,st_in,22),'gen','slow',2.2))
 o.append(fl('s3-wire',wd,'grid','mid',1.6))
 o.append('<g id="s3-house">'+M.house(v,*H0,lit=True)+'</g>')
 # solar array on the front roof slope + inverter on the gable wall: hidden until an inverter is added and answering
@@ -136,6 +135,8 @@ def cable_live(gid,col,core,dot,rev,dur):
     return '<g id="%s" class="s3f"><g class="lv">%s</g><g class="dd"></g></g>'%(gid,s)
 o.append(cable_live('s3-use','#A8D957','#E3F5C4','#F4FFE6',True,1.9))
 o.append(cable_live('s3-hs','#48B9E8','#CDEFFB','#EAF8FD',False,2.4))
+# generator charging the station goes the real way: generator -> house wiring -> the same cable -> station
+o.append(cable_live('s3-gs','#F0A542','#FFD9A0','#FFE7C2',False,2.2))
 wbs,_=M.wallcharger(v,92,72,10,'y')
 o.append('<g id="s3-wb">'+wbs+'</g>')
 qx,qy,qz=portw
