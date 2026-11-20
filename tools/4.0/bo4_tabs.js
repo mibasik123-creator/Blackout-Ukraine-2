@@ -43,7 +43,7 @@ var BO_STK='';setInterval(function(){if(tab!=='st')return;var k=(BT.on?1:0)+'|'+
 function boCarHero(){var c=tsCfg(),d=TS.d||c.last||null,vi=c.vin?vinInfo(c.vin):{},nm=c.vin?((vi.make||'Tesla')+' '+(vi.model||'')).trim():'Авто';
  var chg=!!(d&&(d.st===4||d.st===5)),pct=d&&d.pct!=null?Math.round(d.pct):null,age=d&&d.t?Math.round((Date.now()-d.t)/60000):null;
  var h='<div class="hero"><div class="hi">'+(TS.on?'Tesla · Bluetooth':'Авто')+'</div><div class="ttl">'+svgi('car',26)+esc(nm)+'</div></div>';
- if(!c.vin)return h+'<div class="card"><div class="mut">Додайте авто: вкажіть VIN нижче — підключення напряму по Bluetooth, без хмари.</div></div>';
+ if(!c.vin)return h;
  h+='<div class="card" id="carbig"><div class="bo-cpct">'+(pct!=null?pct+'<small>%</small>':'—')+'</div><div class="mut" id="carst">'+
   (chg?'заряджається'+(d.kw!=null?' · '+String(d.kw).replace('.',',')+' кВт':''):pct!=null?'не заряджається':'ще немає даних')+(age!=null&&!TS.on?' · дані '+(age<1?'щойно':age+' хв тому'):'')+'</div>';
  if(c.paired&&TS.on&&d){h+='<div class="row"><button class="'+(chg?'stop':'')+'" onclick="boCarChg('+(chg?0:1)+')"'+(TS.chgBusy||TS.busy?' disabled':'')+'>'+(chg?'Зупинити заряджання':'Почати заряджання')+'</button></div>'}
