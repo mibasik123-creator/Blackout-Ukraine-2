@@ -3,6 +3,9 @@ Output: proto/overview-4.0-full.html in the design/blackout-4.0 branch (separate
 import re, json, sys
 REPO = '/home/claude/blackout-ukraine-2'
 app = open('/home/claude/ec/ec9.html', encoding='utf-8').read()
+# 4.0.22: EcoFlow packet version 2 for River 2 / Delta 2 / Delta Pro (ef_ec9_base.js = the copy built into ec9)
+_ef_old = open('/home/claude/ec/ef_ec9_base.js', encoding='utf-8').read(); assert app.count(_ef_old) == 1
+app = app.replace(_ef_old, open('/home/claude/ec/ef.js', encoding='utf-8').read())
 import subprocess
 v5 = subprocess.run(['git','-C',REPO,'show','design/blackout-4.0:proto/overview-4.0-v5.html'],capture_output=True,check=True).stdout.decode('utf-8')
 

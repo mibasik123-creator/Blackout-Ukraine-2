@@ -1468,7 +1468,10 @@ var EF_KDB=null;function efKd(pos,len){if(!EF_KDB){var s=atob(EF_KD);EF_KDB=new 
 
 /* ---- framing ---- */
 function efEnc(ft,payload){var d=[0x5a,0x5a,ft<<4,1,(payload.length+2)&255,(payload.length+2)>>8].concat(payload),k=efC16(d);d.push(k&255,k>>8);return d}
-function efPkt(src,dst,cs,ci,pl,ver){var d=[0xaa,ver||3,pl.length&255,pl.length>>8];d.push(efC8(d));d=d.concat([0x0d,0,0,0,0,0,0,src,dst,1,1,cs,ci]).concat(pl);var k=efC16(d);d.push(k&255,k>>8);return d}
+function efPkt(src,dst,cs,ci,pl,ver){ver=ver||3;var d=[0xaa,ver,pl.length&255,pl.length>>8];d.push(efC8(d));d=d.concat([0x0d,0,0,0,0,0,0,src,dst]).concat(ver>=3?[1,1]:[]).concat([cs,ci]).concat(pl);var k=efC16(d);d.push(k&255,k>>8);return d}
+/* River 2, Delta 2, Delta Pro, Wave 2 speak packet version 2 (no dsrc/ddst bytes); newer models version 3 */
+var EF_V2=['R601','R603','R611','R613','R621','R623','R331','R335','R701','R351','R354','D361','D365','KT21','R511','DCA','DCK','DCE','DCC','DCU','DCT','DCG','DCS','DCF','DCJ','Z1'];
+function efVer(sn){sn=String(sn||'').toUpperCase();return EF_V2.some(function(x){return sn.indexOf(x)===0})?2:3}
 function efParsePkt(d){if(d[0]!==0xaa)return null;var vb=d[1],v=vb&15,sen=(vb&0x10)!==0;if(v!==3&&v!==2)return{raw:1,vb:vb};if((v==3&&d.length<20)||(v==2&&d.length<18))return null;var L=d[2]|d[3]<<8;
  if(!sen&&!(d[d.length-2]==0xbb&&d[d.length-1]==0xbb)){var k=efC16(d.slice(0,-2));if(k!==(d[d.length-2]|d[d.length-1]<<8))return null}if(efC8(d.slice(0,4))!==d[4])return null;
  var st=v==2?16:18,seq=d[6],cs=v==2?d[14]:d[16],ci=v==2?d[15]:d[17],pl=d.slice(st,st+L);if(sen&&seq)pl=pl.map(function(c){return c^seq});if(sen&&pl[pl.length-2]==0xbb&&pl[pl.length-1]==0xbb)pl=pl.slice(0,-2);
@@ -1498,6 +1501,8 @@ function efPacket(p){if(p.raw){efLog('RX','EF pkt v'+p.vb);return}
  if(p.src===0x35&&p.cs===0x35){if(p.ci===0x86){var c=p.pl[0];if(p.pl.length===1&&c!==0){var m=EF_AUTHERR[c]||['Код '+c,'Код '+c];EF.err=L3(m[0],m[1],m[1]);EF.st='auth-fail';efLog('ERR','EF auth rejected code '+c);efUi();return}efAuthOk('reply')}
   else{EF.q.push({pkt:p})}efLog('RX','EF auth '+p.ci.toString(16)+' '+b2hex(p.pl.slice(0,8)));return}
  if(EF.st==='auth')efAuthOk('data');
+ if((p.vb&15)===2&&p.src===0x02&&p.cs===0x20&&p.ci===0x02&&p.pl.length>=19){var q=p.pl,soc=q[14];/* PD heartbeat (River 2 / Delta 2): soc, watts out, watts in */
+  if(soc<=100){EF.d[262]=soc;EF.d[4]=q[15]|q[16]<<8;EF.d[3]=q[17]|q[18]<<8;efApply();efLog('RX','EF v2 pd soc='+soc+' out='+EF.d[4]+' in='+EF.d[3])}return}
  if(p.cs===0xfe&&p.ci===0x15){var o=efPb(p.pl);Object.keys(o).forEach(function(k){EF.d[k]=o[k]});efApply();efLog('RX','EF data '+JSON.stringify(efPick(o)))}
  else efLog('RX','EF pkt src='+p.src.toString(16)+' cmd='+p.cs.toString(16)+'/'+p.ci.toString(16)+' len='+p.pl.length)}
 function efPick(o){var r={};[262,242,3,4,54,368,361,268,269].forEach(function(k){if(o[k]!=null)r[k]=Math.round(o[k]*10)/10});return r}
@@ -1517,14 +1522,14 @@ async function efStart(){var P=btPlug(),c=efCfg(),dv=c.devs[BT.id]||{};EF.sn=(dv
  try{
   EF.st='keys';efUi();var kp=EFE.gen(efRand(21));await efWrite(efEnc(0,[1,0].concat(kp.pub)));
   var r1=await efWait(function(f){return !f.pkt&&f.pl[0]===1&&f.pl.length>=43},10000);var sz={1:52,2:56,3:64,4:64}[r1.pl[2]]||40;
-  var sh=EFE.shared(kp.d,r1.pl.slice(3,3+sz));EF.key=sh.slice(0,16);EF.iv=efMd5(sh);efLog('SYS','EF ecdh ok, curve '+r1.pl[2]);
+  var sh=EFE.shared(kp.d,r1.pl.slice(3,3+sz));EF.key=sh.slice(0,16);EF.iv=efMd5(sh);efLog('SYS','EF ecdh ok, curve '+r1.pl[2]+', packet v'+efVer(EF.sn));
   EF.st='session';efUi();await efWrite(efEnc(0,[2]));var r2=await efWait(function(f){return !f.pkt&&f.pl[0]===2&&f.pl.length>=33},10000);
   var dd=EFA.dec(EF.key,EF.iv,r2.pl.slice(1)),srand=dd.slice(0,16),seed=dd.slice(16,18),pos=seed[0]*16+((seed[1]-1)&255)*256;
   EF.key=efMd5(efKd(pos,16).concat(srand));EF.ses=1;EF.q=[];efLog('SYS','EF session key ok');
-  EF.st='auth';efUi();await efWrite(efEnc(1,EFA.enc(EF.key,EF.iv,efPkt(0x21,0x35,0x35,0x89,[],3))));
+  EF.st='auth';efUi();await efWrite(efEnc(1,EFA.enc(EF.key,EF.iv,efPkt(0x21,0x35,0x35,0x89,[],efVer(EF.sn)))));
   try{await efWait(function(f){return f.pkt&&f.pkt.ci===0x89},6000)}catch(e){efLog('SYS','EF no auth-status reply, continuing')}
   if(EF.auth)return;var hx=efMd5(efStrB(String(c.uid)+EF.sn)).map(function(x){return ('0'+x.toString(16)).slice(-2).toUpperCase()}).join('');
-  await efWrite(efEnc(1,EFA.enc(EF.key,EF.iv,efPkt(0x21,0x35,0x35,0x86,efStrB(hx),3))));
+  await efWrite(efEnc(1,EFA.enc(EF.key,EF.iv,efPkt(0x21,0x35,0x35,0x86,efStrB(hx),efVer(EF.sn)))));
   setTimeout(function(){if(EF.on&&!EF.auth&&EF.st==='auth'){EF.st='fail';EF.err=L3('Станция не подтвердила вход','Станція не підтвердила вхід','Station did not confirm login');efUi()}},12000)
  }catch(e){EF.st='fail';EF.err=String(e&&e.message||e);efLog('ERR','EF handshake '+EF.err);efUi()}}
 
