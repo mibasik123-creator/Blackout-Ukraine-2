@@ -67,6 +67,7 @@ core = ('/* ===== BLACKOUT 4.0 overview (engine + renderer from proto/overview-4
 core += '\n' + open('/home/claude/ec/inv.js', encoding='utf-8').read() + '\n'
 core += '\n' + open('/home/claude/ec/aes.js', encoding='utf-8').read().replace("if(typeof module!=='undefined')module.exports=AES128;",'') + '\n' + open('/home/claude/ec/tuya.js', encoding='utf-8').read().split("if(typeof module!=='undefined')")[0] + '\nsetTimeout(function(){try{if(tyCfg().length)tyStart()}catch(e){}},2500);\n'
 core += '\n' + open('/home/claude/ec/bo4_simplify.js', encoding='utf-8').read() + '\n'
+core += '\n' + open('/home/claude/ec/regmap.js', encoding='utf-8').read() + '\n'
 core += r"""
 /* Tesla: start/stop charging (CarServer VehicleAction.chargingStartStopAction: start=2, stop=5; allowed for the Charging Manager role) */
 async function tsCharge(start){if(!TS.on||TS.busy||TS.chgBusy)return;TS.chgBusy=1;TS.busy=1;try{BO4.sync()}catch(e){}
@@ -95,12 +96,12 @@ a2 = src.index('h+=schCard(lvl,sn);'); src = src[:a2] + 'h+=schCard(lvl,sn);retu
 x1 = src.index("var h='<div id=\"bo4slot\"></div>';") + len("var h='<div id=\"bo4slot\"></div>';"); x2 = src.index('h+=schCard(lvl,sn);return h}'); src = src[:x1] + src[x2:]
 t = t[:i] + src + t[j:]
 t = rep(t, "\ntry{render()}catch(e){window.__bootCheck", '\n' + core + "\ntry{render()}catch(e){window.__bootCheck")
-t = rep(t, "function btgGroup(el){if(el.id==='tscard')return 'car';", "function btgGroup(el){if(el.id==='tscard')return 'car';if(el.id==='invcard')return 'inv';if(el.id==='tycard')return 'plug';")
+t = rep(t, "function btgGroup(el){if(el.id==='tscard')return 'car';", "function btgGroup(el){if(el.id==='tscard')return 'car';if(el.id==='invcard')return 'inv';if(el.id==='tycard')return 'plug';if(el.id==='rmcard')return 'svc';")
 t = rep(t, "['car',L3('Авто','Авто','Car')],['svc',", "['car',L3('Авто','Авто','Car')],['inv',L3('Инвертор','Інвертор','Inverter')],['plug',L3('Розетки','Розетки','Plugs')],['svc',")
 t = rep(t, "if(p==='always')return true;return tab==='pan'||!!BT.on}", "if(p==='always')return true;if(tab==='pan'||tab==='bt'||!!BT.on||!!S.run)return true;try{if(TS.on||TS.connecting||(window.TY&&TY.busy)||(window.INV&&INV.on))return true}catch(e){}return false}")
 t = rep(t, "L3('Пока открыт главный экран или подключена станция','Поки відкрито головний екран або підключено станцію','On main screen or while a station is connected')", "L3('Пока открыта Главная или Подключения, или есть активное подключение','Поки відкрито Головну чи Підключення, або є активне з’єднання','On Home or Connect, or while a device is connected')")
 t = rep(t, "var CS=[", "var CS=[['Must HBP1800-3024OS',3072,2024],['Must HBP1800-2024OS',2560,2024],['Must HBP1800-1012 (100 А·год)',1280,2024],['Must HBP1800-1012 (75 А·год)',960,2024],['Must EM1024S',1280,2024],")
-t = rep(t, "\ntry{render()}catch(e){window.__bootCheck", "\n(function(){var v=vBt;vBt=function(){return v.apply(this,arguments)+invCard()+tyCardHtml()}})();\ntry{render()}catch(e){window.__bootCheck")
+t = rep(t, "\ntry{render()}catch(e){window.__bootCheck", "\n(function(){var v=vBt;vBt=function(){return v.apply(this,arguments)+invCard()+tyCardHtml()+rmCardHtml()}})();\ntry{render()}catch(e){window.__bootCheck")
 t = rep(t, "T=['gen','st','pan','hist','bt'],L={gen:[svgi('gen'),'Генератор'],st:[svgi('bat'),'Станции'],pan:[svgi('bolt',30),'Панель'],hist:[svgi('hist'),'История'],bt:[svgi('bt'),'Bluetooth']};",
  "T=['pan','gen','st','hist','bt'],L={gen:[svgi('gen'),'Генератор'],st:[svgi('bat'),'Станции'],pan:[svgi('home'),L3('Главная','Головна','Home')],hist:[svgi('hist'),'История'],bt:[svgi('bt'),L3('Подключения','Підключення','Connect')]};")
 t = rep(t, "return '<button class=\"'+(k=='pan'?'cn ':'')+(k=='pan'&&S.run?'run ':'')+(k==tab?'on':'')+'\"", "return '<button class=\"'+(k==tab?'on':'')+'\"")
@@ -119,6 +120,7 @@ pal = ('body.bo4:not(.pbl){--bg:#090D0B;--bg2:#101613;--card:#151C18;--surf:#151
        '--t1:#F1F5F2;--t2:#A0ADA4;--t3:#65736A;--tx:#F1F5F2;--mut:#A0ADA4;--em:#A8D957;--ac:#A8D957;--ok:#A8D957;--cy:#8FC24A;--bl:#48B9E8;'
        '--lg1:#A8D957;--lg2:#8FC24A;--emrgb:168,217,87;--em2:#C7E89A;--warn:#EFB34F;--bad:#EF665B;--off:#65736A;--on-em:#0B1405;--glow:rgba(168,217,87,.28);'
        'background:#090D0B!important;background-image:radial-gradient(120% 55% at 50% 0%,#101613 0%,#090D0B 70%)!important}\n')
+pal_inv += '#rmcard .rmg{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:4px;margin-top:6px;font:11px ui-monospace,monospace}#rmcard .rmg span{background:rgba(255,255,255,.04);border-radius:6px;padding:3px 5px;white-space:nowrap;overflow:hidden}#rmcard .rmg i{opacity:.5;font-style:normal;margin-right:4px}#rmcard .rmg .hot{background:rgba(155,214,90,.35)}#rmcard .rmg .warm{background:rgba(239,179,79,.18)}#rmcard button.sm{width:auto!important}#rmcard input{font-size:14px!important}'
 k = t.rindex('</style>', 0, t.index('</head>')); t = t[:k] + pal + pal_inv + t[k:]
 REL = '--release' in sys.argv
 NAME = 'BLACKOUT 4.0' if REL else 'BLACKOUT 4.0 test'
