@@ -6,6 +6,8 @@ v=M.V((178,214))
 H0=(0,0);G0=(-112,4);ST0=(110,30);CAR0=(-2,98);PY=(286,212)
 o=[]
 import random, math as _m
+def E2(tag,**a):
+    at=' '.join('%s="%s"'%(k.replace('_','-'),v_) for k,v_ in a.items());return '<%s %s></%s>'%(tag,at,tag)
 def rrect(x0,y0,x1,y1,r,n=6):
     pts=[]
     for cx,cy,a0 in ((x1-r,y1-r,0),(x0+r,y1-r,90),(x0+r,y0+r,180),(x1-r,y0+r,270)):
@@ -49,10 +51,6 @@ gen_out=(G0[0]+34,G0[1]+16,4);house_in=(0,64,3);st_in=(ST0[0]+4,ST0[1]+6,3);hs_f
 o.append(fl('s3-gh',M.curve(v,gen_out,house_in,12),'gen','mid',2.4))
 o.append(fl('s3-gs',M.curve(v,gen_out,st_in,22),'gen','slow',2.2))
 o.append(fl('s3-wire',wd,'grid','mid',1.6))
-o.append(fl('s3-hs',M.curve(v,(86,73,1),(ST0[0]+3,ST0[1]+24,2),14),'grid','slow',1.8))
-# station -> house (station feeds the house during an outage)
-use=M.flow('s3-use-p',M.curve(v,(ST0[0]+3,ST0[1]+22,2),(84,73,1),14),'grid','mid',1.8).replace('#48B9E8','#A8D957').replace('#2c5b6e','#3c5a24').replace('#CDEFFB','#E3F5C4').replace('#EAF8FD','#F4FFE6')
-o.append('<g id="s3-use" class="s3f"><g class="lv">%s</g><g class="dd"></g></g>'%use)
 o.append('<g id="s3-house">'+M.house(v,*H0,lit=True)+'</g>')
 # solar array on the front roof slope + inverter on the gable wall: hidden until an inverter is added and answering
 HL,HD,HH,HR,OV=96,72,54,34,5
@@ -94,6 +92,46 @@ cs=cs.replace('<path id="sh-path" d="','<path id="sh-path" data-x="1" d="')
 o.append('<g id="s3-car" class="s3-tap">'+cs+'</g>')
 st=M.station(v,*ST0)
 o.append('<g id="s3-st" class="s3-tap">'+st+'</g>')
+# station <-> house: a real power cable, plugged into the station's AC socket and into a wall socket on the gable
+import math as _mm
+SX=ST0[0]+24.5;SY=ST0[1]+26
+WALL=(96,66,9)
+def ring_pts(cx,cy,cz,r,face,n=20):
+    return [((cx,cy+r*_mm.cos(2*_mm.pi*i/n),cz+r*_mm.sin(2*_mm.pi*i/n)) if face=='x' else (cx+r*_mm.cos(2*_mm.pi*i/n),cy,cz+r*_mm.sin(2*_mm.pi*i/n))) for i in range(n)]
+way=[(WALL[0]+4.4,WALL[1],WALL[2]-1.2),(WALL[0]+5.6,WALL[1]+.6,WALL[2]-4.5),(WALL[0]+6.2,WALL[1]+1.4,.7),(WALL[0]+11,WALL[1]+.6,.6),
+     (ST0[0]+2,ST0[1]+35,.6),(SX-6,SY+7.5,.6),(SX-.4,SY+6.4,1.2),(SX,SY+4.6,5.5),(SX,SY+3.4,11.4)]
+pts=[v.p(*q) for q in way];cd=M.catmull(pts)
+shd=M.catmull([v.p(q[0]+1.2,q[1]+1.2,0) for q in way[2:7]])
+cab=[]
+cab.append('<path d="%s" fill="none" stroke="#000" stroke-opacity=".5" stroke-width="3.6" stroke-linecap="round" filter="url(#f-soft)"></path>'%shd)
+# wall socket plate + plug body (house side)
+wx,wy,wz=WALL
+cab.append(E2('path',d=v.d([(wx+.2,wy-4.2,wz-4.2),(wx+.2,wy+4.2,wz-4.2),(wx+.2,wy+4.2,wz+4.2),(wx+.2,wy-4.2,wz+4.2)]),fill='#E7ECE9',stroke='#9aa7a0',stroke_width='.4'))
+cab.append(E2('path',d=v.d(ring_pts(wx+.3,wy,wz,2.9,'x')),fill='#cfd6d2'))
+cab.append(E2('path',d=v.d([(wx+.4,wy-2.2,wz-2.2),(wx+3.8,wy-2.2,wz-2.2),(wx+3.8,wy+2.2,wz-2.2),(wx+3.8,wy+2.2,wz+2.2),(wx+.4,wy+2.2,wz+2.2)]),fill='#1c2326'))
+cab.append(E2('path',d=v.d([(wx+3.8,wy-2.2,wz-2.2),(wx+3.8,wy+2.2,wz-2.2),(wx+3.8,wy+2.2,wz+2.2),(wx+3.8,wy-2.2,wz+2.2)]),fill='#2a3236'))
+cab.append(E2('path',d=v.d([(wx+.4,wy-2.2,wz+2.2),(wx+3.8,wy-2.2,wz+2.2),(wx+3.8,wy+2.2,wz+2.2),(wx+.4,wy+2.2,wz+2.2)]),fill='#3a4448'))
+# the cable itself
+cab.append('<path id="s3-cab-p" d="%s" fill="none" stroke="#151b1e" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"></path>'%cd)
+cab.append('<path d="%s" fill="none" stroke="#56636b" stroke-width=".7" stroke-linecap="round" stroke-opacity=".75" transform="translate(-.4 -.6)"></path>'%cd)
+# plug in the station's AC socket (station side)
+cab.append(E2('path',d=v.d([(SX-2.4,SY+.2,13-2.6),(SX+2.4,SY+.2,13-2.6),(SX+2.4,SY+3.4,13-2.6),(SX+2.4,SY+3.4,13+2.6),(SX-2.4,SY+3.4,13+2.6),(SX-2.4,SY+.2,13+2.6)]),fill='#1c2326'))
+cab.append(E2('path',d=v.d([(SX-2.4,SY+3.4,13-2.6),(SX+2.4,SY+3.4,13-2.6),(SX+2.4,SY+3.4,13+2.6),(SX-2.4,SY+3.4,13+2.6)]),fill='#2a3236'))
+cab.append(E2('path',d=v.d([(SX-2.4,SY+.2,13+2.6),(SX+2.4,SY+.2,13+2.6),(SX+2.4,SY+3.4,13+2.6),(SX-2.4,SY+3.4,13+2.6)]),fill='#3a4448'))
+o.append('<g id="s3-cab">'+'\n'.join(cab)+'</g>')
+def cable_live(gid,col,core,dot,rev,dur):
+    k='1;0' if rev else '0;1'
+    s='<path d="%s" fill="none" stroke="%s" stroke-opacity=".45" stroke-width="7" stroke-linecap="round" filter="url(#f-glow)"><animate attributeName="stroke-opacity" values=".25;.55;.25" dur="2.4s" repeatCount="indefinite"></animate></path>'%(cd,col)
+    s+='<path d="%s" fill="none" stroke="#151b1e" stroke-width="2.6" stroke-linecap="round"></path>'%cd
+    s+='<path class="fl evd" d="%s" fill="none" stroke="%s" stroke-width="1.1" stroke-linecap="round" filter="url(#f-dotsm)"%s></path>'%(cd,core,' style="animation-direction:reverse"' if rev else '')
+    for i,b in enumerate((0,dur/3,2*dur/3)):
+        s+='<circle r="%s" fill="%s" filter="url(#f-dot)"><animateMotion dur="%.2fs" begin="-%.2fs" repeatCount="indefinite" keyPoints="%s" keyTimes="0;1" calcMode="linear"><mpath href="#s3-cab-p"></mpath></animateMotion></circle>'%((2.2,1.8,1.5)[i],dot,dur,b,k)
+    # glow at both plugs
+    for (q,r0) in ((WALL,8),((SX,SY+2,13),8)):
+        a,b2=v.p(q[0]+(2 if q is WALL else 0),q[1],q[2]);s+='<circle cx="%.1f" cy="%.1f" r="%d" fill="%s" opacity=".3" filter="url(#f-glow)"><animate attributeName="opacity" values=".15;.45;.15" dur="2.4s" repeatCount="indefinite"></animate></circle>'%(a,b2,r0,col)
+    return '<g id="%s" class="s3f"><g class="lv">%s</g><g class="dd"></g></g>'%(gid,s)
+o.append(cable_live('s3-use','#A8D957','#E3F5C4','#F4FFE6',True,1.9))
+o.append(cable_live('s3-hs','#48B9E8','#CDEFFB','#EAF8FD',False,2.4))
 wbs,_=M.wallcharger(v,92,72,10,'y')
 o.append('<g id="s3-wb">'+wbs+'</g>')
 qx,qy,qz=portw
