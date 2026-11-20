@@ -64,7 +64,7 @@ jobs:
               buildTypes { debug { signingConfig signingConfigs.fixed } }
               defaultConfig {
                   versionCode ${{ github.run_number }}
-                  versionName "3.4.${{ github.run_number }}"
+                  versionName "4.0.${{ github.run_number }}"
               }
           }
           EOF2

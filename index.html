@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=yes">
-<!-- BLACKOUT 3.4.2 | Android-first | local-first -->
+<!-- BLACKOUT 4.0 | Android-first | local-first -->
 <meta name="theme-color" content="#101820">
 <script>(function(){var t='dark';try{var s=JSON.parse(localStorage.getItem('blackout_v1')||'null');if(s&&s.theme==='light')t='light'}catch(e){}var d=document.documentElement;d.setAttribute('data-theme',t);var m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',t==='dark'?'#101820':'#F2F5F7')})()</script>
 <meta name="application-name" content="BLACKOUT">
-<title>BLACKOUT — Energy Management</title>
+<title>BLACKOUT 4.0</title>
 <style>
 :root{--bg:#f5f5f2;--card:#fff;--tx:#1d1d1b;--mut:#6b6b66;--ac:#e8730c;--ok:#2e8b57;--bad:#c0392b;--bd:#e2e2dc;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#151514;--card:#222220;--tx:#f0f0ec;--mut:#9a9a94;--bd:#33332f;color-scheme:dark}}
@@ -372,6 +372,7 @@ body.lite .tsport{animation:none}
 .tsh-badge{display:inline-block;visibility:hidden;margin:0 0 6px;padding:3px 10px;border-radius:20px;background:rgba(168,240,0,.12);color:var(--em);font-weight:700;font-size:13px}.tsh-badge.on{visibility:visible;animation:tspulse 1.8s ease-in-out infinite}.tsh-badge.still{animation:none}
 .tsh-bar.chg i{background:repeating-linear-gradient(90deg,var(--em) 0 10px,var(--em2,#C8FF3D) 10px 20px);background-size:40px 100%;animation:tsbar2 .9s linear infinite}@keyframes tsbar2{to{background-position:40px 0}}.tsh-bar.still i{animation:none}
 @media (prefers-reduced-motion:reduce){.tsh-badge.on,.tsh-bar.chg i{animation:none}}
+body.bo4:not(.pbl){--bg:#090D0B;--bg2:#101613;--card:#151C18;--surf:#151C18;--elev:#1B241F;--bd:#29342E;--t1:#F1F5F2;--t2:#A0ADA4;--t3:#65736A;--tx:#F1F5F2;--mut:#A0ADA4;--em:#A8D957;--ac:#A8D957;--ok:#A8D957;--cy:#8FC24A;--bl:#48B9E8;--lg1:#A8D957;--lg2:#8FC24A;--emrgb:168,217,87;--em2:#C7E89A;--warn:#EFB34F;--bad:#EF665B;--off:#65736A;--on-em:#0B1405;--glow:rgba(168,217,87,.28);background:#090D0B!important;background-image:radial-gradient(120% 55% at 50% 0%,#101613 0%,#090D0B 70%)!important}
 </style>
 </head>
 <body>
@@ -502,7 +503,7 @@ function vSetAll(){
  h+='<div class="card"><h2>Топливо</h2><label>Цена бензина, ₴/л (0 — не считать)</label><input type="number" step="0.1" value="'+S.price+'" onchange="S.price=+this.value||0;save()"></div>';
  h+='<div class="card"><h2>Добавить модели</h2><button onclick="ck=\'s\';setTab(\'cat\')">Открыть каталог</button><label>Импорт списком (по строке на модель): g;Название;л/ч;ТО или s;Название;Вт·ч</label><textarea id="imp"></textarea><button class="sec" onclick="doImp()">Импортировать</button></div>';
  h+='<div class="card"><h2>Резервная копия</h2><button class="sec" onclick="expB()">Показать данные для копирования</button><textarea id="bk" placeholder="Сюда вставьте данные для восстановления" style="margin-top:10px"></textarea><div class="row"><button onclick="cpB()">Копировать</button><button class="sec" onclick="impB()">Восстановить</button></div><div class="mut" style="margin-top:6px">Фото в копию не входят. Сохраните текст в заметках или мессенджере — так данные можно перенести в APK.</div></div>';
- h+='<div class="mut" style="text-align:center">BLACKOUT 3.4.2 · Android Edition</div>';
+ h+='<div class="mut" style="text-align:center">BLACKOUT 4.0 · Android Edition</div>';
  h+='<div class="mut">Значения по умолчанию примерные. Сверьте расход и ёмкость с паспортом. Дані зберігаються локально на цьому пристрої. Резервну копію можна перенести вручну.</div>';
  return h;
 }
@@ -887,11 +888,11 @@ function vPan(){var g=S.gens[S.g]||S.gens[0],r=S.run,sr=S.srun,hr=new Date().get
  function cl(s){return s=='on'?'ONLINE':s=='warn'?'WARNING':'OFFLINE'}
  function sb(v,d,l){return '<div><b data-n="'+v+'" data-d="'+d+'">'+v.toFixed(d).replace('.',',')+'</b><span>'+l+'</span></div>'}
  function tl(v,l){return '<div><b>'+v+'</b><span>'+l+'</span></div>'}
- var h='<div class="ech"><svg class="lg"><use href="#ec-logo"/></svg><div><div class="wm">BLACKOUT UKRAINE</div><div class="nm">Energy in motion</div><div class="hi">'+hi+(S.users[S.usr]?', '+esc(S.users[S.usr]):'')+'</div></div></div>';
+ var h='<div id="bo4slot"></div>';
  h+='<div class="locrow"><select onchange="S.loc=+this.value;save()">'+so(S.locs,S.loc)+'</select><button class="sec gb2" onclick="locDetect()">'+svgi('pin',20)+'</button><select onchange="S.usr=+this.value;save()">'+so(S.users,S.usr)+'</select></div>';
  var ov=(r||sr)?(fuelWarn||svcWarn?'warn':'on'):'off',ovT=fuelWarn?'Внимание: мало топлива':svcWarn&&r?'Пора на ТО':(r&&sr?'Генератор и станция работают':r?'Генератор работает':sr?'Станция работает':'Всё выключено');
  var ring=Math.max(0,Math.min(100,lvl||0)),ctr=(BT.on&&BT.w!=null)?'<div class="cmdv">'+Math.round(BT.w)+'<small>'+UW()+'</small></div><div class="cmdl">Мощность</div>':'<div class="cmdv">'+(lvl==null?'—':pbPct(lvl)+'<small>%</small>')+'</div><div class="cmdl">Заряд станции</div>';
- h+=pbHero(lvl,g,sn,gS,sS,bS);h+=pbMetrics(lvl,sn);h+=schCard(lvl,sn);
+ h+=schCard(lvl,sn);
  h+='<div class="stats">'+tl((r?1:0)+'/'+S.gens.length,'Генераторы активны')+tl((sr?1:0)+'/'+S.sts.length,'Станции активны')+sb(tf2,1,'л топлива')+sb(th,1,'ч сегодня')+sb(g.h,1,'ч наработка')+sb(kc,2,'кВт·ч заряд')+'</div>';
  h+='<div class="pc'+(r?' on':'')+'"><div class="pwrap"><button class="pw'+(r?' on':'')+'" onclick="'+(r?'stopG()':'startG()')+'"><span class="ring"></span>'+PW+'</button></div><div class="pi"><div class="pn eq">'+(g.p?'<img src="'+g.p+'" alt="">':svgi('gen',18))+esc(g.n)+'</div>'+chip(gS,cl(gS))+'<div class="pt" id="tm">'+(r?dur(Date.now()-r):'Выключен')+'</div><div class="mut">'+(r?'Нажмите, чтобы выключить':'Нажмите, чтобы включить')+'</div></div></div>';
  h+='<div class="pc'+(sr?' on':'')+'"><div class="pwrap"><svg class="gz" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" class="gb"/><circle cx="50" cy="50" r="46" class="gf" style="stroke-dasharray:289;stroke-dashoffset:'+(289*(1-ring/100))+'"/></svg><button class="pw'+(sr?' on':'')+'" onclick="'+(sr?'stStop()':'stStart()')+'"><span class="ring"></span>'+PW+'</button></div><div class="pi"><div class="pn eq" onclick="nextSt()">'+(sn&&sn.p?'<img src="'+sn.p+'" alt="">':svgi('bat',18))+esc(sn?sn.n:'—')+(S.sts.length>1&&!sr?' ⇅':'')+'</div>'+chip(sS,cl(sS))+'<div class="pt" id="stm">'+(sr?dur(Date.now()-sr.t):(lvl==null?'—':pbPct(lvl)+' %'))+'</div><div class="mut">'+(BT.on?'● Bluetooth':(sr?'Нажмите, чтобы выключить':'Нажмите, чтобы включить'))+'</div></div></div>';
@@ -1785,6 +1786,306 @@ function btgApply(anim){if(tab!=='bt')return;var app=document.getElementById('ap
 /* ===== Stations tab: live charge for the station connected over Bluetooth ===== */
 function stLive(i){try{if(!BT.on||BT.pct==null)return null;var c=BC(),idx=(c.map&&c.map[BT.id]!=null)?c.map[BT.id]:c.sti;return idx===i?BT.pct:null}catch(e){return null}}
 (function(){var b=btFrame2,last=null;btFrame2=function(){b();try{if(tab==='st'){var p=BT.pct==null?null:Math.floor(BT.pct);if(p!==last){last=p;var y=window.scrollY;render();window.scrollTo(0,y)}}}catch(e){}}})();
+
+/* ===== BLACKOUT 4.0 overview (engine + renderer from proto/overview-4.0-v5.html) ===== */
+(function(){
+var BO4_CSS="\n/* ===== Design tokens — INDUSTRIAL ENERGY PREMIUM (fixed palette) ===== */\n:host{\n --bg:#090D0B;--bg2:#101613;--s1:#151C18;--s2:#1B241F;--b1:#29342E;--b2:#202923;\n --t1:#F1F5F2;--t2:#A0ADA4;--t3:#65736A;\n --grid:#48B9E8;--grid-g:rgba(72,185,232,.15);--grid-v:#72C9ED;\n --gen:#F0A542;--gen-g:rgba(240,165,66,.15);--gen-v:#F3BA70;\n --st:#A8D957;--st-g:rgba(168,217,87,.12);\n --home:#E8EEE9;--home-g:rgba(232,238,233,.08);\n --car:#8D9BA5;--car-on:#A8D957;--car-off:#65736A;\n --err:#EF665B;--warn:#EFB34F;\n --carc:#9A1C24;\n --sp1:4px;--sp2:8px;--sp3:12px;--sp4:16px;--sp5:24px;--r:14px;--ease:cubic-bezier(.2,.8,.2,1)}\n*{box-sizing:border-box}\n:host{display:block;color:var(--t1);font:400 15px/1.35 Inter,system-ui,-apple-system,\"Segoe UI\",Roboto,sans-serif;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}\n\n.wrap{max-width:430px;margin:0 auto;padding:0 6px 6px}\n.num{font-variant-numeric:tabular-nums;font-feature-settings:\"tnum\" 1}\n/* A. Top bar */\n.top{height:52px;display:flex;align-items:center;padding-right:52px}\n.logo{display:flex;align-items:center;gap:8px;font-weight:600;font-size:15px;letter-spacing:.14em}\n.logo svg{display:block}\n.status{margin-left:auto;display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:500;color:var(--t2)}\n.status i{width:7px;height:7px;border-radius:50%;background:var(--st);box-shadow:0 0 0 3px var(--st-g);transition:background .4s,box-shadow .4s}\n.status.warn i{background:var(--warn);box-shadow:0 0 0 3px rgba(239,179,79,.15)}.status.bad i{background:var(--err);box-shadow:0 0 0 3px rgba(239,102,91,.15)}\n.meta{margin-top:-6px;font-size:11.5px;color:var(--t3);letter-spacing:.01em}.meta b{font-weight:500;color:var(--t2)}.test{color:var(--warn);font-weight:600}\n/* B. Charge */\n.charge{display:flex;flex-direction:column;align-items:center;margin-top:22px}\n.ring{position:relative;width:180px;height:180px}\n.ring svg{width:100%;height:100%;display:block;transform:rotate(-90deg)}\n.ring .tr{fill:none;stroke:var(--b1);stroke-width:6}\n.ring .gl{fill:none;stroke:var(--st);stroke-width:12;stroke-linecap:round;opacity:.10;transition:stroke-dashoffset 1s var(--ease)}\n.ring .fg{fill:none;stroke:var(--st);stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset 1s var(--ease),stroke .4s}\n.ring .c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}\n.pct{font-size:62px;font-weight:600;letter-spacing:-2px;line-height:1;transition:opacity .4s}.pct small{font-size:24px;font-weight:500;color:var(--t2);letter-spacing:0;margin-left:2px}\n.dev{font-size:12px;color:var(--t2);margin-top:6px;letter-spacing:.02em}\n.state{margin-top:14px;font-size:14px;font-weight:500;color:var(--t1)}.state span{color:var(--st)}\n.eta{margin-top:2px;font-size:12.5px;color:var(--t2);min-height:17px}\n.charge.stale .fg,.charge.stale .gl{stroke:var(--t3)}.charge.stale .pct{opacity:.5}.charge.stale .state span{color:var(--t2)}\n/* C. Power */\n.pw{display:grid;grid-template-columns:repeat(3,1fr);margin:22px 0 4px}\n.pw>div{padding:0 0 0 14px;border-left:1px solid var(--b2)}.pw>div:first-child{padding-left:0;border-left:0}\n.pw>div>span{display:block;font-size:10.5px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--t3)}\n.pw b{display:block;margin-top:5px;font-size:26px;font-weight:600;letter-spacing:-.5px;white-space:nowrap;transition:color .5s,opacity .4s}\n.pw b small{font-size:12px;font-weight:500;color:var(--t2);margin-left:3px;letter-spacing:0}\n.pw.stale b{opacity:.45}\n/* D/E. Scene and energy lines */\n.scene{margin:14px -20px 0}.scene svg{display:block;width:100%;height:auto}\n.lb{fill:none;stroke:var(--b1);stroke-width:1.2;stroke-linecap:round;transition:stroke .5s}\n.lg{fill:none;stroke-width:4.5;stroke-linecap:round;opacity:0;transition:opacity .8s}\n.lc{fill:none;stroke-width:1.3;stroke-linecap:round;opacity:0;transition:opacity .8s}\n.lp{fill:none;stroke-width:1.8;stroke-linecap:round;stroke-dasharray:1.5 14;opacity:0;transition:opacity .6s}\n.grid .lg{stroke:var(--grid-g);opacity:0}.grid .lc,.grid .lp{stroke:var(--grid)}\n.gen .lg{stroke:var(--gen-g)}.gen .lc,.gen .lp{stroke:var(--gen)}\n.st .lg{stroke:var(--st-g)}.st .lc,.st .lp{stroke:var(--st)}\n.lp{filter:none}\n/* fallback when Web Animations API is unavailable */\n.lp.cssflow{animation:bo-flow 1s linear infinite}@keyframes bo-flow{to{stroke-dashoffset:-15.5}}\n.val{font:500 10.5px Inter,system-ui,sans-serif;transition:opacity .5s}.val.grid{fill:var(--grid-v)}.val.gen{fill:var(--gen-v)}.val.st{fill:var(--st)}\n.nm{font:500 10px Inter,system-ui,sans-serif;fill:var(--t3);letter-spacing:.12em}\n.sv{font:600 12px Inter,system-ui,sans-serif;font-variant-numeric:tabular-nums}\n.node{transition:opacity .6s}.node.off{opacity:.55}\n.win{transition:fill .9s,opacity .9s}\n/* F. Devices */\n.hd2{display:flex;align-items:baseline;justify-content:space-between;margin:18px 0 2px}.hd2 h2{margin:0;font-size:10.5px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--t3)}.hd2 span{font-size:11.5px;color:var(--t3)}\n.row{display:flex;align-items:center;gap:14px;padding:12px 0;border-top:1px solid var(--b2)}.row:first-of-type{border-top:0}\n.row .ic{flex:0 0 56px;height:38px;display:grid;place-items:center}.row .ic svg{max-width:56px;max-height:38px;display:block}\n.row .tx{flex:1;min-width:0}.row b{display:block;font-size:14.5px;font-weight:500}.row .s{font-size:12px;color:var(--t2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.row .s.on{color:var(--st)}\n.row .v{font-size:18px;font-weight:600;text-align:right;min-width:62px}.row .v small{font-size:11.5px;font-weight:500;color:var(--t2);margin-left:1px}\n.row.stale .v,.row.stale .ic{opacity:.45}\n/* Prototype panel (not part of the product UI) */\n.lab{margin-top:30px;border-top:1px dashed var(--b1);padding-top:12px}.lab h3{margin:0 0 8px;font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--warn)}\n.lab .r{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}.lab button{border:1px solid var(--b1);background:var(--s1);color:var(--t1);font:500 12px Inter,system-ui,sans-serif;padding:7px 10px;border-radius:10px}\n.lab button.on{border-color:var(--st);color:var(--st)}.sw{width:24px;height:24px;border-radius:50%;padding:0!important}.sw.on{box-shadow:0 0 0 2px var(--st)}.mono{font:500 11px ui-monospace,monospace;color:var(--t2)}\n@media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important}}\n.gline{margin:8px 0 0;font-size:12px;color:var(--t2);font-variant-numeric:tabular-nums}.gline b{color:var(--grid-v);font-weight:600}.gline.gen b{color:var(--gen-v)}.gline[hidden]{display:none}.row{cursor:pointer}.row:active{opacity:.7}[hidden]{display:none!important}";
+var BO4_HTML="<div class=\"wrap\">\n <!-- A -->\n <div class=\"top\"><div class=\"logo\"><svg width=\"14\" height=\"18\" viewBox=\"0 0 14 18\"><path d=\"M8.6 0 0 10.2h5.4L4.2 18 14 6.9H8.3z\" fill=\"var(--st)\"/></svg>BLACKOUT</div>\n  <div class=\"status\" id=\"pill\"><i></i><span id=\"pillt\">Система ОК</span></div></div>\n <div class=\"meta\"><span id=\"loc\"></span> · <b id=\"fst\">—</b><span class=\"test\" id=\"testlbl\" style=\"display:none\"> · тестові дані</span></div>\n\n <!-- B -->\n <div class=\"charge\" id=\"heroWrap\">\n  <div class=\"ring\"><svg viewBox=\"0 0 180 180\"><circle class=\"tr\" cx=\"90\" cy=\"90\" r=\"82\"/><circle class=\"gl\" id=\"arcglow\" cx=\"90\" cy=\"90\" r=\"82\" pathLength=\"100\" stroke-dasharray=\"100\" stroke-dashoffset=\"100\"/><circle class=\"fg\" id=\"ringfg\" cx=\"90\" cy=\"90\" r=\"82\" pathLength=\"100\" stroke-dasharray=\"100\" stroke-dashoffset=\"100\"/></svg>\n   <div class=\"c\"><div class=\"pct num\"><span id=\"pct\">—</span><small>%</small></div><div class=\"dev\" id=\"stname\">Станція</div></div></div>\n  <div class=\"state\">Станція · <span id=\"mode\">—</span></div><div class=\"eta\" id=\"eta\"></div>\n </div>\n\n <!-- C -->\n <div class=\"pw\" id=\"met\"><div><span>Вхід</span><b class=\"num\" id=\"vinb\"><span id=\"vin\">—</span><small>Вт</small></b></div><div><span>Вихід</span><b class=\"num\"><span id=\"vout\">—</span><small>Вт</small></b></div><div><span id=\"rtl\">Запас</span><b class=\"num\"><span id=\"rt\">—</span><small id=\"rtu\"></small></b></div></div>\n <div class=\"gline\" id=\"gline\" hidden></div>\n\n <!-- D/E -->\n <div class=\"scene\">\n  <svg id=\"flow\" viewBox=\"0 0 360 262\" role=\"img\" aria-label=\"Енергосистема будинку\">\n   <defs>\n    <radialGradient id=\"ground\" cx=\".5\" cy=\".5\" r=\".5\"><stop offset=\"0\" stop-color=\"#151C18\"/><stop offset=\".75\" stop-color=\"#101613\"/><stop offset=\"1\" stop-color=\"#101613\" stop-opacity=\"0\"/></radialGradient>\n    <radialGradient id=\"stpool\" cx=\".5\" cy=\".5\" r=\".5\"><stop offset=\"0\" stop-color=\"rgba(168,217,87,.16)\"/><stop offset=\"1\" stop-color=\"rgba(168,217,87,0)\"/></radialGradient>\n    <radialGradient id=\"warm\" cx=\".5\" cy=\".5\" r=\".5\"><stop offset=\"0\" stop-color=\"rgba(243,217,164,.22)\"/><stop offset=\"1\" stop-color=\"rgba(243,217,164,0)\"/></radialGradient>\n    <linearGradient id=\"wallF\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#202923\"/><stop offset=\"1\" stop-color=\"#151C18\"/></linearGradient>\n    <linearGradient id=\"wallS\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"0\"><stop offset=\"0\" stop-color=\"#171F1B\"/><stop offset=\"1\" stop-color=\"#101613\"/></linearGradient>\n    <linearGradient id=\"roofG\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#2E3a33\"/><stop offset=\"1\" stop-color=\"#202923\"/></linearGradient>\n    <linearGradient id=\"winL\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#F6E3BA\"/><stop offset=\"1\" stop-color=\"#E9C58A\"/></linearGradient>\n    <linearGradient id=\"stF\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#2B3530\"/><stop offset=\"1\" stop-color=\"#161D19\"/></linearGradient>\n    <linearGradient id=\"stS\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"0\"><stop offset=\"0\" stop-color=\"#1C2420\"/><stop offset=\"1\" stop-color=\"#111714\"/></linearGradient>\n    <linearGradient id=\"stT\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#3A463F\"/><stop offset=\"1\" stop-color=\"#29342E\"/></linearGradient>\n    <linearGradient id=\"genB\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#2A332E\"/><stop offset=\"1\" stop-color=\"#171E1A\"/></linearGradient>\n    <linearGradient id=\"carSh\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".22\"/><stop offset=\".5\" stop-color=\"#fff\" stop-opacity=\"0\"/><stop offset=\"1\" stop-color=\"#000\" stop-opacity=\".35\"/></linearGradient>\n    <clipPath id=\"carClip\"><path d=\"M6 32C6 27 9 24 14 23L30 20C38 13 48 9 62 9C76 9 88 13 98 20L108 22C113 23 116 26 116 31V34C116 36 114 37 112 37H8C6.5 37 6 36 6 34Z\"/></clipPath>\n    <clipPath id=\"tankClip\"><rect x=\"0\" y=\"0\" width=\"7\" height=\"22\" rx=\"2\"/></clipPath>\n   </defs>\n\n   <!-- ground -->\n   <ellipse cx=\"180\" cy=\"214\" rx=\"186\" ry=\"46\" fill=\"url(#ground)\"/>\n   <ellipse cx=\"72\" cy=\"232\" rx=\"70\" ry=\"16\" fill=\"url(#stpool)\" id=\"stglow\" opacity=\".3\" style=\"transition:opacity .8s\"/>\n\n   <!-- energy lines (behind objects) -->\n   <g id=\"links\"></g>\n\n   <!-- generator (top left) : open frame, fuel tank with real level -->\n   <g class=\"node\" id=\"n-gen\" transform=\"translate(38 18)\">\n    <ellipse cx=\"27\" cy=\"44\" rx=\"28\" ry=\"4\" fill=\"#000\" opacity=\".5\"/>\n    <rect x=\"2\" y=\"12\" width=\"50\" height=\"30\" rx=\"3\" fill=\"none\" stroke=\"#3A463F\" stroke-width=\"2\"/>\n    <rect x=\"8\" y=\"20\" width=\"26\" height=\"18\" rx=\"2\" fill=\"url(#genB)\"/>\n    <circle cx=\"42\" cy=\"29\" r=\"6\" fill=\"#101613\" stroke=\"#3A463F\" stroke-width=\"1.2\"/><circle cx=\"42\" cy=\"29\" r=\"2\" fill=\"#29342E\"/>\n    <rect x=\"6\" y=\"3\" width=\"40\" height=\"10\" rx=\"3\" fill=\"url(#genB)\" stroke=\"#29342E\"/>\n    <g transform=\"translate(-10 14)\"><rect width=\"7\" height=\"22\" rx=\"2\" fill=\"#101613\" stroke=\"#29342E\"/><g clip-path=\"url(#tankClip)\"><rect id=\"genfuel\" x=\"0\" y=\"22\" width=\"7\" height=\"22\" fill=\"var(--gen)\" opacity=\".85\" style=\"transition:y .9s var(--ease)\"/></g></g>\n    <text x=\"27\" y=\"60\" text-anchor=\"middle\" class=\"nm\">ГЕНЕРАТОР</text>\n    <text x=\"27\" y=\"74\" text-anchor=\"middle\" class=\"sv\" id=\"genv\" style=\"fill:var(--gen-v)\">—</text>\n    <text x=\"27\" y=\"87\" text-anchor=\"middle\" class=\"val\" id=\"genfuelv\" style=\"fill:var(--t3)\">бак —</text>\n   </g>\n\n   <!-- grid (top right) -->\n   <g class=\"node\" id=\"n-grid\" transform=\"translate(274 4)\">\n    <g fill=\"none\" stroke=\"#3A463F\" stroke-width=\"1.2\" stroke-linejoin=\"round\"><path d=\"M22 2 13 54M22 2l9 52M10 12h24M12 22h20M15 36h14M14 22l15 14M30 22 15 36M16 36l13 18M28 36 16 54\"/></g>\n    <ellipse cx=\"22\" cy=\"56\" rx=\"13\" ry=\"2.6\" fill=\"#000\" opacity=\".45\"/>\n    <text x=\"22\" y=\"74\" text-anchor=\"middle\" class=\"nm\">МЕРЕЖА</text>\n    <text x=\"22\" y=\"88\" text-anchor=\"middle\" class=\"sv\" id=\"gridv\" style=\"fill:var(--grid-v)\">—</text>\n   </g>\n\n   <!-- house (center) : two volumes, mono-pitch roofs -->\n   <g transform=\"translate(116 96)\">\n    <ellipse cx=\"66\" cy=\"96\" rx=\"82\" ry=\"10\" fill=\"#000\" opacity=\".55\"/>\n    <ellipse cx=\"62\" cy=\"88\" rx=\"70\" ry=\"20\" fill=\"url(#warm)\" id=\"hglow\" opacity=\"0\" style=\"transition:opacity .9s\"/>\n    <path d=\"M0 30 L78 10 L78 92 L0 92 Z\" fill=\"url(#wallF)\"/>\n    <path d=\"M-3 31 L79 9\" stroke=\"#3A463F\" stroke-width=\"2.2\" stroke-linecap=\"round\"/>\n    <path d=\"M78 34 L132 26 L132 92 L78 92 Z\" fill=\"url(#wallS)\"/>\n    <path d=\"M76 35 L134 25\" stroke=\"#3A463F\" stroke-width=\"2\" stroke-linecap=\"round\"/>\n    <rect class=\"win\" id=\"w1\" x=\"10\" y=\"40\" width=\"26\" height=\"30\" rx=\"1\" fill=\"#1B241F\"/>\n    <rect class=\"win\" id=\"w2\" x=\"42\" y=\"34\" width=\"26\" height=\"36\" rx=\"1\" fill=\"#1B241F\"/>\n    <rect class=\"win\" id=\"w3\" x=\"88\" y=\"46\" width=\"36\" height=\"20\" rx=\"1\" fill=\"#1B241F\"/>\n    <rect x=\"42\" y=\"74\" width=\"14\" height=\"18\" fill=\"#0E1411\"/><rect class=\"win\" id=\"w4\" x=\"10\" y=\"76\" width=\"26\" height=\"8\" rx=\"1\" fill=\"#1B241F\"/>\n    <rect x=\"88\" y=\"72\" width=\"36\" height=\"20\" fill=\"#0E1411\"/><path d=\"M88 77h36M88 82h36M88 87h36\" stroke=\"#151C18\" stroke-width=\"1\"/>\n    <rect x=\"127\" y=\"54\" width=\"4\" height=\"8\" rx=\"1\" fill=\"#202923\" stroke=\"#3A463F\" stroke-width=\".7\"/><circle cx=\"129\" cy=\"57\" r=\".9\" fill=\"var(--grid)\" id=\"wcled\" opacity=\".25\"/>\n    <path d=\"M-6 92 H138\" stroke=\"#29342E\" stroke-width=\"1.4\"/>\n   </g>\n\n   <!-- station (bottom left) : stylised portable power station -->\n   <g transform=\"translate(28 182)\" id=\"n-st\">\n    <ellipse cx=\"44\" cy=\"58\" rx=\"46\" ry=\"5\" fill=\"#000\" opacity=\".55\"/>\n    <path d=\"M4 12 L16 4 L84 4 L72 12 Z\" fill=\"url(#stT)\"/>\n    <path d=\"M72 12 L84 4 L84 46 L72 54 Z\" fill=\"url(#stS)\"/>\n    <rect x=\"4\" y=\"12\" width=\"68\" height=\"42\" rx=\"3\" fill=\"url(#stF)\"/>\n    <path d=\"M20 8 L25 0 L64 0 L59 8\" fill=\"none\" stroke=\"#4A5650\" stroke-width=\"2.4\" stroke-linejoin=\"round\"/>\n    <rect x=\"9\" y=\"17\" width=\"58\" height=\"32\" rx=\"2.5\" fill=\"#101613\"/>\n    <rect x=\"13\" y=\"21\" width=\"21\" height=\"12\" rx=\"1.5\" fill=\"#090D0B\" stroke=\"rgba(168,217,87,.45)\" stroke-width=\".8\"/>\n    <rect x=\"15\" y=\"29\" width=\"13\" height=\"1.8\" rx=\".9\" fill=\"var(--st)\" id=\"stbar\"/>\n    <g fill=\"#090D0B\" stroke=\"#29342E\" stroke-width=\".6\"><rect x=\"39\" y=\"21\" width=\"7\" height=\"5\" rx=\"1\"/><rect x=\"49\" y=\"21\" width=\"7\" height=\"5\" rx=\"1\"/><circle cx=\"61\" cy=\"23.5\" r=\"2.2\"/>\n     <rect x=\"13\" y=\"38\" width=\"9\" height=\"7\" rx=\"1.6\"/><rect x=\"25\" y=\"38\" width=\"9\" height=\"7\" rx=\"1.6\"/><rect x=\"39\" y=\"38\" width=\"9\" height=\"7\" rx=\"1.6\"/><rect x=\"51\" y=\"38\" width=\"9\" height=\"7\" rx=\"1.6\"/></g>\n    <circle cx=\"63.5\" cy=\"41.5\" r=\"1.4\" fill=\"var(--st)\"/>\n    <path d=\"M76 14v34M79 12v34\" stroke=\"#0E1411\" stroke-width=\"1\"/>\n   </g>\n\n   <!-- car (right) : minimal EV icon that fills with energy -->\n   <g id=\"carico\" transform=\"translate(236 192)\">\n    <ellipse cx=\"61\" cy=\"42\" rx=\"56\" ry=\"3.4\" fill=\"#000\" opacity=\".55\"/>\n    <path d=\"M6 32C6 27 9 24 14 23L30 20C38 13 48 9 62 9C76 9 88 13 98 20L108 22C113 23 116 26 116 31V34C116 36 114 37 112 37H8C6.5 37 6 36 6 34Z\" fill=\"#141B17\"/>\n    <g clip-path=\"url(#carClip)\"><rect id=\"carfill\" x=\"6\" y=\"0\" width=\"0\" height=\"40\" fill=\"var(--car-off)\" style=\"transition:width 1s var(--ease),fill .6s\"/><rect id=\"carfilledge\" x=\"6\" y=\"0\" width=\"1.5\" height=\"40\" fill=\"#F1F5F2\" opacity=\"0\" style=\"transition:x 1s var(--ease),opacity .6s\"/></g>\n    <path d=\"M6 32C6 27 9 24 14 23L30 20C38 13 48 9 62 9C76 9 88 13 98 20L108 22C113 23 116 26 116 31V34C116 36 114 37 112 37H8C6.5 37 6 36 6 34Z\" fill=\"url(#carSh)\"/>\n    <path d=\"M6 32C6 27 9 24 14 23L30 20C38 13 48 9 62 9C76 9 88 13 98 20L108 22C113 23 116 26 116 31V34C116 36 114 37 112 37H8C6.5 37 6 36 6 34Z\" fill=\"none\" style=\"stroke:var(--carc)\" stroke-width=\"1.6\" stroke-linejoin=\"round\"/>\n    <path d=\"M35 20.5C43 14.5 51 12 62 12C74 12 84 15 92.5 20.5Z\" fill=\"#0B100E\" stroke=\"#29342E\" stroke-width=\".7\"/><path d=\"M64 12.4V20.5\" style=\"stroke:var(--carc)\" stroke-width=\"1.2\"/>\n    <path d=\"M18 37A10 10 0 0 1 38 37Z M84 37A10 10 0 0 1 104 37Z\" fill=\"#090D0B\"/>\n    <circle cx=\"28\" cy=\"37\" r=\"7.2\" fill=\"#0B100E\" stroke=\"#3A463F\" stroke-width=\"1\"/><circle cx=\"28\" cy=\"37\" r=\"3.4\" fill=\"none\" stroke=\"#65736A\" stroke-width=\"1\"/>\n    <circle cx=\"94\" cy=\"37\" r=\"7.2\" fill=\"#0B100E\" stroke=\"#3A463F\" stroke-width=\"1\"/><circle cx=\"94\" cy=\"37\" r=\"3.4\" fill=\"none\" stroke=\"#65736A\" stroke-width=\"1\"/>\n    <path d=\"M106 23.6L114 25.6\" stroke=\"#E8EEE9\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M8 26.4L13.5 25.3\" stroke=\"#EF665B\" stroke-width=\"1.5\" stroke-linecap=\"round\"/>\n    <circle class=\"evport\" cx=\"13\" cy=\"29\" r=\"1.8\" fill=\"var(--grid)\" opacity=\"0\" style=\"transition:opacity .6s\"/>\n    <text x=\"61\" y=\"55\" text-anchor=\"middle\" class=\"sv\" id=\"carpct\">—</text>\n    <text x=\"61\" y=\"67\" text-anchor=\"middle\" class=\"val\" id=\"carlbl\" style=\"fill:var(--t3)\">Tesla</text>\n   </g>\n  </svg>\n </div>\n\n <!-- F -->\n <div class=\"hd2\"><h2>Пристрої</h2><span id=\"devcount\"></span></div>\n <div class=\"row\" id=\"dcard\"><div class=\"ic\"><svg viewBox=\"0 0 90 62\"><path d=\"M4 12 L16 4 L84 4 L72 12 Z\" fill=\"url(#stT)\"/><path d=\"M72 12 L84 4 L84 46 L72 54 Z\" fill=\"url(#stS)\"/><rect x=\"4\" y=\"12\" width=\"68\" height=\"42\" rx=\"3\" fill=\"url(#stF)\"/><rect x=\"9\" y=\"17\" width=\"58\" height=\"32\" rx=\"2.5\" fill=\"#101613\"/><rect x=\"13\" y=\"21\" width=\"21\" height=\"12\" rx=\"1.5\" fill=\"#090D0B\" stroke=\"rgba(168,217,87,.45)\" stroke-width=\".8\"/><rect x=\"15\" y=\"29\" width=\"13\" height=\"1.8\" rx=\".9\" fill=\"#A8D957\"/></svg></div>\n  <div class=\"tx\"><b id=\"stname2\">Станція</b><div class=\"s on\" id=\"dst\">—</div></div><div class=\"v num\"><span id=\"dpct\">—</span><small>%</small></div></div>\n <div class=\"row\" id=\"gcard\"><div class=\"ic\"><svg viewBox=\"-12 0 66 46\"><rect x=\"2\" y=\"12\" width=\"50\" height=\"30\" rx=\"3\" fill=\"none\" stroke=\"#3A463F\" stroke-width=\"2\"/><rect x=\"8\" y=\"20\" width=\"26\" height=\"18\" rx=\"2\" fill=\"#202923\"/><circle cx=\"42\" cy=\"29\" r=\"6\" fill=\"#101613\" stroke=\"#3A463F\" stroke-width=\"1.2\"/><rect x=\"6\" y=\"3\" width=\"40\" height=\"10\" rx=\"3\" fill=\"#202923\"/><rect x=\"-10\" y=\"14\" width=\"7\" height=\"22\" rx=\"2\" fill=\"#101613\" stroke=\"#29342E\"/><rect id=\"gfuel2\" x=\"-10\" y=\"25\" width=\"7\" height=\"11\" rx=\"1.5\" fill=\"#F0A542\" opacity=\".85\"/></svg></div>\n  <div class=\"tx\"><b id=\"gname\">Генератор</b><div class=\"s\" id=\"gst\">—</div></div><div class=\"v num\"><span id=\"gpct\">—</span><small>% бак</small></div></div>\n <div class=\"row\" id=\"ccard\"><div class=\"ic\"><svg viewBox=\"4 6 114 40\"><path d=\"M6 32C6 27 9 24 14 23L30 20C38 13 48 9 62 9C76 9 88 13 98 20L108 22C113 23 116 26 116 31V34C116 36 114 37 112 37H8C6.5 37 6 36 6 34Z\" fill=\"#141B17\" style=\"stroke:var(--carc)\" stroke-width=\"2\"/><circle cx=\"28\" cy=\"37\" r=\"7\" fill=\"#0B100E\" stroke=\"#3A463F\"/><circle cx=\"94\" cy=\"37\" r=\"7\" fill=\"#0B100E\" stroke=\"#3A463F\"/></svg></div>\n  <div class=\"tx\"><b id=\"cname\">Tesla</b><div class=\"s\" id=\"cst\">—</div></div><div class=\"v num\"><span id=\"cpct\">—</span><small>%</small></div></div>\n\n <div class=\"lab\"><h3>Панель прототипу · тестова телеметрія</h3>\n  <div class=\"r\" id=\"scen\"></div>\n  <div class=\"r\"><span class=\"mono\">Колір кузова:</span><span id=\"ccol\"></span></div>\n  <div class=\"r mono\" id=\"warn\" style=\"color:var(--warn);line-height:1.5\"></div>\n  <div class=\"r\"><button id=\"mot\">Анімація: увімк</button><button id=\"fpsbtn\">FPS</button><span class=\"mono\" id=\"fps\"></span></div></div>\n</div>";
+
+var BO_DEV_DEFAULT=false;
+/*ENGINE-START*/
+/* =====================================================================
+   BLACKOUT 4.0 — Telemetry Store, Data Validation, Energy Balance Engine
+   Pure logic: no DOM access. One computed result feeds every UI part.
+   ===================================================================== */
+var BO_LIMITS={station:15000,grid:30000,gen:30000,car:120000,home:30000};
+var BO_STATION_AC_MAX_W=2400;   /* Fossibot F2400 rated AC output; used only to flag overload, never to block charging */
+var BO_MIN_FLOW_W=5;            /* below this a flow is treated as zero */
+
+/* ---------- Telemetry Store ----------
+   Keeps the last sample per source with the time it was RECEIVED. Rendering never touches timestamps. */
+function TelemetryStore(){this.d={};this.subs=[]}
+TelemetryStore.prototype.set=function(k,sample,now){var v={},key;for(key in sample)if(Object.prototype.hasOwnProperty.call(sample,key))v[key]=sample[key];
+ v.t=(typeof sample.t==='number')?sample.t:(now!=null?now:Date.now());if(v.link==null)v.link=true;this.d[k]=v;this.emit(k)};
+TelemetryStore.prototype.markOffline=function(k){if(this.d[k]){this.d[k].link=false;this.emit(k)}else{this.d[k]={link:false,t:null};this.emit(k)}};
+TelemetryStore.prototype.get=function(k){return this.d[k]};
+TelemetryStore.prototype.clear=function(){this.d={};this.emit('*')};
+TelemetryStore.prototype.on=function(f){this.subs.push(f)};
+TelemetryStore.prototype.emit=function(k){for(var i=0;i<this.subs.length;i++){try{this.subs[i](k)}catch(e){}}};
+TelemetryStore.prototype.snapshot=function(){var o={},k;for(k in this.d)o[k]=this.d[k];return o};
+
+/* ONLINE: fresh data; OFFLINE: link lost (explicit); STALE: data older than its limit; UNKNOWN: never received */
+function sourceState(sample,limit,now){if(!sample)return 'UNKNOWN';if(sample.link===false)return 'OFFLINE';if(typeof sample.t!=='number')return 'UNKNOWN';if(now-sample.t>limit)return 'STALE';return 'ONLINE'}
+
+/* ---------- Data Validation ---------- */
+function num_(v){return (typeof v==='number'&&isFinite(v))?v:null}
+function validate(raw){var issues=[],out={};
+ function W(src,field,v){var n=num_(v);if(v!=null&&n==null){issues.push({level:'warn',code:'nan_'+src+'_'+field,text:'некоректне значення '+field+' ('+src+')'});return null}
+  if(n!=null&&n<0){issues.push({level:'warn',code:'neg_'+src+'_'+field,text:'від’ємна потужність '+field+' ('+src+') відкинута'});return null}return n}
+ function SOC(src,v){var n=num_(v);if(v!=null&&n==null){issues.push({level:'warn',code:'nan_'+src+'_soc',text:'некоректний рівень заряду ('+src+')'});return null}
+  if(n==null)return null;if(n<0||n>100){issues.push({level:'error',code:'soc_range_'+src,text:'рівень заряду '+n+'% поза межами 0–100% ('+src+')'});return null}return n}
+ var s=raw.station;if(s){out.station={pct:SOC('станція',s.pct),inW:W('станція','вхід',s.inW),outW:W('станція','вихід',s.outW),tf:num_(s.tf),te:num_(s.te),t:s.t,link:s.link};
+  if(out.station.tf!=null&&(out.station.tf<0||out.station.tf>6000))out.station.tf=null;if(out.station.te!=null&&(out.station.te<0||out.station.te>200000))out.station.te=null;
+  if(BO_STATION_AC_MAX_W&&out.station.outW!=null&&out.station.outW>BO_STATION_AC_MAX_W)issues.push({level:'error',code:'overload',text:'вихід станції '+Math.round(out.station.outW)+' Вт перевищує номінальні '+BO_STATION_AC_MAX_W+' Вт'})}
+ var g=raw.grid;if(g){out.grid={on:typeof g.on==='boolean'?g.on:(g.on===1?true:g.on===0?false:null),V:num_(g.V),t:g.t,link:g.link};if(out.grid.on==null)issues.push({level:'warn',code:'grid_state',text:'стан мережі не визначено'})}
+ var n=raw.gen;if(n){out.gen={on:typeof n.on==='boolean'?n.on:(n.on===1?true:n.on===0?false:null),fuel:n.fuel==null?null:SOC('бак генератора',n.fuel),t:n.t,link:n.link}}
+ var c=raw.car;if(c){out.car={pct:SOC('Tesla',c.pct),kW:c.kW==null?null:W('Tesla','зарядка',c.kW),st:c.st,src:c.src,t:c.t,link:c.link}}
+ var h=raw.home;if(h){out.home={W:W('будинок','споживання',h.W),t:h.t,link:h.link}}
+ return {data:out,issues:issues}}
+
+/* ---------- Energy Balance Engine ----------
+   Physical scheme of this home:
+   1) generator may feed the house directly and charge the station at the same time;
+   2) grid may feed the house directly and charge the station at the same time;
+   3) Tesla charges from the grid only;
+   4) the station feeds the house only when no alternative source is CONFIRMED;
+   5) there is no station -> Tesla path;
+   6) generator + grid both confirmed = source conflict (error), never resolved by priority. */
+function computeBalance(raw,now){var V=validate(raw||{}),D=V.data,issues=V.issues.slice(),L=BO_LIMITS,M=BO_MIN_FLOW_W;
+ var S={station:sourceState(D.station,L.station,now),grid:sourceState(D.grid,L.grid,now),gen:sourceState(D.gen,L.gen,now),car:sourceState(D.car,L.car,now),home:sourceState(D.home,L.home,now)};
+ var st=D.station,gr=D.grid,gn=D.gen,car=D.car,hm=D.home,on=function(k){return S[k]==='ONLINE'};
+ var gridOn=on('grid')&&gr.on===true,gridOff=on('grid')&&gr.on===false,genOn=on('gen')&&gn.on===true,genOff=on('gen')&&gn.on===false;
+ var stIn=on('station')?st.inW:null,stOut=on('station')?st.outW:null;
+ /* --- who feeds the house --- */
+ var feed;
+ if(genOn&&gridOn){feed='conflict';issues.push({level:'error',code:'conflict',text:'одночасно підтверджені генератор і мережа — перевірте перемикач джерел'})}
+ else if(genOn)feed='gen';else if(gridOn)feed='grid';
+ else if(on('station')&&stOut!=null&&stOut>M)feed='station';      /* measured output and no confirmed alternative */
+ else if(gridOff&&(genOff||S.gen==='UNKNOWN')&&on('station'))feed='none';   /* outage, station idle */
+ else feed='unknown';
+ if(feed==='station'&&!gridOff)issues.push({level:'warn',code:'grid_unknown',text:'стан мережі невідомий ('+stateUa(S.grid)+') — будинок живиться від станції за її вимірами'});
+ if(feed==='station'&&(S.gen==='STALE'||S.gen==='OFFLINE'))issues.push({level:'warn',code:'gen_unknown',text:'стан генератора невідомий ('+stateUa(S.gen)+')'});
+ if((feed==='gen'||feed==='grid')&&stOut!=null&&stOut>M)issues.push({level:'warn',code:'st_out_ignored',text:'вихід станції '+Math.round(stOut)+' Вт при живленні від '+(feed==='gen'?'генератора':'мережі')+' — потік станція→будинок не показано'});
+ if((feed==='station'||feed==='none'||feed==='unknown')&&stIn!=null&&stIn>M)issues.push({level:'warn',code:'st_in_unconfirmed',text:'вхід станції '+Math.round(stIn)+' Вт без підтвердженого джерела'});
+ /* --- house load: meter if online; in an outage it equals the station output --- */
+ var homeW=on('home')?hm.W:(feed==='station'?stOut:null);
+ /* --- car --- */
+ var carChg=on('car')&&car.st===5,carW=carChg&&car.kW!=null?Math.round(car.kW*1000):null,carFromGrid=carChg&&gridOn&&feed!=='conflict';
+ if(car&&car.src==='station')issues.push({level:'error',code:'car_from_station',text:'джерело зарядки Tesla «станція» неможливе у цій схемі — потік не показано'});
+ if(carChg&&!gridOn)issues.push({level:'warn',code:'car_src_unknown',text:'Tesla заряджається, але мережа не підтверджена — джерело невідоме'});
+ /* --- flows: one record per line; state on | supply (supply confirmed, power unknown) | idle | stale | conflict --- */
+ var F={};
+ function src(feedName,stateKey){if(feed==='conflict'&&(feedName==='gen'||feedName==='grid'))return 'conflict';return feed===feedName?'active':(S[stateKey]==='STALE'||S[stateKey]==='OFFLINE'?'unknown':'inactive')}
+ ['gen','grid'].forEach(function(k){var s=src(k,k);
+  F[k+'home']=s==='conflict'?{state:'conflict',w:null}:s==='active'?(homeW!=null?(homeW>M?{state:'on',w:homeW}:{state:'idle',w:homeW}):{state:'supply',w:null}):{state:s==='unknown'?'stale':'idle',w:null};
+  F[k+'st']=s==='conflict'?{state:'conflict',w:null}:s==='active'?(on('station')?(stIn>M?{state:'on',w:stIn}:{state:'idle',w:stIn}):{state:'stale',w:null}):{state:'idle',w:null}});
+ F.use=feed==='station'?{state:'on',w:stOut}:(feed==='unknown'&&D.station&&!on('station')?{state:'stale',w:null}:{state:'idle',w:null});
+ F.gridcar=carFromGrid&&carW!=null?(carW>M?{state:'on',w:carW}:{state:'idle',w:carW}):(D.car&&D.car.st===5&&!on('car')?{state:'stale',w:null}:{state:'idle',w:null});
+ /* invariant: there is no station -> car flow at all (the line does not exist) */
+ /* --- source totals: only when every term is measured --- */
+ var genLoad=null,gridLoad=null;
+ if(feed==='gen'&&homeW!=null&&stIn!=null)genLoad=homeW+stIn;
+ if(feed==='grid'&&homeW!=null&&stIn!=null)gridLoad=homeW+stIn+(carFromGrid&&carW!=null?carW:0);
+ /* --- station mode and forecast (from the station's own estimates) --- */
+ var mode=null,fc=null;
+ if(on('station')&&stIn!=null&&stOut!=null){mode=stIn>stOut+M?'charging':stOut>M?'discharging':'idle';
+  if(mode==='charging')fc=st.tf!=null?{kind:'full',min:st.tf}:{kind:'full',min:null};else if(mode==='discharging')fc=st.te!=null?{kind:'empty',min:st.te}:{kind:'empty',min:null}}
+ /* --- overall status --- */
+ var anyOnline=['station','grid','gen','car','home'].some(on),hasErr=issues.some(function(i){return i.level==='error'}),status;
+ if(feed==='conflict')status={level:'bad',text:'Конфлікт джерел'};
+ else if(!anyOnline)status={level:'bad',text:'Немає даних'};
+ else if(!on('station'))status={level:'warn',text:'Станція без зв’язку'};
+ else if(hasErr)status={level:'warn',text:'Помилка даних'};
+ else if(feed==='gen')status={level:'warn',text:gridOff?'Відключення · генератор':'Генератор'};
+ else if(feed==='station'||feed==='none')status={level:'warn',text:'Відключення'};
+ else if(feed==='grid')status={level:'ok',text:'Система ОК'};
+ else status={level:'warn',text:'Стан невідомий'};
+ return {now:now,states:S,data:D,feed:feed,flows:F,issues:issues,status:status,
+  station:{pct:st?st.pct:null,inW:st?st.inW:null,outW:st?st.outW:null,state:S.station,age:st&&typeof st.t==='number'?now-st.t:null,mode:mode,forecast:fc},
+  home:{W:homeW,measured:on('home')},gen:{on:gn?gn.on:null,state:S.gen,fuel:gn?gn.fuel:null,load:genLoad},grid:{on:gr?gr.on:null,state:S.grid,load:gridLoad},
+  car:{pct:car?car.pct:null,state:S.car,charging:carChg,kW:carChg?car.kW:null,fromGrid:carFromGrid,age:car&&typeof car.t==='number'?now-car.t:null}}}
+function stateUa(s){return {ONLINE:'на зв’язку',OFFLINE:'зв’язок втрачено',STALE:'дані застаріли',UNKNOWN:'невідомо'}[s]||s}
+
+/*ENGINE-END*/
+
+/* =====================================================================
+   BLACKOUT 4.0 — Flow Renderer, UI Renderer, Diagnostics, dev simulator
+   Everything below reads ONLY the result of computeBalance().
+   ===================================================================== */
+var Tel=new TelemetryStore();
+var BO_DEV=/[?&#]dev\b/.test(location.href)||(function(){try{return localStorage.getItem('bo_dev')==='1'}catch(e){return false}})()||(typeof BO_DEV_DEFAULT!=='undefined'&&BO_DEV_DEFAULT);
+var MOTION=!(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches);
+function $(id){return ROOT?ROOT.getElementById(id):null}
+function txt(id,t){var e=$(id);if(e&&e.textContent!==t)e.textContent=t}
+function cls(id,c,on){var e=$(id);if(e)e.classList.toggle(c,!!on)}
+function attr(id,a,v){var e=$(id);if(e)e.setAttribute(a,v)}
+function ago(ms){if(ms==null)return '';var s=Math.round(ms/1000);return s<60?s+' с тому':s<3600?Math.round(s/60)+' хв тому':Math.round(s/3600)+' год тому'}
+function fmtW(w){return w>=1000?(Math.round(w/100)/10).toString().replace('.',',')+' кВт':Math.round(w)+' Вт'}
+
+/* ---------- Flow Renderer ---------- */
+var LINKS=[
+ {id:'genhome',cls:'gen',d:'M78 112 C96 114 110 120 120 128',lx:102,ly:110,a:'start'},
+ {id:'genst',cls:'gen',d:'M56 114 C46 140 48 164 58 182',lx:42,ly:156,a:'end'},
+ {id:'gridhome',cls:'grid',d:'M284 100 C270 106 258 116 250 126',lx:262,ly:104,a:'end'},
+ {id:'gridst',cls:'grid',d:'M292 102 C282 112 270 124 262 138 M118 168 C104 172 96 176 90 182',lx:104,ly:160,a:'end'},
+ {id:'use',cls:'st',d:'M100 206 C116 204 128 198 138 188',lx:142,ly:212,a:'start'},
+ {id:'gridcar',cls:'grid',d:'M306 102 C318 130 316 166 302 196',lx:304,ly:150,a:'end'}];
+var HAS_WAAPI=typeof Element!=='undefined'&&typeof Element.prototype.animate==='function';
+var Flow={init:function(){var g=$('links');if(!g)return;var h='';LINKS.forEach(function(l){h+='<g id="lk-'+l.id+'" class="'+l.cls+'"><path class="lb" d="'+l.d+'"/><path class="lg" d="'+l.d+'"/><path class="lc" d="'+l.d+'"/><path class="lp" d="'+l.d+'"/><text class="val '+l.cls+'" x="'+l.lx+'" y="'+l.ly+'" text-anchor="'+l.a+'"></text></g>'});g.innerHTML=h;
+  LINKS.forEach(function(l){var gl=$('lk-'+l.id);l.base=gl.querySelector('.lb');l.gl=gl.querySelector('.lg');l.core=gl.querySelector('.lc');l.el=gl.querySelector('.lp');l.tx=gl.querySelector('.val');l.rate=0;l.an=null;
+   /* Web Animations when available; otherwise a CSS animation controlled through duration/direction/play-state */
+   if(HAS_WAAPI){try{l.an=l.el.animate([{strokeDashoffset:0},{strokeDashoffset:-15.5}],{duration:1000,iterations:Infinity});l.an.playbackRate=0}catch(e){l.an=null}}
+   if(!l.an){l.el.classList.add('cssflow');l.el.style.animationPlayState='paused'}})},
+ rateFor:function(w){if(!(w>BO_MIN_FLOW_W))return 0;return Math.min(2.4,.3+Math.log10(w)*.58)},
+ applyRate:function(l,v){l.rate=v;if(l.an){try{if(typeof l.an.updatePlaybackRate==='function')l.an.updatePlaybackRate(v);else l.an.playbackRate=v}catch(e){}}
+  else{if(Math.abs(v)<.01){l.el.style.animationPlayState='paused'}else{l.el.style.animationDuration=(1/Math.abs(v)).toFixed(3)+'s';l.el.style.animationDirection=v<0?'reverse':'normal';l.el.style.animationPlayState=!ACTIVE()?'paused':'running'}}},
+ tween:function(l,target){if(l._r)cancelAnimationFrame(l._r);if(!ACTIVE()||!l.an){this.applyRate(l,target);return}var self=this,from=l.rate,t0=performance.now(),D=700;
+  (function step(t){var k=Math.min(1,(t-t0)/D),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;self.applyRate(l,from+(target-from)*e);l._r=k<1?requestAnimationFrame(step):0})(t0)},
+ set:function(id,f){var l=null;for(var i=0;i<LINKS.length;i++)if(LINKS[i].id===id)l=LINKS[i];if(!l||!l.el)return;var w=f.w,on=f.state==='on'&&w>BO_MIN_FLOW_W,k=Math.min(1,.2+Math.log10(Math.max(w||1,1))/4.2);
+  l.el.style.opacity=on?.95:0;l.core.style.opacity=on?(.4+.55*k):(f.state==='supply'?.35:0);l.gl.style.opacity=on?(.4+.6*k):0;
+  l.base.style.strokeDasharray=(f.state==='stale'||f.state==='conflict')?'2 4':'';l.base.style.stroke=f.state==='conflict'?'var(--err)':'';
+  if(l.tx){l.tx.textContent=f.state==='stale'?'немає даних':on?fmtW(w):'';l.tx.style.opacity=f.state==='stale'?.55:1}
+  this.tween(l,on&&MOTION?this.rateFor(w):0)},
+ pauseAll:function(p){LINKS.forEach(function(l){if(p&&l._r){cancelAnimationFrame(l._r);l._r=0}if(l.an){try{p?l.an.pause():l.an.play()}catch(e){}}else if(l.el){l.el.style.animationPlayState=p||Math.abs(l.rate)<.01?'paused':'running'}})}};
+
+/* ---------- smooth numbers (skipped while hidden) ---------- */
+var NUM={};function num(id,v,dec){var el=$(id);if(!el)return;if(el._r)cancelAnimationFrame(el._r);if(v==null||!isFinite(v)){el.textContent='—';NUM[id]=null;return}
+ var fmt=function(x){return dec?x.toFixed(dec).replace('.',','):Math.round(x).toString().padStart(4,'0')};
+ var from=NUM[id]==null?v:NUM[id];NUM[id]=v;if(!ACTIVE()||from===v){el.textContent=fmt(v);return}var t0=performance.now(),D=600;
+ (function st(t){var k=Math.min(1,(t-t0)/D),x=from+(v-from)*(1-Math.pow(1-k,3));el.textContent=fmt(x);el._r=k<1?requestAnimationFrame(st):0})(t0)}
+function setArc(p){var o=(100-(p==null?0:p)).toFixed(1),vis=p==null?'0':'';var a=$('ringfg'),b=$('arcglow');if(a){a.style.strokeDashoffset=o;a.style.opacity=vis}if(b){b.style.strokeDashoffset=o;b.style.opacity=vis}}
+
+/* ---------- UI Renderer: paints one computed result ---------- */
+var LAST=null;
+function paint(){if(!ROOT)return;var R=computeBalance(Tel.snapshot(),Date.now());LAST=R;window.__R=R;var S=R.states,st=R.station,stOn=S.station==='ONLINE';
+ /* status */
+ var pill=$('pill');if(pill)pill.className='status'+(R.status.level==='bad'?' bad':R.status.level==='warn'?' warn':'');txt('pillt',R.status.text);
+ txt('fst',S.station==='UNKNOWN'?'немає даних':stOn?(st.age<5000?'оновлено щойно':'оновлено '+ago(st.age)):'станція: '+(S.station==='OFFLINE'?'зв’язок втрачено · ':'')+ago(st.age));
+ /* charge + station state: last known values are dimmed and never shown as current */
+ cls('heroWrap','stale',!stOn);cls('met','stale',!stOn);
+ if(st.pct!=null){var p=Math.floor(st.pct);txt('pct',String(p));setArc(p)}else{txt('pct','—');setArc(null)}
+ var modeTxt={charging:'заряджається',discharging:'живить будинок',idle:'очікування'};
+ if(stOn){txt('mode',st.mode==='discharging'&&R.feed!=='station'?'віддає енергію':st.mode?modeTxt[st.mode]:'недостатньо даних');var fc=st.forecast;
+  if(fc&&fc.min!=null){txt('rtl',fc.kind==='full'?'До повного':'Запас');num('rt',fc.min/60,1);txt('rtu','год');txt('eta',(fc.kind==='full'?'повна через ':'вистачить на ')+Math.floor(fc.min/60)+' год '+(fc.min%60)+' хв')}
+  else{txt('rtl',fc&&fc.kind==='full'?'До повного':'Запас');num('rt',null);txt('rtu','');txt('eta',fc?'недостатньо даних для прогнозу':'')}}
+ else{txt('mode',S.station==='UNKNOWN'?'немає даних':S.station==='OFFLINE'?'зв’язок втрачено':'дані застаріли');txt('rtl','Запас');num('rt',null);txt('rtu','');txt('eta',st.age!=null?'останні дані '+ago(st.age):'')}
+ num('vin',st.inW);num('vout',st.outW);
+ var vb=$('vinb');if(vb)vb.style.color=!stOn?'':R.feed==='grid'&&st.inW>BO_MIN_FLOW_W?'var(--grid-v)':R.feed==='gen'&&st.inW>BO_MIN_FLOW_W?'var(--gen-v)':'';
+ /* flows */
+ for(var k in R.flows)Flow.set(k,R.flows[k]);
+ /* sources */
+ var g=R.gen,gr=R.grid;
+ txt('genv',g.state!=='ONLINE'?'—':g.on===true?(g.load!=null?fmtW(g.load):'працює'):g.on===false?'вимкн.':'—');
+ txt('gridv',gr.state!=='ONLINE'?'—':gr.on===true?(gr.load!=null?fmtW(gr.load):'є'):gr.on===false?'немає':'—');
+ cls('n-gen','off',!(g.state==='ONLINE'&&g.on===true));cls('n-grid','off',!(gr.state==='ONLINE'&&gr.on===true));
+ if(g.fuel!=null){attr('genfuel','y',(22*(1-g.fuel/100)).toFixed(1));attr('gfuel2','y',(14+22*(1-g.fuel/100)).toFixed(1));attr('gfuel2','height',(22*g.fuel/100).toFixed(1));txt('genfuelv','бак '+Math.round(g.fuel)+'%');txt('gpct',String(Math.round(g.fuel)))}
+ else{txt('genfuelv','бак —');txt('gpct','—')}
+ /* house */
+ var lit=R.feed==='gen'||R.feed==='grid'||(R.feed==='station'&&R.home.W>BO_MIN_FLOW_W);
+ ['w1','w2','w3','w4'].forEach(function(w){var e=$(w);if(e){e.setAttribute('fill',lit?'url(#winL)':'#1B241F');e.style.opacity=lit?.9:1}});attr('hglow','opacity',lit?1:0);
+ attr('stglow','opacity',stOn&&(st.inW>BO_MIN_FLOW_W||R.flows.use.state==='on')?'1':'.3');
+ var sb=$('stbar');if(sb&&st.pct!=null)sb.setAttribute('width',(13*Math.max(.05,st.pct/100)).toFixed(1));
+ /* car: fills with energy; green only while it really charges */
+ var c=R.car,cf=$('carfill'),ce=$('carfilledge'),cOn=c.state==='ONLINE';
+ if(cf&&c.pct!=null){var wv=110*c.pct/100;cf.setAttribute('width',wv.toFixed(1));cf.style.fill=cOn&&c.charging?'var(--car-on)':'var(--car-off)';cf.style.opacity=cOn?1:.45;
+  if(ce){ce.setAttribute('x',(6+wv-1.5).toFixed(1));ce.style.opacity=cOn&&c.charging?.8:0}txt('carpct',Math.floor(c.pct)+'%');var cp=$('carpct');if(cp)cp.style.fill=cOn&&c.charging?'var(--car-on)':'var(--t1)'}
+ else{if(cf)cf.setAttribute('width',0);if(ce)ce.style.opacity=0;txt('carpct','—')}
+ var kw=c.kW!=null?String(c.kW).replace('.',',')+' кВт':'';
+ txt('carlbl',c.state==='UNKNOWN'?'Tesla · немає даних':!cOn?'Tesla · '+(c.state==='OFFLINE'?'зв’язок втрачено':'дані застаріли'):c.charging?(c.fromGrid?'від мережі · '+kw:'не підтверджено · '+kw):'Tesla · не заряджається');
+ var ep=ROOT.querySelector('#carico .evport');if(ep)ep.setAttribute('opacity',c.fromGrid?1:0);attr('wcled','opacity',c.fromGrid?1:.25);
+ /* device rows */
+ txt('dpct',st.pct!=null?String(Math.floor(st.pct)):'—');txt('dst',S.station==='UNKNOWN'?'немає даних':stOn?'Bluetooth · на зв’язку':stateUa(S.station)+' · '+ago(st.age));cls('dst','on',stOn);cls('dcard','stale',!stOn);
+ txt('gst',g.state!=='ONLINE'?stateUa(g.state):g.on?'працює · '+(g.load!=null?fmtW(g.load):'потужність невідома'):'вимкнено');cls('gst','on',g.state==='ONLINE'&&g.on===true);cls('gcard','stale',g.state!=='ONLINE');
+ txt('cpct',c.pct!=null?String(Math.floor(c.pct)):'—');txt('cst',c.state==='UNKNOWN'?'немає даних':!cOn?stateUa(c.state)+' · '+ago(c.age):c.charging?(c.fromGrid?'заряджається від мережі · ':'заряджається · джерело не підтверджено · ')+kw:'на зв’язку · не заряджається');cls('cst','on',cOn&&c.charging);cls('ccard','stale',!cOn);
+ txt('devcount',['station','gen','car'].filter(function(k){return S[k]==='ONLINE'}).length+' на зв’язку');
+ /* diagnostics */
+ Diag.show(R)}
+var pending=0;function schedule(){if(pending||!ACTIVE())return;pending=1;requestAnimationFrame(function(){pending=0;if(ACTIVE())paint()})}
+Tel.on(schedule);
+/* ages advance without new data: re-evaluate freshness periodically (cheap, nothing re-rendered from scratch) */
+var ageTimer=setInterval(function(){if(ACTIVE())paint()},5000);
+
+
+/* ---------- Diagnostics ---------- */
+var Diag={show:function(R){var w=$('warn');if(!w)return;w.textContent=R.issues.length?'Перевірка даних: '+R.issues.map(function(i){return (i.level==='error'?'⛔ ':'⚠ ')+i.text}).join('; '):'Перевірка даних: суперечностей немає'},
+ fpsOn:false,fpsRaf:0,fps:function(on){this.fpsOn=on;var el=$('fps');if(!on){if(this.fpsRaf)cancelAnimationFrame(this.fpsRaf);this.fpsRaf=0;if(el)el.textContent='';return}
+  var self=this,n=0,t0=performance.now();(function f(t){if(!self.fpsOn)return;n++;if(t-t0>=1000){var v=Math.round(n*1000/(t-t0));if(el)el.textContent=v+' fps';window.__fps=v;n=0;t0=t}self.fpsRaf=requestAnimationFrame(f)})(t0)}};
+
+/* ---------- Public API for the app integration: protocol adapters call these ---------- */
+window.BlackoutTel={set:function(k,sample){Tel.set(k,sample)},offline:function(k){Tel.markOffline(k)},result:function(){return LAST}};
+
+/* ---------- Dev simulator (only in developer mode) ---------- */
+function startDev(){var lab=ROOT.querySelector('.lab');if(lab)lab.style.display='';
+ function rnd(a){return (Math.random()-.5)*2*a}var sim={pct:72.4,cp:64,fuel:62};
+ var SC={
+  grid:{n:'1 Мережа є',f:function(s){return{station:{pct:s.pct=Math.min(100,s.pct+.02),inW:549+rnd(12),outW:0,tf:85},grid:{on:true,V:229},gen:{on:false,fuel:s.fuel},home:{W:1180+rnd(40)},car:{pct:s.cp,kW:0,st:7}}}},
+  out:{n:'2 Відключення',f:function(s){var o=420+rnd(25);return{station:{pct:s.pct=Math.max(0,s.pct-.03),inW:0,outW:o,te:Math.round(s.pct/100*2048/o*60)},grid:{on:false,V:0},gen:{on:false,fuel:s.fuel},car:{pct:s.cp,kW:0,st:7}}}},
+  gen:{n:'3 Генератор працює',f:function(s){return{station:{pct:100,inW:0,outW:0},grid:{on:false,V:0},gen:{on:true,fuel:s.fuel=Math.max(0,s.fuel-.02)},home:{W:780+rnd(30)},car:{pct:s.cp,kW:0,st:7}}}},
+  genst:{n:'4 Генератор + станція',f:function(s){return{station:{pct:s.pct=Math.min(100,s.pct+.03),inW:910+rnd(30),outW:0,tf:64},grid:{on:false,V:0},gen:{on:true,fuel:s.fuel=Math.max(0,s.fuel-.02)},home:{W:780+rnd(30)},car:{pct:s.cp,kW:0,st:7}}}},
+  cargrid:{n:'5 Tesla від мережі',f:function(s){return{station:{pct:s.pct=Math.min(100,s.pct+.02),inW:549+rnd(10),outW:0,tf:85},grid:{on:true,V:228},gen:{on:false,fuel:s.fuel},home:{W:650+rnd(20)},car:{pct:s.cp=Math.min(80,s.cp+.01),kW:7.2,st:5,src:'grid'}}}},
+  stlost:{n:'6 Станція без BT',f:function(s){return{grid:{on:true,V:229},gen:{on:false,fuel:s.fuel},home:{W:640},car:{pct:s.cp,kW:7.2,st:5,src:'grid'}}},off:['station']},
+  genlost:{n:'7 Генератор без зв’язку',f:function(s){var o=400+rnd(10);return{station:{pct:s.pct=Math.max(0,s.pct-.02),inW:0,outW:o,te:Math.round(s.pct/100*2048/o*60)},grid:{on:false,V:0},car:{pct:s.cp,kW:0,st:7}}},off:['gen']},
+  gridlost:{n:'8 Мережа без зв’язку',f:function(s){var o=300+rnd(10);return{station:{pct:s.pct=Math.max(0,s.pct-.02),inW:0,outW:o,te:Math.round(s.pct/100*2048/o*60)},gen:{on:false,fuel:s.fuel},car:{pct:s.cp,kW:0,st:7}}},age:['grid']},
+  bad:{n:'9 Суперечливі дані',f:function(s){return{station:{pct:104,inW:900,outW:2000,tf:60},grid:{on:false,V:0},gen:{on:true,fuel:s.fuel},home:{W:800},car:{pct:s.cp,kW:1.8,st:5,src:'station'}}}},
+  none:{n:'10 Немає даних',f:null,clear:true},
+  both:{n:'11 Генератор + мережа',f:function(s){return{station:{pct:s.pct,inW:600,outW:0,tf:70},grid:{on:true,V:229},gen:{on:true,fuel:s.fuel},home:{W:700},car:{pct:s.cp,kW:0,st:7}}}},
+  zero:{n:'12 Нульове навантаження',f:function(s){return{station:{pct:s.pct,inW:0,outW:0},grid:{on:false,V:0},gen:{on:false,fuel:s.fuel},car:{pct:s.cp,kW:0,st:7}}}},
+  min:{n:'13 Мінімальне',f:function(s){return{station:{pct:s.pct,inW:0,outW:12+rnd(2),te:9000},grid:{on:false,V:0},gen:{on:false,fuel:s.fuel},car:{pct:s.cp,kW:0,st:7}}}},
+  over:{n:'14 Перевантаження',f:function(s){var o=2650+rnd(20);return{station:{pct:s.pct=Math.max(0,s.pct-.2),inW:0,outW:o,te:Math.round(s.pct/100*2048/o*60)},grid:{on:false,V:0},gen:{on:false,fuel:s.fuel},car:{pct:s.cp,kW:0,st:7}}}}};
+ var cur='grid';function tick(){var s=SC[cur];if(!s||!s.f)return;var o=s.f(sim);for(var k in o)Tel.set(k,o[k])}
+ window.setSc=function(k){cur=k;var sc=SC[k];[].forEach.call(ROOT.querySelectorAll('#scen button'),function(b){b.classList.toggle('on',b.dataset.k===k)});
+  if(sc.clear){Tel.clear();return}
+  /* simulate a lost link: offline = explicit disconnect; age = no updates for longer than the limit (done once, in the simulator, never by rendering) */
+  (sc.off||[]).forEach(function(x){Tel.markOffline(x)});(sc.age||[]).forEach(function(x){var v=Tel.get(x);if(v){var o={};for(var q in v)o[q]=v[q];o.t=Date.now()-BO_LIMITS[x]-60000;Tel.set(x,o)}});
+  /* sources this scenario does not report at all are removed (unknown), unless the scenario simulates their loss */
+  var keep=(sc.off||[]).concat(sc.age||[]),probe=sc.f({pct:sim.pct,cp:sim.cp,fuel:sim.fuel});['station','grid','gen','car','home'].forEach(function(x){if(keep.indexOf(x)<0&&!(x in probe))delete Tel.d[x]});
+  tick()};
+ var scn=$('scen');if(scn){scn.innerHTML=Object.keys(SC).map(function(k){return '<button data-k="'+k+'">'+SC[k].n+'</button>'}).join('');scn.onclick=function(e){var b=e.target.closest('button');if(b)setSc(b.dataset.k)}}
+ setInterval(function(){if(!!ACTIVE())tick()},2000);
+ var CARS={red:'#9A1C24',white:'#D9DEDA',black:'#4A5450',blue:'#3A6AB8',grey:'#6E7A82',silver:'#A9B1B6'},cc=$('ccol');
+ if(cc){cc.innerHTML=Object.keys(CARS).map(function(k){return '<button class="sw" data-c="'+k+'" style="background:'+CARS[k]+'"></button>'}).join('');cc.onclick=function(e){var b=e.target.closest('button');if(!b)return;HOST.style.setProperty('--carc',CARS[b.dataset.c]);[].forEach.call(cc.querySelectorAll('.sw'),function(x){x.classList.toggle('on',x===b)})}}
+ var mot=$('mot');if(mot)mot.onclick=function(){MOTION=!MOTION;this.textContent='Анімація: '+(MOTION?'увімк':'вимк');paint()};
+ var fb=$('fpsbtn');if(fb)fb.onclick=function(){Diag.fps(!Diag.fpsOn);this.classList.toggle('on',Diag.fpsOn)};
+ setSc('grid')}
+
+
+/* ---------- BLACKOUT 4.0 inside the app: shadow-DOM mount + real data adapters ----------
+   The overview lives in its own shadow root, so its styles never touch other screens and
+   the app's styles never touch it. Data comes only from what the app really measures. */
+var HOST=null,ROOT=null,stT=0;
+function ACTIVE(){return !!(HOST&&HOST.isConnected&&!document.hidden)}
+function onVis(){var a=ACTIVE();Flow.pauseAll(!a);if(!a){for(var id in NUM){var e=$(id);if(e&&e._r){cancelAnimationFrame(e._r);e._r=0}}pending=0}else paint()}
+document.addEventListener('visibilitychange',onVis);
+function build(){HOST=document.createElement('div');HOST.id='bo4host';ROOT=HOST.attachShadow({mode:'open'});ROOT.innerHTML='<style>'+BO4_CSS+'</style>'+BO4_HTML;
+ Flow.init();
+ function go(id,f){var e=$(id);if(e)e.addEventListener('click',f)}
+ go('dcard',function(){try{localStorage.setItem('bo_btg','st')}catch(e){}setTab('bt')});
+ go('gcard',function(){setTab('gen')});
+ go('ccard',function(){try{localStorage.setItem('bo_btg','car')}catch(e){}setTab('bt')});
+ if(BO_DEV){startDev();var tl=$('testlbl');if(tl)tl.style.display=''}else{var lab=ROOT.querySelector('.lab');if(lab)lab.style.display='none'}}
+function attach(){var slot=document.getElementById('bo4slot');
+ if(!slot){if(HOST&&HOST.isConnected)HOST.remove();if(HOST)onVis();return}
+ if(!HOST)build();slot.replaceWith(HOST);sync();onVis()}
+/* rated AC output per known model: used only to flag overload, never to block anything */
+function ratedW(name){name=String(name||'');return /F2400/i.test(name)?2400:/F1800/i.test(name)?1800:/AC2P/i.test(name)?300:null}
+function stName(){try{var m=btDevModel(),c=BC(),idx=(c.map&&BT.id&&c.map[BT.id]!=null)?c.map[BT.id]:c.sti,sn=S.sts[idx!=null?idx:si];
+  if(m&&m.brand==='Fossibot')return sn?sn.n:'Fossibot';if(m)return (m.brand+' '+(m.model||'')).trim();if(BT.on&&btIsEF())return 'EcoFlow '+((window.EF&&EF.model)||'');return sn?sn.n:(BT.name||'Станція')}catch(e){return 'Станція'}}
+function sync(){if(BO_DEV)return;var now=Date.now();
+ /* station: the connected station's own measurements, time = when its frame arrived */
+ if(BT.on&&stT&&(BT.pct!=null||BT.w!=null||BT.wi!=null)){var nm=stName();BO_STATION_AC_MAX_W=ratedW(nm);
+  Tel.set('station',{pct:BT.pct,inW:BT.wi,outW:BT.w,tf:BT.tf,te:BT.te,t:stT});txt('stname',nm);txt('stname2',nm)}
+ else{var s0=Tel.get('station');if(s0&&s0.link!==false)Tel.markOffline('station')}
+ /* generator: the generator sends no data; its state is the session started/stopped in the app */
+ var g=S.gens[S.g]||S.gens[0];if(g){Tel.set('gen',{on:!!S.run,fuel:S.fills.length?Math.round(fuelLeft(g)/fuelCap(g)*100):null,t:now});txt('gname',g.n)}
+ /* grid: confirmed only by the Fossibot AC-input measurement and only while the generator session is off */
+ var fresh=BT.on&&stT&&now-stT<BO_LIMITS.station,acKnown=!!(BT.tx&&!(window.BLUP&&BLUP.on)&&!btIsEF()&&BT.regs&&BT.regs[22]!=null);
+ if(S.run){if(Tel.d.grid){delete Tel.d.grid;Tel.emit('grid')}}
+ else if(fresh&&acKnown)Tel.set('grid',{on:BT.hz!=null&&BT.vin>150,V:BT.vin,t:stT});
+ /* car: Tesla over Bluetooth, time = when the car answered */
+ try{var c=tsCfg();if(c.vin){var d=TS.d||c.last;var vi=vinInfo(c.vin);txt('cname',((vi.make||'Tesla')+' '+(vi.model||'')).trim());HOST&&HOST.style.setProperty('--carc',tsColor());
+  if(d&&typeof d.t==='number')Tel.set('car',{pct:d.pct,kW:d.kw,st:d.st,t:d.t,link:!!(TS.on&&TS.d)});else if(Tel.d.car){delete Tel.d.car;Tel.emit('car')}}}catch(e){}
+ /* grid V/A/Hz line (measured by the station) */
+ var gl=$('gline');if(gl){var gt='';try{if(fresh)gt=pbGridTxt();if(gt&&S.run)gt=gt.replace(/^[^<]+/,'Вхід від генератора ')}catch(e){}if(gl.innerHTML!==gt)gl.innerHTML=gt;gl.hidden=!gt;gl.classList.toggle('gen',!!S.run)}
+ txt('loc',S.locs&&S.locs[S.loc]?S.locs[S.loc]:'')}
+setInterval(function(){if(ACTIVE())sync()},2000);
+window.BO4={attach:attach,sync:sync,frame:function(){stT=Date.now();if(ACTIVE())sync()},lost:function(){if(ACTIVE())sync()},active:ACTIVE};
+
+})();
+
+/* app hooks: station frames, link loss, every render */
+(function(){var u=btUi;btUi=function(){var r=u.apply(this,arguments);try{BO4.frame()}catch(e){}return r}})();
+(function(){var d=btDown;btDown=function(){var r=d.apply(this,arguments);try{BO4.lost()}catch(e){}return r}})();
+(function(){var r=render;render=function(){try{document.body.classList.add('bo4')}catch(e){}r.apply(this,arguments);try{BO4.attach()}catch(e){console.error('BLACKOUT 4.0 overview',e)}}})();
 
 try{render()}catch(e){window.__bootCheck&&setTimeout(window.__bootCheck,0);throw e}
 try{initNativeApp()}catch(e){console.error('BLACKOUT native init',e)}
