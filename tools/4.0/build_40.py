@@ -65,6 +65,7 @@ core = ('/* ===== BLACKOUT 4.0 overview (engine + renderer from proto/overview-4
         'var BO4_CSS=' + json.dumps(css, ensure_ascii=False) + ';\nvar BO4_HTML=' + json.dumps(html, ensure_ascii=False) + ';\n'
         + js + '\n' + glue + '\n})();\n')
 core += '\n' + open('/home/claude/ec/inv.js', encoding='utf-8').read() + '\n'
+core += '\n' + open('/home/claude/ec/aes.js', encoding='utf-8').read().replace("if(typeof module!=='undefined')module.exports=AES128;",'') + '\n' + open('/home/claude/ec/tuya.js', encoding='utf-8').read().split("if(typeof module!=='undefined')")[0] + '\nsetTimeout(function(){try{if(tyCfg().length)tyStart()}catch(e){}},2500);\n'
 core += '\n' + open('/home/claude/ec/bo4_simplify.js', encoding='utf-8').read() + '\n'
 core += r"""
 /* Tesla: start/stop charging (CarServer VehicleAction.chargingStartStopAction: start=2, stop=5; allowed for the Charging Manager role) */
@@ -94,10 +95,10 @@ a2 = src.index('h+=schCard(lvl,sn);'); src = src[:a2] + 'h+=schCard(lvl,sn);retu
 x1 = src.index("var h='<div id=\"bo4slot\"></div>';") + len("var h='<div id=\"bo4slot\"></div>';"); x2 = src.index('h+=schCard(lvl,sn);return h}'); src = src[:x1] + src[x2:]
 t = t[:i] + src + t[j:]
 t = rep(t, "\ntry{render()}catch(e){window.__bootCheck", '\n' + core + "\ntry{render()}catch(e){window.__bootCheck")
-t = rep(t, "function btgGroup(el){if(el.id==='tscard')return 'car';", "function btgGroup(el){if(el.id==='tscard')return 'car';if(el.id==='invcard')return 'inv';")
-t = rep(t, "['car',L3('Авто','Авто','Car')],['svc',", "['car',L3('Авто','Авто','Car')],['inv',L3('Инвертор','Інвертор','Inverter')],['svc',")
+t = rep(t, "function btgGroup(el){if(el.id==='tscard')return 'car';", "function btgGroup(el){if(el.id==='tscard')return 'car';if(el.id==='invcard')return 'inv';if(el.id==='tycard')return 'plug';")
+t = rep(t, "['car',L3('Авто','Авто','Car')],['svc',", "['car',L3('Авто','Авто','Car')],['inv',L3('Инвертор','Інвертор','Inverter')],['plug',L3('Розетки','Розетки','Plugs')],['svc',")
 t = rep(t, "var CS=[", "var CS=[['Must HBP1800-3024OS',3072,2024],['Must HBP1800-2024OS',2560,2024],['Must HBP1800-1012 (100 А·год)',1280,2024],['Must HBP1800-1012 (75 А·год)',960,2024],['Must EM1024S',1280,2024],")
-t = rep(t, "\ntry{render()}catch(e){window.__bootCheck", "\n(function(){var v=vBt;vBt=function(){return v.apply(this,arguments)+invCard()}})();\ntry{render()}catch(e){window.__bootCheck")
+t = rep(t, "\ntry{render()}catch(e){window.__bootCheck", "\n(function(){var v=vBt;vBt=function(){return v.apply(this,arguments)+invCard()+tyCardHtml()}})();\ntry{render()}catch(e){window.__bootCheck")
 t = rep(t, "T=['gen','st','pan','hist','bt'],L={gen:[svgi('gen'),'Генератор'],st:[svgi('bat'),'Станции'],pan:[svgi('bolt',30),'Панель'],hist:[svgi('hist'),'История'],bt:[svgi('bt'),'Bluetooth']};",
  "T=['pan','gen','st','hist','bt'],L={gen:[svgi('gen'),'Генератор'],st:[svgi('bat'),'Станции'],pan:[svgi('home'),L3('Главная','Головна','Home')],hist:[svgi('hist'),'История'],bt:[svgi('bt'),L3('Подключения','Підключення','Connect')]};")
 t = rep(t, "return '<button class=\"'+(k=='pan'?'cn ':'')+(k=='pan'&&S.run?'run ':'')+(k==tab?'on':'')+'\"", "return '<button class=\"'+(k==tab?'on':'')+'\"")
@@ -109,7 +110,9 @@ pal_inv = ('#invcard .invf{display:grid;grid-template-columns:1fr 96px;gap:10px;
            '#invcard .invc{background:var(--elev,#1B241F);border:1px solid var(--bd,#29342E);border-radius:12px;padding:10px 12px;min-width:0}#invcard .invc b{display:block;font-size:20px;margin:2px 0;font-variant-numeric:tabular-nums}#invcard select{width:100%}'
            '.ctl .ctlh{display:flex;align-items:center;justify-content:space-between;gap:14px}.ctl .ctln{font-size:17px;font-weight:600;margin-bottom:3px}'
            '.ctl .ctlh>div{flex:1;min-width:0}.ctl .ctlb{flex:0 0 auto;width:auto!important;padding:0 22px!important;margin:0!important;min-width:118px;height:46px;border-radius:23px;font-size:15px;font-weight:700}.ctl .ctlb.stop{background:transparent!important;border:1.5px solid var(--warn,#EFB34F)!important;color:var(--warn,#EFB34F)!important;box-shadow:none!important}'
-           '.ctl.on{border-color:rgba(168,217,87,.35)}')
+           '.ctl.on{border-color:rgba(168,217,87,.35)}'
+           '#tycard .typ{border:1px solid var(--bd,#29342E);border-radius:14px;padding:10px 12px;margin:8px 0}#tycard .typh{display:flex;align-items:center;gap:10px}#tycard .tyname{flex:1;min-width:0;background:transparent!important;border:0!important;font-size:16px;font-weight:600;color:inherit;padding:0!important;box-shadow:none!important}#tycard .tyst{font-size:12.5px;margin:4px 0 6px}#tycard label{display:block;margin-top:6px}#tycard input,#tycard select{width:100%;box-sizing:border-box}'
+           '#tycard .act.tg{position:relative;flex:0 0 auto;width:50px!important;height:28px;padding:0!important;margin:0!important;border-radius:14px;border:1px solid var(--bd,#29342E);background:var(--elev,#1B241F)!important;box-shadow:none!important}#tycard .act.tg i{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#65736A;transition:transform .25s,background .25s}#tycard .act.tg.on{background:#A8D957!important;border-color:#A8D957}#tycard .act.tg.on i{transform:translateX(22px);background:#0B1405}#tycard .act.tg[disabled]{opacity:.45}')
 pal = ('body.bo4:not(.pbl){--bg:#090D0B;--bg2:#101613;--card:#151C18;--surf:#151C18;--elev:#1B241F;--bd:#29342E;'
        '--t1:#F1F5F2;--t2:#A0ADA4;--t3:#65736A;--tx:#F1F5F2;--mut:#A0ADA4;--em:#A8D957;--ac:#A8D957;--ok:#A8D957;--cy:#8FC24A;--bl:#48B9E8;'
        '--lg1:#A8D957;--lg2:#8FC24A;--emrgb:168,217,87;--em2:#C7E89A;--warn:#EFB34F;--bad:#EF665B;--off:#65736A;--on-em:#0B1405;--glow:rgba(168,217,87,.28);'
