@@ -5,19 +5,19 @@ var HOST=null,ROOT=null,stT=0,BO4_STN='',BO4_GEN='';
 function ACTIVE(){return !!(HOST&&HOST.isConnected&&!document.hidden)}
 function onVis(){var a=ACTIVE();Flow.pauseAll(true);var s3=$('s3');if(s3&&s3.pauseAnimations){if(a)s3.unpauseAnimations();else s3.pauseAnimations()}if(a){try{s3Liq()}catch(e){}}if(!a){for(var id in NUM){var e=$(id);if(e&&e._r){cancelAnimationFrame(e._r);e._r=0}}pending=0}else paint()}
 document.addEventListener('visibilitychange',onVis);
-function build(){HOST=document.createElement('div');HOST.id='bo4host';ROOT=HOST.attachShadow({mode:'open'});ROOT.innerHTML='<style>'+BO4_CSS+'</style>'+BO4_HTML;
+function build(){HOST=document.createElement('div');HOST.id='bo4host';ROOT=HOST.attachShadow({mode:'open'});ROOT.innerHTML='<style>'+BO4_CSS+'</style>'+BO4_HTML;var hd2=ROOT.querySelector('.hd2');if(hd2){var sl=document.createElement('slot');sl.name='sch';hd2.parentNode.insertBefore(sl,hd2)}
  Flow.init();
  function go(id,f){var e=$(id);if(e)e.addEventListener('click',f)}
- go('dcard',function(){setTab('st')});
- go('gcard',function(){setTab('gen')});
- go('ccard',function(){setTab('car')});
- go('n-gen',function(){setTab('gen')});go('s3-gen',function(){setTab('gen')});go('s3-st',function(){setTab('st')});go('s3-car',function(){setTab('car')});go('n-st',function(){setTab('st')});go('carico',function(){setTab('car')});
+ go('dcard',function(){boSheet('st')});
+ go('gcard',function(){boSheet('gen')});
+ go('ccard',function(){boSheet('car')});
+ go('n-gen',function(){boSheet('gen')});go('s3-gen',function(){boSheet('gen')});go('s3-st',function(){boSheet('st')});go('s3-car',function(){boSheet('car')});go('n-st',function(){boSheet('st')});go('carico',function(){boSheet('car')});
  /* row buttons: real app actions; the tap does not open the row */
  function act(id,f){var e=$(id);if(e)e.addEventListener('click',function(ev){ev.stopPropagation();if(e.disabled)return;try{f()}catch(x){console.error(x)}setTimeout(sync,60);setTimeout(sync,1500)})}
  /* on/off switches: generator session, station AC output (Fossibot), Tesla charging */
  act('gact',function(){if(S.run){if(confirm('Зупинити генератор?'))stopG()}else startG()});
  act('dact',function(){if(!BT.on){btConnect();return}if(fbIs()){var a=fbState('ac');if(a!=null)fbSet('ac',!a);return}if(confirm('Відключити станцію від застосунку?'))btDisc()});
- act('cact',function(){var c=tsCfg();if(!c.paired){setTab('car');return}if(!TS.on){tsConnect();return}
+ act('cact',function(){var c=tsCfg();if(!c.paired){boSheet('car');return}if(!TS.on){tsConnect();return}
   var d=TS.d,chg=d&&(d.st===4||d.st===5);if(chg){if(confirm('Зупинити заряджання Tesla?'))tsCharge(false)}else tsCharge(true)});
  if(BO_DEV){startDev();var tl=$('testlbl');if(tl)tl.style.display=''}else{var lab=ROOT.querySelector('.lab');if(lab)lab.style.display='none'}}
 function attach(){var slot=document.getElementById('bo4slot');
