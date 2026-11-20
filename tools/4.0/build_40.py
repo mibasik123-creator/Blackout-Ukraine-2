@@ -63,6 +63,7 @@ glue = open('/home/claude/ec/bo4_glue.js', encoding='utf-8').read()
 core = ('/* ===== BLACKOUT 4.0 overview (engine + renderer from proto/overview-4.0-v5.html) ===== */\n(function(){\n'
         'var BO4_CSS=' + json.dumps(css, ensure_ascii=False) + ';\nvar BO4_HTML=' + json.dumps(html, ensure_ascii=False) + ';\n'
         + js + '\n' + glue + '\n})();\n')
+core += '\n' + open('/home/claude/ec/inv.js', encoding='utf-8').read() + '\n'
 core += r"""
 /* Tesla: start/stop charging (CarServer VehicleAction.chargingStartStopAction: start=2, stop=5; allowed for the Charging Manager role) */
 async function tsCharge(start){if(!TS.on||TS.busy||TS.chgBusy)return;TS.chgBusy=1;TS.busy=1;try{BO4.sync()}catch(e){}
@@ -88,12 +89,19 @@ src = src[:a] + "var h='<div id=\"bo4slot\"></div>';" + src[b:]
 src = rep(src, 'h+=pbHero(lvl,g,sn,gS,sS,bS);h+=pbMetrics(lvl,sn);h+=schCard(lvl,sn);', 'h+=schCard(lvl,sn);')
 t = t[:i] + src + t[j:]
 t = rep(t, "\ntry{render()}catch(e){window.__bootCheck", '\n' + core + "\ntry{render()}catch(e){window.__bootCheck")
+t = rep(t, "function btgGroup(el){if(el.id==='tscard')return 'car';", "function btgGroup(el){if(el.id==='tscard')return 'car';if(el.id==='invcard')return 'inv';")
+t = rep(t, "['car',L3('Авто','Авто','Car')],['svc',", "['car',L3('Авто','Авто','Car')],['inv',L3('Инвертор','Інвертор','Inverter')],['svc',")
+t = rep(t, "var CS=[", "var CS=[['Must HBP1800-3024OS',3072,2024],['Must HBP1800-2024OS',2560,2024],['Must HBP1800-1012 (100 А·год)',1280,2024],['Must HBP1800-1012 (75 А·год)',960,2024],['Must EM1024S',1280,2024],")
+t = rep(t, "\ntry{render()}catch(e){window.__bootCheck", "\n(function(){var v=vBt;vBt=function(){return v.apply(this,arguments)+invCard()}})();\ntry{render()}catch(e){window.__bootCheck")
 # 4.0 palette for the other screens: colour tokens only, scoped to this test build (body.bo4)
+pal_inv = ('#invcard .invf{display:grid;grid-template-columns:1fr 96px;gap:10px;margin-bottom:8px}#invcard .invf label{font-size:12px;color:var(--t2,#A0ADA4)}#invcard .invf input{width:100%;margin-top:4px;box-sizing:border-box}'
+           '#invcard .invg{display:grid;grid-template-columns:1fr 1fr;gap:8px;transition:opacity .3s}#invcard .invg.old{opacity:.45}'
+           '#invcard .invc{background:var(--elev,#1B241F);border:1px solid var(--bd,#29342E);border-radius:12px;padding:10px 12px;min-width:0}#invcard .invc b{display:block;font-size:20px;margin:2px 0;font-variant-numeric:tabular-nums}#invcard select{width:100%}')
 pal = ('body.bo4:not(.pbl){--bg:#090D0B;--bg2:#101613;--card:#151C18;--surf:#151C18;--elev:#1B241F;--bd:#29342E;'
        '--t1:#F1F5F2;--t2:#A0ADA4;--t3:#65736A;--tx:#F1F5F2;--mut:#A0ADA4;--em:#A8D957;--ac:#A8D957;--ok:#A8D957;--cy:#8FC24A;--bl:#48B9E8;'
        '--lg1:#A8D957;--lg2:#8FC24A;--emrgb:168,217,87;--em2:#C7E89A;--warn:#EFB34F;--bad:#EF665B;--off:#65736A;--on-em:#0B1405;--glow:rgba(168,217,87,.28);'
        'background:#090D0B!important;background-image:radial-gradient(120% 55% at 50% 0%,#101613 0%,#090D0B 70%)!important}\n')
-k = t.rindex('</style>', 0, t.index('</head>')); t = t[:k] + pal + t[k:]
+k = t.rindex('</style>', 0, t.index('</head>')); t = t[:k] + pal + pal_inv + t[k:]
 REL = '--release' in sys.argv
 NAME = 'BLACKOUT 4.0' if REL else 'BLACKOUT 4.0 test'
 t = rep(t, 'BLACKOUT 3.4.2', NAME, t.count('BLACKOUT 3.4.2'))

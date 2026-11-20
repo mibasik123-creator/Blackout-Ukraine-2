@@ -44,6 +44,19 @@ jobs:
           echo '{"appId":"com.blackout.log","appName":"Blackout","webDir":"www"}' > capacitor.config.json
       - run: npx cap add android
       - run: npx cap sync android
+      - name: Native local-network bridge for inverters (BoNet)
+        run: |
+          D=android/app/src/main/java/com/blackout/log
+          cp native/BoNet.java $D/BoNet.java
+          python3 - <<'PY'
+          p='android/app/src/main/java/com/blackout/log/MainActivity.java'
+          s=open(p).read()
+          a='public class MainActivity extends BridgeActivity {}'
+          assert a in s, s
+          s=s.replace(a,'public class MainActivity extends BridgeActivity {\n    @Override\n    public void onCreate(android.os.Bundle savedInstanceState) {\n        registerPlugin(BoNet.class);\n        super.onCreate(savedInstanceState);\n    }\n}')
+          open(p,'w').write(s)
+          print(s)
+          PY
       - name: Use fixed signing key (APK updates install over the old one, data is kept)
         run: |
           mkdir -p ~/.android
