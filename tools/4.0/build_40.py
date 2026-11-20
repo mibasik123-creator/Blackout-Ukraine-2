@@ -64,6 +64,16 @@ core = ('/* ===== BLACKOUT 4.0 overview (engine + renderer from proto/overview-4
         'var BO4_CSS=' + json.dumps(css, ensure_ascii=False) + ';\nvar BO4_HTML=' + json.dumps(html, ensure_ascii=False) + ';\n'
         + js + '\n' + glue + '\n})();\n')
 core += r"""
+/* Tesla: start/stop charging (CarServer VehicleAction.chargingStartStopAction: start=2, stop=5; allowed for the Charging Manager role) */
+async function tsCharge(start){if(!TS.on||TS.busy||TS.chgBusy)return;TS.chgBusy=1;TS.busy=1;try{BO4.sync()}catch(e){}
+ try{var body=await tsCommand(3,pbB(2,pbB(6,pbB(start?2:5,[]))));var resp=pbD(body),as=pbSub(resp,1),res=as?(pb1(as,1)||0):0;
+  if(res){var rr=pbSub(as,2),tx=rr&&pb1(rr,1),why='';try{why=tx?new TextDecoder().decode(Uint8Array.from(tx)):''}catch(e){}
+   var M={is_charging:'вже заряджається',not_charging:'не заряджається',disconnected:'кабель не підключено',complete:'заряджання завершено',cable:'кабель не підключено'};var k=Object.keys(M).filter(function(x){return why.indexOf(x)>=0})[0];
+   throw new Error(k?M[k]:(why||'авто відхилило команду'))}
+  tsLog('CMD','charging '+(start?'start':'stop')+' ok');toast(start?'Tesla: заряджання запущено':'Tesla: заряджання зупинено')}
+ catch(e){var m=String(e&&e.message||e);if(/timeout/.test(m))m='авто не відповідає — можливо, спить';tsLog('ERR','charge '+m);toast('Tesla: '+m)}
+ TS.busy=0;TS.chgBusy=0;setTimeout(function(){tsRead()},2500);try{BO4.sync()}catch(e){}}
+
 /* app hooks: station frames, link loss, every render */
 (function(){var u=btUi;btUi=function(){var r=u.apply(this,arguments);try{BO4.frame()}catch(e){}return r}})();
 (function(){var d=btDown;btDown=function(){var r=d.apply(this,arguments);try{BO4.lost()}catch(e){}return r}})();

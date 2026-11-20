@@ -14,9 +14,11 @@ function build(){HOST=document.createElement('div');HOST.id='bo4host';ROOT=HOST.
  go('n-gen',function(){setTab('gen')});go('n-st',function(){try{localStorage.setItem('bo_btg','st')}catch(e){}setTab('bt')});go('carico',function(){try{localStorage.setItem('bo_btg','car')}catch(e){}setTab('bt')});
  /* row buttons: real app actions; the tap does not open the row */
  function act(id,f){var e=$(id);if(e)e.addEventListener('click',function(ev){ev.stopPropagation();if(e.disabled)return;try{f()}catch(x){console.error(x)}setTimeout(sync,60);setTimeout(sync,1500)})}
- act('gact',function(){S.run?stopG():startG()});
- act('dact',function(){if(BT.on){try{localStorage.setItem('bo_btg','st')}catch(e){}setTab('bt')}else btConnect()});
- act('cact',function(){var c=tsCfg();if(!c.paired){try{localStorage.setItem('bo_btg','car')}catch(e){}setTab('bt')}else if(TS.on)tsRead();else tsConnect()});
+ /* on/off switches: generator session, station AC output (Fossibot), Tesla charging */
+ act('gact',function(){if(S.run){if(confirm('Зупинити генератор?'))stopG()}else startG()});
+ act('dact',function(){if(!BT.on){btConnect();return}if(fbIs()){var a=fbState('ac');if(a!=null)fbSet('ac',!a);return}if(confirm('Відключити станцію від застосунку?'))btDisc()});
+ act('cact',function(){var c=tsCfg();if(!c.paired){try{localStorage.setItem('bo_btg','car')}catch(e){}setTab('bt');return}if(!TS.on){tsConnect();return}
+  var d=TS.d,chg=d&&(d.st===4||d.st===5);if(chg){if(confirm('Зупинити заряджання Tesla?'))tsCharge(false)}else tsCharge(true)});
  if(BO_DEV){startDev();var tl=$('testlbl');if(tl)tl.style.display=''}else{var lab=ROOT.querySelector('.lab');if(lab)lab.style.display='none'}}
 function attach(){var slot=document.getElementById('bo4slot');
  if(!slot){if(HOST&&HOST.isConnected)HOST.remove();if(HOST)onVis();return}
@@ -37,10 +39,15 @@ function sync(){if(BO_DEV)return;var now=Date.now();
   Tel.set('gen',{on:!!S.run,fuel:fl,t:now});txt('gname',g.n);BO4_GEN=g.n}
  var ng=$('n-gen');if(ng)ng.classList.toggle('run',!!S.run&&MOTION);
  /* row buttons */
- function btn(id,label,show,c,dis){var e=$(id);if(!e)return;e.hidden=!show;if(e.textContent!==label)e.textContent=label;e.className='act '+(c||'');e.disabled=!!dis}
- btn('gact',S.run?'Стоп':'Старт',!!g,S.run?'gen':'go');
- btn('dact',BT.on?'Керувати':'Підключити',true,BT.on?'':'go');
- try{var tc=tsCfg();btn('cact',!tc.paired?'Налаштувати':TS.connecting?'Підключення…':TS.on?'Оновити':'Підключити',!!tc.vin,TS.on?'':'go',!!TS.connecting)}catch(e){}
+ function btn(id,label,show,c,dis){var e=$(id);if(!e)return;e.hidden=!show;if(e.textContent!==label)e.textContent=label;e.className='act '+(c||'');e.disabled=!!dis;e.removeAttribute('data-l')}
+ function sw(id,on,c,cap,dis){var e=$(id);if(!e)return;e.hidden=false;if(!e.querySelector('i'))e.innerHTML='<i></i>';var k='act tg '+(c||'')+(on?' on':'');if(e.className!==k)e.className=k;e.disabled=!!dis;e.setAttribute('data-l',cap);e.setAttribute('aria-pressed',on?'true':'false')}
+ if(g)sw('gact',!!S.run,'gen',S.run?'працює':'вимкн.');else btn('gact','',false);
+ if(!BT.on)btn('dact','Підключити',true,'go');
+ else if(fbIs()){var ac=fbState('ac');sw('dact',ac===true,'st',ac==null?'AC …':'AC '+(ac?'увімк.':'вимк.'),ac==null||(typeof FBO_BUSY!=='undefined'&&FBO_BUSY))}
+ else btn('dact','Відключити',true,'');
+ try{var tc=tsCfg(),td=TS.d,tchg=!!(td&&(td.st===4||td.st===5));
+  if(!tc.vin)btn('cact','',false);else if(!tc.paired)btn('cact','Налаштувати',true,'go');else if(!TS.on)btn('cact',TS.connecting?'Підключення…':'Підключити',true,'go',!!TS.connecting);
+  else sw('cact',tchg,'st',TS.chgBusy?'…':tchg?'заряд':'не заряд.',!!(TS.busy||TS.chgBusy||!td))}catch(e){}
  /* grid: confirmed only by the Fossibot AC-input measurement and only while the generator session is off */
  var fresh=BT.on&&stT&&now-stT<BO_LIMITS.station,acKnown=!!(BT.tx&&!(window.BLUP&&BLUP.on)&&!btIsEF()&&BT.regs&&BT.regs[22]!=null);
  if(S.run){if(Tel.d.grid){delete Tel.d.grid;Tel.emit('grid')}}

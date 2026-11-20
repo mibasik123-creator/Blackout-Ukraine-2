@@ -59,6 +59,11 @@ CSS = (
  '.row .act:active{transform:scale(.95)}.row .act[disabled]{opacity:.5}'
  '.row .act.gen{border-color:rgba(240,165,66,.55);color:var(--gen-v)}.row .act.go{border-color:rgba(168,217,87,.5);color:var(--st)}'
  '.row .act[hidden]{display:none}'
+ '.row .act.tg{position:relative;width:50px;height:28px;padding:0;border-radius:14px;background:var(--s2);margin-bottom:12px}'
+ '.row .act.tg i{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--t3);transition:transform .25s var(--ease),background .25s}'
+ '.row .act.tg.on i{transform:translateX(22px);background:#0B1405}'
+ '.row .act.tg.on.st{background:var(--st);border-color:var(--st)}.row .act.tg.on.gen{background:var(--gen);border-color:var(--gen)}'
+ '.row .act.tg::after{content:attr(data-l);position:absolute;left:50%;top:31px;transform:translateX(-50%);font-size:9.5px;font-weight:500;color:var(--t3);white-space:nowrap;letter-spacing:.02em}'
  '.row b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
  '@media (max-width:400px){.row{gap:10px}.row .ic{flex-basis:46px}.row .ic svg{max-width:46px}.row .act{padding:0 10px;font-size:12px}.row .v{min-width:44px;font-size:16.5px}}'
  '@media (prefers-reduced-motion:reduce){#n-gen .smk,#n-gen .fline,#n-gen .gbody{animation:none!important}}'
@@ -170,4 +175,8 @@ def patch_js2(js):
     block = js[i + len(s0):j]
     js = js[:i] + " cls('met','stale',!stOn);\n if(heroSrc(R)==='station'){cls('heroWrap','stale',!stOn);\n" + block + " }\n" + js[j:]
     js = rep(js, 'var LAST=null;', HERO_JS + 'var LAST=null;')
+    # house on the grid by default -> energy visibly flows from the grid
+    js = rep(js, " for(var k in R.flows)Flow.set(k,R.flows[k]);", " for(var k in R.flows)Flow.set(k,R.flows[k]);if(R.feed==='unknown'&&R.flows.gridhome.state!=='conflict')Flow.set('gridhome',{state:'supply',w:null});")
+    js = rep(js, "var lit=R.feed==='gen'||R.feed==='grid'||", "var lit=R.feed==='gen'||R.feed==='grid'||R.feed==='unknown'||")
+    js = rep(js, "cls('n-grid','off',!(gr.state==='ONLINE'&&gr.on===true));", "cls('n-grid','off',!(gr.state==='ONLINE'&&gr.on===true)&&R.feed!=='unknown');")
     return js
