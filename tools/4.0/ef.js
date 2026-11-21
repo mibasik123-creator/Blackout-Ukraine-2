@@ -86,6 +86,9 @@ function efPacket(p){if(p.raw){efLog('RX','EF pkt v'+p.vb);return}
  if(EF.st==='auth')efAuthOk('data');
  if((p.vb&15)===2&&p.src===0x02&&p.cs===0x20&&p.ci===0x02&&p.pl.length>=19){var q=p.pl,soc=q[14];/* PD heartbeat (River 2 / Delta 2): soc, watts out, watts in */
   if(soc<=100){EF.d[262]=soc;EF.d[4]=q[15]|q[16]<<8;EF.d[3]=q[17]|q[18]<<8;efApply();efLog('RX','EF v2 pd soc='+soc+' out='+EF.d[4]+' in='+EF.d[3])}return}
+ if((p.vb&15)===2&&p.src===0x03&&p.cs===0x20&&p.ci===0x02&&p.pl.length>=30){var e=p.pl,u32=function(i){return (e[i]|e[i+1]<<8|e[i+2]<<16|e[i+3]<<24)>>>0};/* EMS heartbeat: time to full / to empty (min), precise charge */
+  var tc=u32(17),td=u32(21),dv=new DataView(new Uint8Array(e.slice(26,30)).buffer),f=dv.getFloat32(0,true);
+  if(tc>0&&tc<6000)EF.d[269]=tc;else delete EF.d[269];if(td>0&&td<6000)EF.d[268]=td;else delete EF.d[268];if(f>0&&f<=100)EF.d[262]=Math.round(f*10)/10;efApply();return}
  if(p.cs===0xfe&&p.ci===0x15){var o=efPb(p.pl);Object.keys(o).forEach(function(k){EF.d[k]=o[k]});efApply();efLog('RX','EF data '+JSON.stringify(efPick(o)))}
  else efLog('RX','EF pkt src='+p.src.toString(16)+' cmd='+p.cs.toString(16)+'/'+p.ci.toString(16)+' len='+p.pl.length)}
 function efPick(o){var r={};[262,242,3,4,54,368,361,268,269].forEach(function(k){if(o[k]!=null)r[k]=Math.round(o[k]*10)/10});return r}
