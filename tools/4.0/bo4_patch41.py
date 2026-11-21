@@ -127,6 +127,7 @@ HERO_JS = r"""
 /* hero ring = the source that powers the house. Default is the grid: the house is on the grid unless
    the generator runs, the station is measured feeding it, or the grid is confirmed off. */
 function heroSrc(R){var f=R.feed,src=f==='gen'?'gen':f==='station'?'station':f==='conflict'?'conflict':f==='none'?'none':'grid';
+ if(src==='grid'&&R.grid&&R.grid.on===false&&R.grid.state==='ONLINE')src='none';
  var hw=$('heroWrap');if(hw&&hw.getAttribute('data-src')!==src)hw.setAttribute('data-src',src);
  var ico=$('hico'),pc=$('pctw');function show(icon){if(ico)ico.style.display=icon?'':'none';if(pc)pc.style.display=icon?'none':''}
  cls('heroWrap','assumed',false);

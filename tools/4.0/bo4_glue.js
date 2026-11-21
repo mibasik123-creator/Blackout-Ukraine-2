@@ -52,7 +52,7 @@ function sync(){if(BO_DEV)return;var now=Date.now();
  var fresh=BT.on&&stT&&now-stT<BO_LIMITS.station,acKnown=!!(BT.tx&&!(window.BLUP&&BLUP.on)&&!btIsEF()&&BT.regs&&BT.regs[22]!=null);
  var tg=(typeof tyGrid==='function')?tyGrid():null;
  if(S.run){if(Tel.d.grid){delete Tel.d.grid;Tel.emit('grid')}}
- else if(tg&&now-tg.t<BO_LIMITS.grid)Tel.set('grid',{on:tg.V>150,V:tg.V,t:tg.t});  /* Smart Life plug marked as city-grid sensor */
+ else if(tg&&now-tg.t<(tg.cloud?150000:BO_LIMITS.grid))Tel.set('grid',{on:tg.V>150,V:tg.V,t:tg.t});  /* Smart Life plug marked as city-grid sensor */
  else if(fresh&&acKnown)Tel.set('grid',{on:BT.hz!=null&&BT.vin>150,V:BT.vin,t:stT});
  /* car: Tesla over Bluetooth, time = when the car answered */
  try{var c=tsCfg();if(c.vin){var d=TS.d||c.last;var vi=vinInfo(c.vin);txt('cname',((vi.make||'Tesla')+' '+(vi.model||'')).trim());HOST&&HOST.style.setProperty('--carc',tsColor());

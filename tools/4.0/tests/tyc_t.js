@@ -1,0 +1,18 @@
+const {chromium}=require('playwright'),cr=require('crypto');(async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:390,height:844}});const errs=[];p.on('pageerror',e=>errs.push(e.message));p.on('dialog',d=>d.accept());
+const calls=[];let online=true;
+await p.exposeFunction('__http',async o=>{const u=new URL(o.url);const path=u.pathname+u.search;const h=o.headers;const body=o.body||'';
+ const str=o.method+'\n'+cr.createHash('sha256').update(body).digest('hex')+'\n\n'+path;const exp=cr.createHmac('sha256','SECRET123').update('AID'+(h.access_token||'')+h.t+str).digest('hex').toUpperCase();
+ calls.push(o.method+' '+path+' sig:'+(exp===h.sign?'OK':'BAD')+(body?' body:'+body:''));
+ if(path.startsWith('/v1.0/token'))return {status:200,body:JSON.stringify({success:true,result:{access_token:'TK',expire_time:7200}})};
+ if(path.includes('/commands'))return {status:200,body:JSON.stringify({success:true,result:true})};
+ return {status:200,body:JSON.stringify({success:true,result:{online,status:[{code:'switch_1',value:true},{code:'cur_voltage',value:2291},{code:'cur_power',value:455},{code:'cur_current',value:210}]}})}});
+await p.addInitScript(()=>{window.Capacitor={isNativePlatform:()=>true,Plugins:{BoNet:{http:o=>window.__http(o),tcpOpen:async()=>{throw new Error('ECONNREFUSED')}}}}});
+await p.goto('file:///tmp/claude-0/t.html');await p.waitForTimeout(1200);
+await p.evaluate(()=>{S.plugs=[{name:'ELIVCO',ip:'192.168.31.253',dev:'bfeff5d35c2725fad6gsyh',key:'gu`E;#|s:?3eecs=',ver:'auto',grid:true}];boGo('bt','plug')});await p.waitForTimeout(400);
+await p.evaluate(()=>{document.getElementById('tyaid').value='AID';document.getElementById('tyasec').value='SECRET123';document.getElementById('tycok').checked=true;tycEnable()});await p.waitForTimeout(800);
+const s1=await p.evaluate(()=>{var st=TY.plugs['bfeff5d35c2725fad6gsyh'];return [JSON.stringify(st.d),st.err,JSON.stringify(tyGrid()),!!S.tyc]});console.log(s1);
+await p.evaluate(()=>tyToggle(0));await p.waitForTimeout(800);
+online=false;await p.evaluate(()=>tyPoll(0));await p.waitForTimeout(800);
+await p.evaluate(()=>{setTab('pan');BO4.sync()});await p.waitForTimeout(900);console.log(await p.evaluate(()=>{var st=TY.plugs['bfeff5d35c2725fad6gsyh'];return [JSON.stringify(st.d),st.err,JSON.stringify(window.__R&&__R.grid)]}));
+await p.screenshot({path:'tyc.png',fullPage:true});
+console.log(calls.join('\n'));console.log(errs);await b.close()})();
